@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "943018463993",
+    "project_id": "directorios-laguna",
+    "storage_bucket": "directorios-laguna.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:943018463993:android:622059b326a77390530828",
+        "android_client_info": {
+          "package_name": "com.example.directorios_laguna"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsZswvyHei8V4iMR6oIyT9I9yau3S37X0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

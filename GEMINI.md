@@ -1,0 +1,1 @@
+Responde siempre en español. Todas las explicaciones de código y sugerencias deben ser en idioma español de España o Latinoamérica.
