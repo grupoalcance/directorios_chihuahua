@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"directorios-laguna","appId":"1:943018463993:android:622059b326a77390530828","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"directorios-laguna","configurations":{"android":"1:943018463993:android:622059b326a77390530828","ios":"1:943018463993:ios:d2363ce7ea45795c530828","macos":"1:943018463993:ios:d2363ce7ea45795c530828","web":"1:943018463993:web:dd0c125c5087a005530828","windows":"1:943018463993:web:da8937f643d66b0c530828"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "directorios-laguna",
+          "appId": "1:943018463993:android:622059b326a77390530828",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "directorios-laguna",
+          "configurations": {
+            "android": "1:943018463993:android:622059b326a77390530828",
+            "ios": "1:943018463993:ios:d2363ce7ea45795c530828",
+            "macos": "1:943018463993:ios:d2363ce7ea45795c530828",
+            "web": "1:943018463993:web:dd0c125c5087a005530828",
+            "windows": "1:943018463993:web:da8937f643d66b0c530828"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
