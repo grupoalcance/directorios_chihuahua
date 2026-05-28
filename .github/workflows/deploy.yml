@@ -35,4 +35,4 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: build/web/ # 👈 Sube solo la versión final empaquetada
-          server-dir: public_html/ # 👈 Lo deja directo en la raíz de Hostinger
+          server-dir: ./ # 👈 Lo deja directo en la raíz de Hostinger
