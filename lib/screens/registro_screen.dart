@@ -555,11 +555,94 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
     if (resultado == "success") {
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const MedicosPageScreen()),
-          (route) => false,
-        );
+        if (_isDoctor) {
+          // 👇 NUEVA PANTALLA DE ESPERA PARA DOCTORES 👇
+          showDialog(
+            context: context,
+            barrierDismissible: false, // No se puede cerrar picando afuera
+            builder: (BuildContext context) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                contentPadding: const EdgeInsets.all(30),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 60,
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+                    const Text(
+                      '¡Registro Exitoso!',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1F36),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const Text(
+                      'Tu perfil ha sido creado y se encuentra bajo revisión. Un asesor de Médicos Laguna se pondrá en contacto contigo muy pronto vía WhatsApp para afinar los detalles de tu membresía y activar tu cuenta.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.black54,
+                        height: 1.5,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Lo mandamos al inicio (ya logueado pero como inactivo)
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MedicosPageScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Ir a Inicio',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        } else {
+          // Pacientes pasan directo
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MedicosPageScreen()),
+            (route) => false,
+          );
+        }
       }
     } else {
       if (mounted) {

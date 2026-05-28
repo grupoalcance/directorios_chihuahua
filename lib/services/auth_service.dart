@@ -36,17 +36,21 @@ class AuthService {
         'rol': rol,
         'uid': userCredential.user!.uid,
         'fecha_registro': DateTime.now(),
+        // 👇 AQUÍ ESTÁ LA NUEVA MAGIA DEL NEGOCIO 👇
+        // Si es médico entra APAGADO (false), si es paciente entra PRENDIDO (true)
+        'activo': rol == 'medico' ? false : true,
       };
 
       // 3. Si es médico, blindamos su cuenta con la estructura correcta
       if (rol == 'medico') {
         userData['especialidad'] = especialidad;
         userData['cedula'] = cedula;
-        userData['tipo_perfil'] = 'basico'; // <-- CRÍTICO: Perfil por defecto
+        // Se queda como 'basico' por defecto hasta que pague el VIP
+        userData['tipo_perfil'] = 'basico';
         userData['servicios'] =
             []; // Array de etiquetas vacío para que no marque error
 
-        // <-- MAGIA: Construimos su primer consultorio automáticamente
+        // Construimos su primer consultorio automáticamente
         userData['consultorios'] = [
           {
             'nombre': 'Consultorio Principal',

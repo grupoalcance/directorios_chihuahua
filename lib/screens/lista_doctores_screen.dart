@@ -24,9 +24,9 @@ class ListaDoctoresScreen extends StatelessWidget {
       cleanPhone = '52$cleanPhone';
     }
 
-    // Creamos un mensaje automático genial
+    // Creamos un mensaje automático genial y neutral
     String mensaje = Uri.encodeComponent(
-      'Hola Doctor(a), vi su perfil en médicoslaguna.com y me gustaría agendar una cita.',
+      'Hola, vi su perfil en médicoslaguna.com y me gustaría agendar una cita o pedir información.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
 
@@ -58,7 +58,7 @@ class ListaDoctoresScreen extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               const Text(
-                'Contacta directamente a tu médico especialista.',
+                'Contacta directamente a los mejores especialistas.',
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 25),
@@ -68,6 +68,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                   stream: FirebaseFirestore.instance
                       .collection('usuarios')
                       .where('rol', isEqualTo: 'medico')
+                      .where('activo', isEqualTo: true)
                       .where('especialidad', isEqualTo: especialidad)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -93,7 +94,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             Text(
-                              'Aún no hay médicos registrados en $especialidad.',
+                              'Aún no hay especialistas registrados en $especialidad.',
                               style: const TextStyle(
                                 color: Colors.grey,
                                 fontSize: 16,
@@ -115,10 +116,12 @@ class ListaDoctoresScreen extends StatelessWidget {
                       String tipoA = dataA['tipo_perfil'] ?? 'basico';
                       String tipoB = dataB['tipo_perfil'] ?? 'basico';
 
-                      if (tipoA == 'pro' && tipoB != 'pro')
+                      if (tipoA == 'pro' && tipoB != 'pro') {
                         return -1; // 'a' va primero
-                      if (tipoA != 'pro' && tipoB == 'pro')
+                      }
+                      if (tipoA != 'pro' && tipoB == 'pro') {
                         return 1; // 'b' va primero
+                      }
                       return 0; // Se quedan igual
                     });
 
@@ -141,8 +144,9 @@ class ListaDoctoresScreen extends StatelessWidget {
                               String apellidos = data['apellidos'] ?? '';
                               String iniciales = '';
                               if (nombre.isNotEmpty) iniciales += nombre[0];
-                              if (apellidos.isNotEmpty)
+                              if (apellidos.isNotEmpty) {
                                 iniciales += apellidos[0];
+                              }
 
                               // --- EXTRAEMOS EL PRIMER CONSULTORIO (PRINCIPAL) ---
                               List<dynamic> consultorios =
@@ -185,7 +189,9 @@ class ListaDoctoresScreen extends StatelessWidget {
                                   context,
                                   data,
                                   iniciales.toUpperCase(),
-                                  'Dr(a). ${data['nombre']} ${data['apellidos']}',
+                                  // 👇 NEUTRALIZAMOS EL NOMBRE 👇
+                                  '${data['nombre']} ${data['apellidos']}'
+                                      .trim(),
                                   data['especialidad'] ?? especialidad,
                                   data['cedula'] ?? 'S/N',
                                   direccionDoctor,
@@ -395,6 +401,8 @@ class ListaDoctoresScreen extends StatelessWidget {
     String whatsapp,
   ) {
     String? fotoUrl = doctorData['foto_url']; // Buscamos la foto
+    // 👇 SENSOR DE RESEÑAS CONECTADO 👇
+    int totalResenas = doctorData['reseñas_count'] ?? 0;
 
     return Container(
       padding: const EdgeInsets.all(25),
@@ -491,17 +499,23 @@ class ListaDoctoresScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Row(
+                    // 👇 REEMPLAZO DE ESTRELLITAS FALSAS POR CONTEO REAL 👇
+                    Row(
                       children: [
-                        Icon(Icons.star, color: Colors.amber, size: 14),
-                        Icon(Icons.star, color: Colors.amber, size: 14),
-                        Icon(Icons.star, color: Colors.amber, size: 14),
-                        Icon(Icons.star, color: Colors.amber, size: 14),
-                        Icon(Icons.star, color: Colors.amber, size: 14),
-                        SizedBox(width: 5),
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const SizedBox(width: 5),
                         Text(
-                          '(1 reseñas)',
-                          style: TextStyle(color: Colors.grey, fontSize: 11),
+                          totalResenas == 0
+                              ? '(Nuevo)'
+                              : '($totalResenas opiniones)',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),

@@ -23,6 +23,7 @@ class DoctorProfileScreen extends StatefulWidget {
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   int _selectedClinicIndex = 0;
 
+  // 👇 1. LÓGICA DE HORARIOS ACTUALIZADA PARA SOPORTAR DOBLE TURNO 👇
   String _formatearHorario(Map<String, dynamic>? horarioMap) {
     if (horarioMap == null || horarioMap.isEmpty) return 'Previa Cita';
     List<String> dias = [
@@ -39,8 +40,16 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       if (horarioMap.containsKey(dia)) {
         var config = horarioMap[dia];
         bool abierto = config['abierto'] ?? false;
+        bool tieneTurno2 = config['tieneTurno2'] ?? false;
+
         if (abierto) {
-          resultado += '$dia: ${config['de']} - ${config['a']}\n';
+          String turno1 = '${config['de']} - ${config['a']}';
+          if (tieneTurno2) {
+            String turno2 = '${config['de2']} - ${config['a2']}';
+            resultado += '$dia: $turno1  y  $turno2\n';
+          } else {
+            resultado += '$dia: $turno1\n';
+          }
         } else {
           resultado += '$dia: Cerrado\n';
         }
@@ -62,8 +71,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String cleanPhone = whatsapp.replaceAll(RegExp(r'[^0-9]'), '');
     if (!cleanPhone.startsWith('52') && cleanPhone.length == 10)
       cleanPhone = '52$cleanPhone';
+    // 👇 2. MENSAJE NEUTRAL PARA CUALQUIER TIPO DE NEGOCIO 👇
     String mensaje = Uri.encodeComponent(
-      'Hola Doctor(a), vi su perfil en médicoslaguna.com y me gustaría agendar una cita.',
+      'Hola, vi su perfil en médicoslaguna.com y me gustaría pedir información o agendar una cita.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication))
@@ -181,7 +191,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    '¿Cuántas estrellas le das al doctor(a)?',
+                    // 👇 TEXTO NEUTRAL 👇
+                    '¿Cuántas estrellas le das?',
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 15),
@@ -246,7 +257,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                     .trim();
                           }
 
-                          // 1. Guardar la reseña en la colección del doctor
                           await FirebaseFirestore.instance
                               .collection('usuarios')
                               .doc(doctorId)
@@ -259,7 +269,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                 'fecha': FieldValue.serverTimestamp(),
                               });
 
-                          // 👇 2. SENSOR DE RESEÑAS: Suma +1 al contador principal del doctor 👇
                           await FirebaseFirestore.instance
                               .collection('usuarios')
                               .doc(doctorId)
@@ -312,9 +321,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
     String doctorId = data['uid'] ?? '';
 
-    String nombreCompleto =
-        'Dr(a). ${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'.trim();
-    String especialidad = data['especialidad'] ?? 'Medicina General';
+    // 👇 EL NOMBRE YA NO LLEVA "Dr." QUEMADO AQUI TAMPOCO
+    String nombreCompleto = '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'
+        .trim();
+    String especialidad = data['especialidad'] ?? 'Especialista';
     String cedula = data['cedula'] ?? 'S/N';
     String descripcion =
         data['descripcion'] ??
@@ -347,7 +357,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),
-      appBar: const CustomAppBar(), // <-- LA LÍNEA MÁGICA DE LA BARRA
+      appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         child: Center(
           child: Container(
@@ -430,7 +440,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         child: Row(
           children: consultorios.asMap().entries.map((entry) {
             int index = entry.key;
-            String nombre = entry.value['nombre'] ?? 'Consultorio ${index + 1}';
+            String nombre = entry.value['nombre'] ?? 'Ubicación ${index + 1}';
             bool isSelected = _selectedClinicIndex == index;
             return GestureDetector(
               onTap: () => setState(() => _selectedClinicIndex = index),
@@ -496,7 +506,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Inicio  >  Médicos  >  $especialidad  >  $nombre',
+          'Inicio  >  Directorio  >  $especialidad  >  $nombre',
           style: const TextStyle(color: Colors.grey, fontSize: 13),
         ),
         Row(
@@ -575,7 +585,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   }
 
   Widget _buildDoctorMainCard(
-    String doctorId, // <-- ESTE ES EL UID DEL DOCTOR
+    String doctorId,
     String nombre,
     String especialidad,
     String cedula,
@@ -620,7 +630,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         height: 180,
                         color: Colors.grey.shade200,
                         child: const Icon(
-                          Icons.person,
+                          Icons.business, // Icono genérico (edificio)
                           size: 100,
                           color: Colors.grey,
                         ),
@@ -641,7 +651,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     Icon(Icons.verified, color: Colors.white, size: 14),
                     SizedBox(width: 5),
                     Text(
-                      'Doctor verificado',
+                      // 👇 DE "DOCTOR VERIFICADO" A SÓLO "VERIFICADO" 👇
+                      'Verificado',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -698,7 +709,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                       ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                            '¡Doctor guardado en tus favoritos!',
+                                            '¡Guardado en tus favoritos!',
                                           ),
                                           backgroundColor: Colors.pink,
                                         ),
@@ -740,7 +751,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 ),
                 const SizedBox(height: 5),
                 const Text(
-                  'Alta especialidad médica y trato humanitario.',
+                  'Alta especialidad y trato humanitario.',
                   style: TextStyle(color: Colors.grey, fontSize: 15),
                 ),
                 const SizedBox(height: 15),
@@ -802,20 +813,20 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         ),
                         Colors.green,
                         () {
-                          // 👇 SENSOR DE WHATSAPP 👇
-                          String fechaHoy =
-                              "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
-                          FirebaseFirestore.instance
-                              .collection('usuarios')
-                              .doc(doctorId)
-                              .update({
-                                'clics_wa': FieldValue.increment(1),
-                                'ultimo_contacto': fechaHoy,
-                              })
-                              .catchError(
-                                (e) => debugPrint("Error en sensor WA: $e"),
-                              );
-
+                          if (doctorId.isNotEmpty) {
+                            String fechaHoy =
+                                "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
+                            FirebaseFirestore.instance
+                                .collection('usuarios')
+                                .doc(doctorId)
+                                .update({
+                                  'clics_wa': FieldValue.increment(1),
+                                  'ultimo_contacto': fechaHoy,
+                                })
+                                .catchError(
+                                  (e) => debugPrint("Error en sensor WA: $e"),
+                                );
+                          }
                           _abrirWhatsApp(waActivo);
                         },
                       ),
@@ -850,7 +861,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     ),
                     _statItem(
                       Icons.medical_information,
-                      'Cédula Profesional',
+                      'Cédula / Permiso',
                       cedula,
                     ),
                     _statItem(
@@ -937,8 +948,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 👇 4. "ACERCA DE" EN LUGAR DE "SOBRE EL DOCTOR" 👇
         _contentCard(
-          'Sobre el doctor',
+          'Acerca de',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -968,7 +980,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           children: [
             Expanded(
               child: _contentCard(
-                'Información del consultorio',
+                'Información de la sucursal',
                 Column(
                   children: [
                     _infoRow(
@@ -1011,7 +1023,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   children: [
                     if (metodos.isEmpty)
                       const Text(
-                        'Pago en consultorio',
+                        'Pago en sucursal',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ...metodos
@@ -1021,7 +1033,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         .toList(),
                     const SizedBox(height: 20),
                     const Text(
-                      'Aseguradoras',
+                      'Aseguradoras o Convenios',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -1178,7 +1190,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Opiniones de pacientes',
+                    'Opiniones de clientes',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -1207,7 +1219,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
                   child: Text(
-                    'Sé el primero en dejar una opinión sobre este doctor.',
+                    'Sé el primero en dejar una opinión sobre este servicio.',
                     style: TextStyle(color: Colors.grey),
                   ),
                 )
@@ -1320,10 +1332,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       itemBuilder: (context, index) {
         var r = docs[index].data() as Map<String, dynamic>;
 
-        String nombrePx = r['nombre_paciente'] ?? 'Paciente';
+        String nombrePx = r['nombre_paciente'] ?? 'Cliente';
         String iniciales = nombrePx.isNotEmpty
             ? nombrePx[0].toUpperCase()
-            : 'P';
+            : 'C';
         int calif = r['calificacion'] ?? 5;
         String comentario = r['comentario'] ?? '';
 
@@ -1479,7 +1491,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     return Column(
       children: [
         _contentCard(
-          'Consultorio',
+          'Ubicación',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1527,7 +1539,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Costo de consulta',
+                        'Costo de atención',
                         style: TextStyle(color: Colors.grey),
                       ),
                       Text(
@@ -1556,7 +1568,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   xTw.isEmpty &&
                   web.isEmpty)
                 const Text(
-                  'El doctor no ha enlazado sus redes.',
+                  'No hay redes sociales enlazadas.',
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
               if (fb.isNotEmpty)
@@ -1717,7 +1729,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Blog de Salud de $nombre',
+                'Novedades y Artículos de $nombre',
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -1854,8 +1866,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String whatsappActivo,
     String telefonoActivo,
   ) {
-    String doctorId =
-        widget.doctorData['uid'] ?? ''; // <-- NECESITAMOS EL ID PARA EL SENSOR
+    String doctorId = widget.doctorData['uid'] ?? '';
 
     return Container(
       padding: const EdgeInsets.all(30),
@@ -1883,7 +1894,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Contacta al $nombre de\nmanera rápida y segura.',
+                    'Contacta a $nombre de\nmanera rápida y segura.',
                     style: TextStyle(color: Colors.grey.shade400),
                   ),
                 ],
@@ -1894,7 +1905,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             children: [
               ElevatedButton.icon(
                 onPressed: () {
-                  // 👇 SENSOR DE WHATSAPP 👇
                   if (doctorId.isNotEmpty) {
                     String fechaHoy =
                         "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
@@ -1968,7 +1978,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         _footerBadge(
           Icons.verified_user_outlined,
           'Perfiles verificados',
-          'Médicos certificados',
+          'Especialistas certificados',
         ),
         _footerBadge(
           Icons.check_circle_outline,

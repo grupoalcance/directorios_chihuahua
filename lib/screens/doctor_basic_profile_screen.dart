@@ -107,8 +107,8 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
 
     String doctorId = data['uid'] ?? ''; // Para el link de compartir
 
-    String nombreCompleto =
-        'Dr(a). ${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'.trim();
+    String nombreCompleto = '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'
+        .trim();
     String especialidad = data['especialidad'] ?? 'Medicina General';
     String cedula = data['cedula'] ?? 'S/N';
 

@@ -557,6 +557,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
               stream: FirebaseFirestore.instance
                   .collection('usuarios')
                   .where('rol', isEqualTo: 'medico')
+                  .where('activo', isEqualTo: true)
                   .where('tipo_perfil', isEqualTo: 'pro')
                   .limit(4)
                   .snapshots(),
@@ -591,14 +592,20 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       spacing: 20,
       runSpacing: 20,
       children: docs
-          .map((doc) => SizedBox(width: 320, child: _cardDoctorPro(doc)))
+          .map(
+            (doc) => SizedBox(
+              width: 320,
+              height: 360, // 👈 1. LE DAMOS ALTURA PERFECTA A LA VISTA PC
+              child: _cardDoctorPro(doc),
+            ),
+          )
           .toList(),
     );
   }
 
   Widget _carruselMedicos(List<QueryDocumentSnapshot> docs) {
     return SizedBox(
-      height: 420,
+      height: 360,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: docs.length,
@@ -611,7 +618,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
   Widget _cardDoctorPro(QueryDocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    String doctorUid = doc.id; // <-- CAPTURAMOS EL ID DEL DOCTOR PARA EL SENSOR
+    String doctorUid = doc.id;
+    int totalResenas = data['reseñas_count'] ?? 0;
 
     String nombre = data['nombre'] ?? '';
     String apellidos = data['apellidos'] ?? '';
@@ -619,7 +627,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     if (nombre.isNotEmpty) iniciales += nombre[0];
     if (apellidos.isNotEmpty) iniciales += apellidos[0];
 
-    String nombreCompleto = 'Dr(a). $nombre $apellidos';
+    String nombreCompleto = '$nombre $apellidos'.trim();
     String specialty = data['especialidad'] ?? 'Medicina General';
     String cedula = data['cedula'] ?? 'S/N';
     String? fotoUrl = data['foto_url'];
@@ -653,7 +661,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -726,6 +733,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                         color: Colors.lightBlue,
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -734,19 +743,26 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                         color: Colors.blueGrey,
                         fontSize: 12,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.star, color: Colors.amber, size: 12),
-                        Icon(Icons.star, color: Colors.amber, size: 12),
-                        Icon(Icons.star, color: Colors.amber, size: 12),
-                        Icon(Icons.star, color: Colors.amber, size: 12),
-                        Icon(Icons.star, color: Colors.amber, size: 12),
-                        SizedBox(width: 5),
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const SizedBox(width: 5),
                         Text(
-                          '(1 reseñas)',
-                          style: TextStyle(color: Colors.grey, fontSize: 10),
+                          totalResenas == 0
+                              ? '(Nuevo)'
+                              : '($totalResenas opiniones)',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 10,
+                          ),
                         ),
                       ],
                     ),
@@ -759,7 +775,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           _contactRowHome(Icons.location_on, Colors.blue, address),
           const SizedBox(height: 10),
           _contactRowHome(Icons.phone, Colors.blue, phone),
-          const SizedBox(height: 20),
+
+          const Spacer(), // 👈 3. ESTE RESORTE MÁGICO EMPUJA LOS BOTONES HASTA EL FONDO
 
           Column(
             children: [
@@ -767,21 +784,20 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // 👇 SENSOR DE WHATSAPP 👇
-                    String fechaHoy =
-                        "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
-                    FirebaseFirestore.instance
-                        .collection('usuarios')
-                        .doc(doctorUid)
-                        .update({
-                          'clics_wa': FieldValue.increment(1),
-                          'ultimo_contacto': fechaHoy,
-                        })
-                        .catchError(
-                          (e) => debugPrint("Error en sensor WA: $e"),
-                        );
-
-                    // Ejecuta la función de abrir WhatsApp original
+                    if (doctorUid.isNotEmpty) {
+                      String fechaHoy =
+                          "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
+                      FirebaseFirestore.instance
+                          .collection('usuarios')
+                          .doc(doctorUid)
+                          .update({
+                            'clics_wa': FieldValue.increment(1),
+                            'ultimo_contacto': fechaHoy,
+                          })
+                          .catchError(
+                            (e) => debugPrint("Error en sensor WA: $e"),
+                          );
+                    }
                     _abrirWhatsApp(whatsapp);
                   },
                   icon: const FaIcon(
@@ -810,7 +826,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    // 👇 SENSOR DE VISITA AL PERFIL 👇
                     FirebaseFirestore.instance
                         .collection('usuarios')
                         .doc(doctorUid)
@@ -819,7 +834,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           (e) => debugPrint("Error en sensor Visitas: $e"),
                         );
 
-                    // Abre el perfil
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -861,6 +875,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         Expanded(
           child: Text(
             text,
+            maxLines: 2, // 👈 LIMITA A 2 RENGLONES MÁXIMO
+            overflow:
+                TextOverflow.ellipsis, // 👈 PONE PUNTITOS (...) SI SE PASA
             style: const TextStyle(
               color: Colors.blueGrey,
               fontSize: 13,
@@ -884,8 +901,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           .get();
 
       for (var doc in doctores.docs) {
-        String doctorName = "Dr(a). ${doc['nombre']} ${doc['apellidos']}"
-            .trim();
+        String doctorName = "${doc['nombre']} ${doc['apellidos']}".trim();
 
         QuerySnapshot blogsSnapshot = await FirebaseFirestore.instance
             .collection('usuarios')
@@ -1219,7 +1235,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        '¿Eres médico?',
+                        '¿Eres especialista?',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,

@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'login_screen.dart';
-import 'doctor_dashboard_screen.dart'; // <-- IMPORTAMOS EL DASHBOARD DEL DOCTOR
+import 'doctor_dashboard_screen.dart';
+import 'medicos_page_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -20,7 +21,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // AHORA TENEMOS 4 TABS EN VEZ DE 3
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -69,13 +71,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           ],
         ),
         actions: [
+          // 👇 NUEVO BOTÓN PARA IR AL INICIO SIN CERRAR SESIÓN 👇
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MedicosPageScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.public, color: Colors.blue),
+            label: const Text(
+              'Ver sitio público',
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 15),
           TextButton.icon(
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
               if (mounted) {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const MedicosPageScreen(),
+                  ),
                   (route) => false,
                 );
               }
@@ -101,13 +122,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
           final usuarios = snapshot.data!.docs;
 
-          // Separar doctores y pacientes
-          final doctores = usuarios
-              .where((doc) => doc['rol'] == 'medico')
-              .toList();
-          final pacientes = usuarios
-              .where((doc) => doc['rol'] == 'paciente')
-              .toList();
+          // Separar doctores, pacientes y solicitudes pendientes (A PRUEBA DE BALAS)
+          final doctores = usuarios.where((doc) {
+            var data = doc.data() as Map<String, dynamic>? ?? {};
+            return data['rol'] == 'medico';
+          }).toList();
+
+          final pacientes = usuarios.where((doc) {
+            var data = doc.data() as Map<String, dynamic>? ?? {};
+            return data['rol'] == 'paciente';
+          }).toList();
+
+          // 👇 LOS QUE ESTÁN ESPERANDO A QUE LOS ACTIVES
+          final solicitudesPendientes = doctores.where((doc) {
+            var data = doc.data() as Map<String, dynamic>;
+            return (data['activo'] ?? true) == false; // Trae a los inactivos
+          }).toList();
 
           // Calcular KPIs
           int perfilesActivos = 0;
@@ -134,14 +164,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   runSpacing: 20,
                   children: [
                     _buildKpiCard(
-                      'Doctores registrados',
-                      doctores.length.toString(),
+                      'Solicitudes Pendientes',
+                      solicitudesPendientes.length.toString(),
                       const Icon(
-                        Icons.medical_services,
-                        color: Colors.blue,
+                        Icons.notification_important,
+                        color: Colors.redAccent,
                         size: 30,
                       ),
-                      Colors.blue,
+                      Colors.redAccent,
                     ),
                     _buildKpiCard(
                       'Perfiles activos',
@@ -160,22 +190,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       Colors.amber,
                     ),
                     _buildKpiCard(
+                      'Total Registrados',
+                      doctores.length.toString(),
+                      const Icon(
+                        Icons.medical_services,
+                        color: Colors.blue,
+                        size: 30,
+                      ),
+                      Colors.blue,
+                    ),
+                    _buildKpiCard(
                       'Pacientes',
                       pacientes.length.toString(),
                       const Icon(Icons.people, color: Colors.purple, size: 30),
                       Colors.purple,
                     ),
-                    _buildKpiCard(
-                      'Reseñas totales',
-                      totalResenas.toString(),
-                      const Icon(
-                        Icons.comment,
-                        color: Colors.pinkAccent,
-                        size: 30,
-                      ),
-                      Colors.pinkAccent,
-                    ),
-                    // 👇 ÍCONO DE WHATSAPP SOLUCIONADO 👇
                     _buildKpiCard(
                       'Clics en WA',
                       totalClicsWA.toString(),
@@ -212,13 +241,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         _currentTabIndex = index;
                       });
                     },
-                    tabs: const [
+                    tabs: [
                       Tab(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.hourglass_empty),
+                            const SizedBox(width: 8),
+                            const Text('Pendientes'),
+                            if (solicitudesPendientes.isNotEmpty) ...[
+                              const SizedBox(width: 5),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${solicitudesPendientes.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const Tab(
                         icon: Icon(Icons.medical_services_outlined),
                         text: 'Doctores',
                       ),
-                      Tab(icon: Icon(Icons.people_outline), text: 'Pacientes'),
-                      Tab(icon: Icon(Icons.bar_chart), text: 'Estadísticas'),
+                      const Tab(
+                        icon: Icon(Icons.people_outline),
+                        text: 'Pacientes',
+                      ),
+                      const Tab(
+                        icon: Icon(Icons.bar_chart),
+                        text: 'Estadísticas',
+                      ),
                     ],
                   ),
                 ),
@@ -237,7 +299,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       ),
                     ],
                   ),
-                  child: _buildCurrentTabContent(doctores, pacientes),
+                  child: _buildCurrentTabContent(
+                    doctores,
+                    pacientes,
+                    solicitudesPendientes,
+                  ),
                 ),
               ],
             ),
@@ -252,9 +318,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   Widget _buildCurrentTabContent(
     List<QueryDocumentSnapshot> doctores,
     List<QueryDocumentSnapshot> pacientes,
+    List<QueryDocumentSnapshot> pendientes,
   ) {
-    if (_currentTabIndex == 0) return _buildDoctoresTable(doctores);
-    if (_currentTabIndex == 1) return _buildPacientesTable(pacientes);
+    if (_currentTabIndex == 0)
+      return _buildDoctoresTable(pendientes, esPestanaPendientes: true);
+    if (_currentTabIndex == 1) return _buildDoctoresTable(doctores);
+    if (_currentTabIndex == 2) return _buildPacientesTable(pacientes);
     return _buildEstadisticasList(doctores);
   }
 
@@ -294,7 +363,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  Widget _buildDoctoresTable(List<QueryDocumentSnapshot> doctores) {
+  Widget _buildDoctoresTable(
+    List<QueryDocumentSnapshot> doctores, {
+    bool esPestanaPendientes = false,
+  }) {
+    if (doctores.isEmpty && esPestanaPendientes) {
+      return const Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Center(
+          child: Text(
+            '¡Todo al día! No hay solicitudes pendientes por activar.',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -302,16 +386,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           fontWeight: FontWeight.bold,
           color: Colors.blueGrey,
         ),
-        columns: const [
-          DataColumn(label: Text('Doctor')),
-          DataColumn(label: Text('Especialidad')),
-          DataColumn(label: Text('Cédula')),
-          DataColumn(label: Text('Nivel')),
-          DataColumn(label: Text('Estado')),
-          DataColumn(label: Text('Visitas')),
-          DataColumn(label: Text('WA')),
-          DataColumn(label: Text('Reseñas')),
-          DataColumn(label: Text('Acciones')),
+        columns: [
+          const DataColumn(label: Text('Doctor')),
+          if (esPestanaPendientes)
+            const DataColumn(label: Text('Teléfono de Contacto')),
+          const DataColumn(label: Text('Especialidad')),
+          if (!esPestanaPendientes) const DataColumn(label: Text('Nivel')),
+          if (!esPestanaPendientes) const DataColumn(label: Text('Estado')),
+          if (!esPestanaPendientes) const DataColumn(label: Text('Visitas')),
+          const DataColumn(label: Text('Acciones')),
         ],
         rows: doctores.map((doc) {
           var data = doc.data() as Map<String, dynamic>;
@@ -321,6 +404,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
           String iniciales =
               (data['nombre']?[0] ?? '') + (data['apellidos']?[0] ?? '');
+          String telefonoRegistro = data['telefono'] ?? 'No registró';
 
           return DataRow(
             cells: [
@@ -361,101 +445,96 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                 ),
               ),
+              if (esPestanaPendientes)
+                DataCell(
+                  SelectableText(
+                    telefonoRegistro,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                ),
               DataCell(Text(data['especialidad'] ?? '---')),
-              DataCell(Text(data['cedula'] ?? '---')),
-              DataCell(
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+              if (!esPestanaPendientes)
+                DataCell(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isPro ? Colors.green : Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isPro)
+                          const Icon(Icons.star, color: Colors.white, size: 12),
+                        Text(
+                          isPro ? ' DESTACADO' : 'BÁSICO',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: isPro ? Colors.green : Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                ),
+              if (!esPestanaPendientes)
+                DataCell(
+                  Row(
                     children: [
-                      if (isPro)
-                        const Icon(Icons.star, color: Colors.white, size: 12),
+                      Icon(
+                        isActive ? Icons.circle : Icons.circle_outlined,
+                        color: isActive ? Colors.green : Colors.red,
+                        size: 12,
+                      ),
+                      const SizedBox(width: 5),
                       Text(
-                        isPro ? ' DESTACADO' : 'BÁSICO',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                        isActive ? 'Activo' : 'Inactivo',
+                        style: TextStyle(
+                          color: isActive ? Colors.green : Colors.red,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
+              if (!esPestanaPendientes)
+                DataCell(
+                  Text(
+                    '${data['visitas'] ?? 0}',
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               DataCell(
                 Row(
                   children: [
-                    Icon(
-                      isActive ? Icons.circle : Icons.circle_outlined,
-                      color: isActive ? Colors.green : Colors.red,
-                      size: 12,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      isActive ? 'Activo' : 'Inactivo',
-                      style: TextStyle(
-                        color: isActive ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              DataCell(
-                Text(
-                  '${data['visitas'] ?? 0}',
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Text(
-                  '${data['clics_wa'] ?? 0}',
-                  style: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Text(
-                  '${data['reseñas_count'] ?? 0}',
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              DataCell(
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _toggleNivelDoctor(
-                        uid,
-                        data['tipo_perfil'] ?? 'basico',
-                      ),
-                      icon: Icon(
-                        Icons.star,
-                        color: isPro ? Colors.grey : Colors.amber,
-                        size: 16,
-                      ),
-                      label: Text(
-                        isPro ? 'Quitar Pro' : 'Destacar',
-                        style: TextStyle(
-                          color: isPro ? Colors.grey : Colors.blue.shade800,
+                    if (!esPestanaPendientes)
+                      TextButton.icon(
+                        onPressed: () => _toggleNivelDoctor(
+                          uid,
+                          data['tipo_perfil'] ?? 'basico',
+                        ),
+                        icon: Icon(
+                          Icons.star,
+                          color: isPro ? Colors.grey : Colors.amber,
+                          size: 16,
+                        ),
+                        label: Text(
+                          isPro ? 'Quitar Pro' : 'Destacar',
+                          style: TextStyle(
+                            color: isPro ? Colors.grey : Colors.blue.shade800,
+                          ),
                         ),
                       ),
-                    ),
-                    TextButton(
+                    TextButton.icon(
                       style: TextButton.styleFrom(
                         backgroundColor: isActive
                             ? Colors.red.shade50
@@ -470,10 +549,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         ),
                       ),
                       onPressed: () => _toggleEstadoDoctor(uid, isActive),
-                      child: Text(
-                        isActive ? 'Desactivar' : 'Activar',
+                      icon: Icon(
+                        isActive
+                            ? Icons.power_settings_new
+                            : Icons.check_circle,
+                        size: 16,
+                        color: isActive ? Colors.red : Colors.green,
+                      ),
+                      label: Text(
+                        isActive ? 'Desactivar' : 'Activar Médico',
                         style: TextStyle(
                           color: isActive ? Colors.red : Colors.green,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),

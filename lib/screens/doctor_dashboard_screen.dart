@@ -62,6 +62,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
     'Torreón, Coah.',
     'Gómez Palacio, Dgo.',
     'Lerdo, Dgo.',
+    'Matamoros, Coah.',
+    'Francisco I. Madero, Coah.',
+    'San Pedro, Coah.',
   ];
 
   final List<String> diasSemana = [
@@ -222,6 +225,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
     }
   }
 
+  // 👇 ACTUALIZADO PARA CREAR NUEVO CONSULTORIO CON ESTRUCTURA DE DOBLE TURNO
   void _agregarNuevoConsultorio() {
     setState(() {
       consultorios.add({
@@ -232,13 +236,62 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
         'telefono': '',
         'whatsapp': '',
         'horario': {
-          'Lunes': {'abierto': true, 'de': '09:00 AM', 'a': '05:00 PM'},
-          'Martes': {'abierto': true, 'de': '09:00 AM', 'a': '05:00 PM'},
-          'Miércoles': {'abierto': true, 'de': '09:00 AM', 'a': '05:00 PM'},
-          'Jueves': {'abierto': true, 'de': '09:00 AM', 'a': '05:00 PM'},
-          'Viernes': {'abierto': true, 'de': '09:00 AM', 'a': '05:00 PM'},
-          'Sábado': {'abierto': false, 'de': '09:00 AM', 'a': '02:00 PM'},
-          'Domingo': {'abierto': false, 'de': '09:00 AM', 'a': '02:00 PM'},
+          'Lunes': {
+            'abierto': true,
+            'de': '09:00 AM',
+            'a': '05:00 PM',
+            'tieneTurno2': false,
+            'de2': '05:00 PM',
+            'a2': '08:00 PM',
+          },
+          'Martes': {
+            'abierto': true,
+            'de': '09:00 AM',
+            'a': '05:00 PM',
+            'tieneTurno2': false,
+            'de2': '05:00 PM',
+            'a2': '08:00 PM',
+          },
+          'Miércoles': {
+            'abierto': true,
+            'de': '09:00 AM',
+            'a': '05:00 PM',
+            'tieneTurno2': false,
+            'de2': '05:00 PM',
+            'a2': '08:00 PM',
+          },
+          'Jueves': {
+            'abierto': true,
+            'de': '09:00 AM',
+            'a': '05:00 PM',
+            'tieneTurno2': false,
+            'de2': '05:00 PM',
+            'a2': '08:00 PM',
+          },
+          'Viernes': {
+            'abierto': true,
+            'de': '09:00 AM',
+            'a': '05:00 PM',
+            'tieneTurno2': false,
+            'de2': '05:00 PM',
+            'a2': '08:00 PM',
+          },
+          'Sábado': {
+            'abierto': false,
+            'de': '09:00 AM',
+            'a': '02:00 PM',
+            'tieneTurno2': false,
+            'de2': '04:00 PM',
+            'a2': '06:00 PM',
+          },
+          'Domingo': {
+            'abierto': false,
+            'de': '09:00 AM',
+            'a': '02:00 PM',
+            'tieneTurno2': false,
+            'de2': '04:00 PM',
+            'a2': '06:00 PM',
+          },
         },
       });
     });
@@ -284,18 +337,42 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             consultorios = List<Map<String, dynamic>>.from(
               userData?['consultorios'].map((item) {
                 var map = Map<String, dynamic>.from(item);
+
+                // Asegurar que exista la estructura del segundo turno si es un doc viejo
+                if (map['horario'] != null) {
+                  Map<String, dynamic> horario = map['horario'];
+                  for (String dia in diasSemana) {
+                    if (horario[dia] != null) {
+                      horario[dia]['tieneTurno2'] =
+                          horario[dia]['tieneTurno2'] ?? false;
+                      horario[dia]['de2'] = horario[dia]['de2'] ?? '05:00 PM';
+                      horario[dia]['a2'] = horario[dia]['a2'] ?? '08:00 PM';
+                    }
+                  }
+                }
+
                 if (map['calle_numero'] == null || map['ciudad'] == null) {
                   String dirAntigua = map['direccion'] ?? '';
-                  if (dirAntigua.contains(',')) {
-                    List<String> partes = dirAntigua.split(',');
-                    map['ciudad'] = partes.last.trim();
-                    map['calle_numero'] = dirAntigua
-                        .substring(0, dirAntigua.lastIndexOf(','))
-                        .trim();
-                  } else {
-                    map['calle_numero'] = dirAntigua;
-                    map['ciudad'] = 'Torreón, Coah.';
+                  String ciudadAsignada = 'Torreón, Coah.'; // Por defecto
+                  String calleAsignada = dirAntigua;
+
+                  for (String ciudad in _listaCiudades) {
+                    if (dirAntigua.endsWith(ciudad)) {
+                      ciudadAsignada = ciudad;
+                      int index = dirAntigua.lastIndexOf(ciudad);
+                      if (index > 0) {
+                        calleAsignada = dirAntigua.substring(0, index).trim();
+                        if (calleAsignada.endsWith(',')) {
+                          calleAsignada = calleAsignada
+                              .substring(0, calleAsignada.length - 1)
+                              .trim();
+                        }
+                      }
+                      break;
+                    }
                   }
+                  map['ciudad'] = ciudadAsignada;
+                  map['calle_numero'] = calleAsignada;
                 }
                 return map;
               }),
@@ -370,7 +447,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           'link_web': _webCtrl.text,
           'metodos_pago': pagosSeleccionados,
           'aseguradoras': aseguradorasSeleccionadas,
-          // IMPORTANTE: Ya NO guardamos "blogs: blogs" aquí. La lista de blogs va en la sub-colección.
         });
       }
 
@@ -435,7 +511,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                   ),
                   const SizedBox(height: 30),
                   SizedBox(
-                    height: 2500,
+                    height:
+                        3000, // <-- Aumentamos el tamaño para los dobles turnos
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -513,8 +590,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 👇 QUITAMOS EL "Dr(a)." QUEMADO AQUI
               Text(
-                'Dr(a). ${_nombreCtrl.text} ${_apellidosCtrl.text}',
+                '${_nombreCtrl.text} ${_apellidosCtrl.text}'.trim(),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -971,9 +1049,19 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _textField('Nombre', _nombreCtrl)),
+              Expanded(
+                child: _textField(
+                  'Nombre (Ej: Clínica Sonrisas, Dr. Juan)',
+                  _nombreCtrl,
+                ),
+              ),
               const SizedBox(width: 20),
-              Expanded(child: _textField('Apellidos', _apellidosCtrl)),
+              Expanded(
+                child: _textField(
+                  'Apellidos (Opcional si eres Clínica)',
+                  _apellidosCtrl,
+                ),
+              ),
             ],
           ),
           Row(
@@ -1046,7 +1134,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           const Divider(),
 
           _textField(
-            'Sobre el doctor (Breve descripción de tu perfil)',
+            'Sobre el doctor/clínica (Breve descripción de tu perfil)',
             _descripcionCtrl,
             enabled: isPro,
             maxLines: 3,
@@ -1340,7 +1428,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
               Expanded(
                 flex: 1,
                 child: DropdownButtonFormField<String>(
-                  value: clinic['ciudad'] ?? 'Torreón, Coah.',
+                  value: _listaCiudades.contains(clinic['ciudad'])
+                      ? clinic['ciudad']
+                      : 'Torreón, Coah.',
                   decoration: InputDecoration(
                     labelText: 'Ciudad',
                     border: OutlineInputBorder(
@@ -1411,61 +1501,121 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             ),
           ),
           const SizedBox(height: 10),
+          // 👇 AQUÍ LLAMAMOS A LA NUEVA LÓGICA DE TURNOS
           ...diasSemana.map((dia) => _buildHorarioRow(index, dia)).toList(),
         ],
       ),
     );
   }
 
+  // 👇 LÓGICA DE DOBLE TURNO INCORPORADA 👇
   Widget _buildHorarioRow(int clinicIndex, String dia) {
     var diaData = consultorios[clinicIndex]['horario'][dia];
     bool abierto = diaData['abierto'];
+    bool tieneTurno2 =
+        diaData['tieneTurno2'] ?? false; // Seguro para los doctores viejos
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 140,
-            child: CheckboxListTile(
-              title: Text(
-                dia,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: abierto ? FontWeight.bold : FontWeight.normal,
+          Row(
+            children: [
+              SizedBox(
+                width: 140,
+                child: CheckboxListTile(
+                  title: Text(
+                    dia,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: abierto ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                  value: abierto,
+                  onChanged: (val) => setState(() {
+                    consultorios[clinicIndex]['horario'][dia]['abierto'] = val;
+                    // Si cierras el día, apagamos automáticamente el turno 2
+                    if (val == false) {
+                      consultorios[clinicIndex]['horario'][dia]['tieneTurno2'] =
+                          false;
+                    }
+                  }),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
                 ),
               ),
-              value: abierto,
-              onChanged: (val) => setState(
-                () =>
-                    consultorios[clinicIndex]['horario'][dia]['abierto'] = val,
-              ),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
+              if (abierto) ...[
+                const Text(
+                  'De: ',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                _timeDrop(clinicIndex, dia, 'de'),
+                const SizedBox(width: 10),
+                const Text(
+                  'A: ',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                _timeDrop(clinicIndex, dia, 'a'),
+
+                // BOTÓN PARA AGREGAR EL SEGUNDO TURNO
+                if (!tieneTurno2)
+                  TextButton.icon(
+                    onPressed: () => setState(
+                      () =>
+                          consultorios[clinicIndex]['horario'][dia]['tieneTurno2'] =
+                              true,
+                    ),
+                    icon: const Icon(Icons.add, size: 14, color: Colors.blue),
+                    label: const Text(
+                      'Turno tarde',
+                      style: TextStyle(fontSize: 12, color: Colors.blue),
+                    ),
+                  ),
+              ] else
+                const Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    'Cerrado',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          if (abierto) ...[
-            const Text(
-              'De: ',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            _timeDrop(clinicIndex, dia, 'de'),
-            const SizedBox(width: 10),
-            const Text(
-              'A: ',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            _timeDrop(clinicIndex, dia, 'a'),
-          ] else
-            const Padding(
-              padding: EdgeInsets.only(left: 20),
-              child: Text(
-                'Cerrado',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                ),
+
+          // FILA DEL SEGUNDO TURNO (Aparece abajo si le dio a +)
+          if (abierto && tieneTurno2)
+            Padding(
+              padding: const EdgeInsets.only(left: 140, top: 5),
+              child: Row(
+                children: [
+                  const Text(
+                    'De: ',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                  _timeDrop(clinicIndex, dia, 'de2'),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'A: ',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                  _timeDrop(clinicIndex, dia, 'a2'),
+
+                  // Botón para eliminar el turno de tarde
+                  IconButton(
+                    onPressed: () => setState(
+                      () =>
+                          consultorios[clinicIndex]['horario'][dia]['tieneTurno2'] =
+                              false,
+                    ),
+                    icon: const Icon(Icons.close, size: 16, color: Colors.red),
+                    tooltip: 'Quitar turno de tarde',
+                  ),
+                ],
               ),
             ),
         ],
@@ -1484,7 +1634,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: consultorios[clinicIdx]['horario'][dia][key],
+          value:
+              consultorios[clinicIdx]['horario'][dia][key] ??
+              '05:00 PM', // Fallback por si acaso
           items: horasDisponibles
               .map(
                 (h) => DropdownMenuItem(
