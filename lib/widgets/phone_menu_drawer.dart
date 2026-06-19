@@ -13,11 +13,15 @@ class PhoneMenuDrawer extends StatelessWidget {
           // Encabezado del menú lateral
           const DrawerHeader(
             decoration: BoxDecoration(color: Colors.blue),
-            child: Alignment(
+            child: Align(
               alignment: Alignment.bottomLeft,
               child: Text(
                 'Médicos Laguna',
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -26,10 +30,12 @@ class PhoneMenuDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.info_outline, color: Colors.blue),
             title: const Text('¿Quiénes somos?'),
-            onPressed: () => Navigator.pop(context),
+            onTap: () => Navigator.pop(
+              context,
+            ), // <-- CORREGIDO (Era onTap, no onPressed)
           ),
 
-          // 2. Desplegable Ciudad para Celular (Usando ExpansionTile)
+          // 2. Desplegable Ciudad
           ExpansionTile(
             leading: const Icon(Icons.location_city, color: Colors.blue),
             title: const Text('Ciudad'),
@@ -43,9 +49,12 @@ class PhoneMenuDrawer extends StatelessWidget {
             ],
           ),
 
-          // 3. Desplegable Especialidad para Celular
+          // 3. Desplegable Especialidad
           ExpansionTile(
-            leading: const Icon(Icons.medical_services_outlined, color: Colors.blue),
+            leading: const Icon(
+              Icons.medical_services_outlined,
+              color: Colors.blue,
+            ),
             title: const Text('Especialidad'),
             children: [
               _buildSubItem(context, 'Cardiología'),
@@ -58,35 +67,38 @@ class PhoneMenuDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.local_hospital, color: Colors.blue),
             title: const Text('Hospitales'),
-            onPressed: () => Navigator.pop(context),
+            onTap: () => Navigator.pop(context),
           ),
 
           // 5. Farmacias
           ListTile(
             leading: const Icon(Icons.local_pharmacy, color: Colors.blue),
             title: const Text('Farmacias'),
-            onPressed: () => Navigator.pop(context),
+            onTap: () => Navigator.pop(context),
           ),
 
           // 6. Enfermería
           ListTile(
             leading: const Icon(Icons.people_outline, color: Colors.blue),
             title: const Text('Enfermería'),
-            onPressed: () => Navigator.pop(context),
+            onTap: () => Navigator.pop(context),
           ),
 
-          // 7. Urgencias 24/hrs (Le ponemos icono rojo de alerta)
+          // 7. Urgencias 24/hrs
           ListTile(
             leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
-            title: const Text('Urgencias 24/hrs', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            onPressed: () => Navigator.pop(context),
+            title: const Text(
+              'Urgencias 24/hrs',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            onTap: () => Navigator.pop(context),
           ),
 
           // 8. Contacto
           ListTile(
             leading: const Icon(Icons.email_outlined, color: Colors.blue),
             title: const Text('Contacto'),
-            onPressed: () => Navigator.pop(context),
+            onTap: () => Navigator.pop(context),
           ),
 
           const Divider(),
@@ -100,7 +112,10 @@ class PhoneMenuDrawer extends StatelessWidget {
                 backgroundColor: Colors.blue,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text('Suscribirse al directorio', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Suscribirse al directorio',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -108,17 +123,20 @@ class PhoneMenuDrawer extends StatelessWidget {
     );
   }
 
-  // Mini-widget para no repetir código en las sub-opciones
+  // Mini-widget CORREGIDO
   Widget _buildSubItem(BuildContext context, String titulo) {
     return ListTile(
       title: Padding(
         padding: const EdgeInsets.only(left: 16.0),
-        style: const TextStyle(fontSize: 14),
+        child: Text(
+          titulo,
+          style: const TextStyle(fontSize: 14),
+        ), // <-- CORREGIDO
       ),
-      title: Text(titulo),
-      onPressed: () {
+      onTap: () {
+        // <-- CORREGIDO
         print('Celular eligió: $titulo');
-        Navigator.pop(context); // Cierra el menú lateral
+        Navigator.pop(context);
       },
     );
   }
