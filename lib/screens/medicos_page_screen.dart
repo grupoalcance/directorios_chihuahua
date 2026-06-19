@@ -210,7 +210,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomAppBar(),
-      drawer: const PhoneMenuDrawer(),
+      drawer: screenWidth < 900 ? const PhoneMenuDrawer() : null,
       body: CustomScrollView(
         slivers: [
           _buildHeroSection(screenWidth),
