@@ -8,6 +8,7 @@ import 'registro_screen.dart';
 import 'lista_doctores_screen.dart';
 import 'blog_detail_screen.dart';
 import '../widgets/custom_app_bar.dart'; // Tu nueva barra universal
+import '../widgets/phone_menu_drawer.dart';
 
 // --- MODELOS ---
 class Especialidad {
@@ -208,7 +209,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(), // <-- LA LÍNEA MÁGICA
+      appBar: const CustomAppBar(),
+      drawer: const PhoneMenuDrawer(),
       body: CustomScrollView(
         slivers: [
           _buildHeroSection(screenWidth),
