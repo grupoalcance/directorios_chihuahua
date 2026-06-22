@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:convert'; // HACK: Necesario para leer la foto en Base64
+import 'dart:convert'; 
 import 'doctor_basic_profile_screen.dart';
 import 'doctor_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,8 +9,13 @@ import '../widgets/custom_app_bar.dart'; // <-- IMPORTAMOS LA NUEVA BARRA
 
 class ListaDoctoresScreen extends StatelessWidget {
   final String especialidad;
+  final String ciudad;
 
-  const ListaDoctoresScreen({super.key, required this.especialidad});
+  const ListaDoctoresScreen({
+    Key? key,
+    required this.especialidad,
+    this.ciudad = '', // 👈 2. AGREGA ESTA LÍNEA (con el valor por defecto)
+  }) : super(key: key);
 
   // --- 2. FUNCIÓN PARA WHATSAPP (Con mensaje predeterminado) ---
   Future<void> _abrirWhatsApp(String whatsapp) async {
