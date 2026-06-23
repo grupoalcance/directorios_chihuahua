@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'dart:convert'; 
+import 'dart:convert';
 import 'doctor_basic_profile_screen.dart';
 import 'doctor_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,10 +14,10 @@ class ListaDoctoresScreen extends StatelessWidget {
   const ListaDoctoresScreen({
     Key? key,
     required this.especialidad,
-    this.ciudad = '', // 👈 2. AGREGA ESTA LÍNEA (con el valor por defecto)
+    this.ciudad = '', // 👈 Recibe la ciudad elegida de manera opcional
   }) : super(key: key);
 
-  // --- 2. FUNCIÓN PARA WHATSAPP (Con mensaje predeterminado) ---
+  // --- FUNCIÓN PARA WHATSAPP (Con mensaje predeterminado) ---
   Future<void> _abrirWhatsApp(String whatsapp) async {
     if (whatsapp.isEmpty) return;
 
@@ -29,7 +29,7 @@ class ListaDoctoresScreen extends StatelessWidget {
       cleanPhone = '52$cleanPhone';
     }
 
-    // Creamos un mensaje automático genial y neutral
+    // Creamos un mensaje automático neutral
     String mensaje = Uri.encodeComponent(
       'Hola, vi su perfil en médicoslaguna.com y me gustaría agendar una cita o pedir información.',
     );
@@ -43,9 +43,35 @@ class ListaDoctoresScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Título dinámico para la sección de resultados
+    String textoFiltro = especialidad.isNotEmpty
+        ? especialidad
+        : 'Especialistas';
+    if (ciudad.isNotEmpty) {
+      textoFiltro += ' en $ciudad';
+    }
+
+    // --- CONSTRUCCIÓN DE LA QUERY DINÁMICA DE FIREBASE ---
+    Query queryMedicos = FirebaseFirestore.instance
+        .collection('usuarios')
+        .where('rol', isEqualTo: 'medico')
+        .where('activo', isEqualTo: true);
+
+    // Si la especialidad no está vacía, aplicamos el filtro
+    if (especialidad.isNotEmpty) {
+      queryMedicos = queryMedicos.where(
+        'especialidad',
+        isEqualTo: especialidad,
+      );
+    }
+    // Si la ciudad no está vacía, aplicamos el filtro en cascada de forma transparente
+    if (ciudad.isNotEmpty) {
+      queryMedicos = queryMedicos.where('ciudad', isEqualTo: ciudad);
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),
-      appBar: const CustomAppBar(), // <-- LA LÍNEA MÁGICA
+      appBar: const CustomAppBar(), // <-- LA LÍNEA MÁGICA UNIFICADA
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1000),
@@ -54,7 +80,7 @@ class ListaDoctoresScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Resultados para $especialidad',
+                'Resultados para $textoFiltro',
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -70,12 +96,8 @@ class ListaDoctoresScreen extends StatelessWidget {
 
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('usuarios')
-                      .where('rol', isEqualTo: 'medico')
-                      .where('activo', isEqualTo: true)
-                      .where('especialidad', isEqualTo: especialidad)
-                      .snapshots(),
+                  stream: queryMedicos
+                      .snapshots(), // 👈 Query optimizada con los filtros duales
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
                       return const Center(
@@ -87,7 +109,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    if (snapshot.data!.docs.isEmpty) {
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -99,9 +121,10 @@ class ListaDoctoresScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 20),
                             Text(
-                              'Aún no hay especialistas registrados en $especialidad.',
-                              style: const TextStyle(
-                                color: Colors.grey,
+                              'Aún no hay especialistas registrados para esta búsqueda.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
                                 fontSize: 16,
                               ),
                             ),
@@ -110,7 +133,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                       );
                     }
 
-                    // --- 1. ORDENAMOS LOS DOCTORES (PRO ARRIBA, BÁSICOS ABAJO) ---
+                    // --- ORDENAMOS LOS DOCTORES (PRO ARRIBA, BÁSICOS ABAJO) ---
                     var doctores = snapshot.data!.docs.toList();
                     doctores.sort((a, b) {
                       Map<String, dynamic> dataA =
@@ -121,13 +144,9 @@ class ListaDoctoresScreen extends StatelessWidget {
                       String tipoA = dataA['tipo_perfil'] ?? 'basico';
                       String tipoB = dataB['tipo_perfil'] ?? 'basico';
 
-                      if (tipoA == 'pro' && tipoB != 'pro') {
-                        return -1; // 'a' va primero
-                      }
-                      if (tipoA != 'pro' && tipoB == 'pro') {
-                        return 1; // 'b' va primero
-                      }
-                      return 0; // Se quedan igual
+                      if (tipoA == 'pro' && tipoB != 'pro') return -1;
+                      if (tipoA != 'pro' && tipoB == 'pro') return 1;
+                      return 0;
                     });
 
                     return LayoutBuilder(
@@ -149,9 +168,8 @@ class ListaDoctoresScreen extends StatelessWidget {
                               String apellidos = data['apellidos'] ?? '';
                               String iniciales = '';
                               if (nombre.isNotEmpty) iniciales += nombre[0];
-                              if (apellidos.isNotEmpty) {
+                              if (apellidos.isNotEmpty)
                                 iniciales += apellidos[0];
-                              }
 
                               // --- EXTRAEMOS EL PRIMER CONSULTORIO (PRINCIPAL) ---
                               List<dynamic> consultorios =
@@ -194,9 +212,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                                   context,
                                   data,
                                   iniciales.toUpperCase(),
-                                  // 👇 NEUTRALIZAMOS EL NOMBRE 👇
-                                  '${data['nombre']} ${data['apellidos']}'
-                                      .trim(),
+                                  '$nombre $apellidos'.trim(),
                                   data['especialidad'] ?? especialidad,
                                   data['cedula'] ?? 'S/N',
                                   direccionDoctor,
@@ -272,16 +288,15 @@ class ListaDoctoresScreen extends StatelessWidget {
     String cedula,
     String address,
     String phone,
-    String whatsapp, // No se usa visualmente en Básico, pero se recibe
+    String whatsapp,
   ) {
-    String? fotoUrl = doctorData['foto_url']; // Buscamos la foto
+    String? fotoUrl = doctorData['foto_url'];
 
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.transparent),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
@@ -292,7 +307,6 @@ class ListaDoctoresScreen extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // --- AVATAR BÁSICO CON FOTO HACKEADA ---
               CircleAvatar(
                 radius: 35,
                 backgroundColor: Colors.blueGrey.shade300,
@@ -350,15 +364,10 @@ class ListaDoctoresScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-
-          // --- SOLO DIRECCIÓN Y TELÉFONO FIJO (Primer consultorio) ---
           _contactRow(Icons.location_on, Colors.blue, address),
           const SizedBox(height: 10),
           _contactRow(Icons.phone, Colors.blue, phone),
-
           const SizedBox(height: 20),
-
-          // UN SOLO BOTÓN SENCILLO
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -392,7 +401,7 @@ class ListaDoctoresScreen extends StatelessWidget {
   }
 
   // ==========================================
-  // TARJETA PRO (Con etiqueta verde, estrellitas y dos botones)
+  // TARJETA PRO
   // ==========================================
   Widget _buildTarjetaPro(
     BuildContext context,
@@ -405,8 +414,7 @@ class ListaDoctoresScreen extends StatelessWidget {
     String phone,
     String whatsapp,
   ) {
-    String? fotoUrl = doctorData['foto_url']; // Buscamos la foto
-    // 👇 SENSOR DE RESEÑAS CONECTADO 👇
+    String? fotoUrl = doctorData['foto_url'];
     int totalResenas = doctorData['reseñas_count'] ?? 0;
 
     return Container(
@@ -425,7 +433,6 @@ class ListaDoctoresScreen extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // --- AVATAR PRO CON FOTO HACKEADA ---
               CircleAvatar(
                 radius: 35,
                 backgroundColor: Colors.teal.shade400,
@@ -504,7 +511,6 @@ class ListaDoctoresScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    // 👇 REEMPLAZO DE ESTRELLITAS FALSAS POR CONTEO REAL 👇
                     Row(
                       children: [
                         const Icon(Icons.star, color: Colors.amber, size: 14),
@@ -530,22 +536,16 @@ class ListaDoctoresScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-
-          // --- SOLO DIRECCIÓN Y TELÉFONO FIJO (Primer consultorio) ---
           _contactRow(Icons.location_on, Colors.blue, address),
           const SizedBox(height: 10),
           _contactRow(Icons.phone, Colors.blue, phone),
-
           const SizedBox(height: 20),
-
-          // --- DOS BOTONES PARA LA TARJETA PRO ---
           Column(
             children: [
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // --- AQUÍ EL BOTÓN YA RECIBE EL WHATSAPP DEL 1ER CONSULTORIO ---
                     if (whatsapp.isNotEmpty) {
                       _abrirWhatsApp(whatsapp);
                     }
@@ -563,7 +563,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981), // Verde
+                    backgroundColor: const Color(0xFF10B981),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

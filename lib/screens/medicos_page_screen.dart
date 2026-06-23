@@ -10,6 +10,25 @@ import 'lista_doctores_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
+// --- LISTA MÁSTER HOMOLOGADA DE LAS 15 ESPECIALIDADES MÁS BUSCADAS ---
+const List<String> las15EspecialidadesLaguna = [
+  'Cardiología',
+  'Dermatología',
+  'Ginecología y Obstetricia',
+  'Medicina General',
+  'Neumología',
+  'Neurología',
+  'Nutrición',
+  'Odontología (Dentista)',
+  'Oftalmología',
+  'Otorrinolaringología',
+  'Pediatría',
+  'Psicología',
+  'Psiquiatría',
+  'Traumatología y Ortopedia',
+  'Urología',
+];
+
 // --- MODELOS ---
 class Especialidad {
   final String nombre;
@@ -132,6 +151,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           ),
           'color': Colors.blue,
         };
+      case 'ginecología y obstetricia':
       case 'ginecología':
       case 'ginecologia':
         return {
@@ -145,6 +165,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       case 'dentista':
       case 'odontología':
       case 'odontologia':
+      case 'odontología (dentista)':
         return {
           'icon': const FaIcon(
             FontAwesomeIcons.tooth,
@@ -163,6 +184,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           ),
           'color': Colors.orange,
         };
+      case 'traumatología y ortopedia':
       case 'traumatología':
       case 'traumatologia':
         return {
@@ -173,9 +195,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           ),
           'color': Colors.brown,
         };
-      case 'general':
-      case 'médico general':
       case 'medicina general':
+      case 'general':
         return {
           'icon': const FaIcon(
             FontAwesomeIcons.userDoctor,
@@ -184,8 +205,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           ),
           'color': Colors.green,
         };
-      case 'neumólogo':
-      case 'neumologo':
       case 'neumología':
       case 'neumologia':
         return {
@@ -195,6 +214,76 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             size: 30,
           ),
           'color': Colors.lightBlue,
+        };
+      case 'dermatología':
+      case 'dermatologia':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.handDots,
+            color: Colors.pink,
+            size: 30,
+          ),
+          'color': Colors.pink,
+        };
+      case 'nutrición':
+      case 'nutricion':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.appleWhole,
+            color: Colors.lightGreen,
+            size: 30,
+          ),
+          'color': Colors.lightGreen,
+        };
+      case 'oftalmología':
+      case 'oftalmologia':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.eye,
+            color: Colors.indigo,
+            size: 30,
+          ),
+          'color': Colors.indigo,
+        };
+      case 'otorrinolaringología':
+      case 'otorrinolaringologia':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.earDeaf,
+            color: Colors.blueGrey,
+            size: 30,
+          ),
+          'color': Colors.blueGrey,
+        };
+      case 'psicología':
+      case 'psicologia':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.brain,
+            color: Colors.deepPurple,
+            size: 30,
+          ),
+          'color': Colors.deepPurple,
+        };
+      case 'psiquiatría':
+      case 'psiquiatria':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.userShield,
+            color: Colors.blueGrey,
+            size: 30,
+          ),
+          'color': Colors.blueGrey,
+        };
+      case 'urología':
+      case 'urologia':
+        return {
+          'icon': const FaIcon(
+            FontAwesomeIcons.mars,
+            color: Colors.cyan,
+            size: 30,
+          ),
+          'color': Colors.cyan,
         };
       default:
         return {
@@ -231,7 +320,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
         onCiudadSeleccionada: (String ciudadElegida) {
-          // Si eligen una ciudad en la barra de arriba de la página, los manda directo a la búsqueda filtrada de esa ciudad
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -388,21 +476,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         RawAutocomplete<String>(
           textEditingController: _especialidadController,
           focusNode: FocusNode(),
-          optionsBuilder: (TextEditingValue textEditingValue) async {
-            final snapshot = await FirebaseFirestore.instance
-                .collection('usuarios')
-                .where('rol', isEqualTo: 'medico')
-                .get();
-            Set<String> especialidades = {};
-            for (var doc in snapshot.docs) {
-              var data = doc.data() as Map<String, dynamic>;
-              if (data['activo'] == false) continue;
-              String esp = (data['especialidad'] ?? 'General')
-                  .toString()
-                  .trim();
-              if (esp.isNotEmpty) especialidades.add(esp);
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            // 👇 CORREGIDO: Muestra todas las especialidades al hacer clic si está vacío
+            if (textEditingValue.text.isEmpty) {
+              return las15EspecialidadesLaguna;
             }
-            return especialidades.where((String option) {
+            return las15EspecialidadesLaguna.where((String option) {
               return option.toLowerCase().contains(
                 textEditingValue.text.toLowerCase(),
               );
@@ -436,18 +515,23 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxWidth: 300,
-                    maxHeight: 200,
+                    maxHeight: 250, // 👈 Ajustado a 250 para mejor rango visual
                   ),
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
-                    shrinkWrap: true,
+                    shrinkWrap:
+                        false, // 👈 CORREGIDO: Fuerte expansión en el contenedor para habilitar scroll interno
                     itemCount: options.length,
                     itemBuilder: (BuildContext context, int index) {
                       final String option = options.elementAt(index);
                       return ListTile(
+                        dense: true, // 👈 Compacto y limpio
                         title: Text(
                           option,
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF334155),
+                          ),
                         ),
                         onTap: () => onSelected(option),
                       );
@@ -488,6 +572,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           textEditingController: _ciudadBuscadorController,
           focusNode: FocusNode(),
           optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return lasCiudades;
+            }
             return lasCiudades.where((String option) {
               return option.toLowerCase().contains(
                 textEditingValue.text.toLowerCase(),
@@ -522,22 +609,25 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxWidth: 300,
-                    maxHeight: 200,
+                    maxHeight: 250, // 👈 Ajustado a 250
                   ),
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
-                    shrinkWrap: true,
+                    shrinkWrap:
+                        false, // 👈 CORREGIDO: Permite ver la lista completa con scroll
                     itemCount: options.length,
                     itemBuilder: (BuildContext context, int index) {
                       final String option = options.elementAt(index);
                       return ListTile(
+                        dense: true,
                         title: Text(
                           option,
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF334155),
+                          ),
                         ),
-                        onTap: () => onSelected(
-                          option,
-                        ), // Al dar clic, solo llena el input de la caja, no filtra el inicio
+                        onTap: () => onSelected(option),
                       );
                     },
                   ),
@@ -553,14 +643,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   Widget _buildBotonBuscar() {
     return ElevatedButton(
       onPressed: () {
-        // 👇 AQUÍ SE HACE LA REDIRECCIÓN CON LOS FILTROS ELEGIDOS 👇
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ListaDoctoresScreen(
               especialidad: _especialidadController.text.trim(),
-              ciudad: _ciudadBuscadorController.text
-                  .trim(), // Se va con la ciudad que escribió o seleccionó
+              ciudad: _ciudadBuscadorController.text.trim(),
             ),
           ),
         );
@@ -583,7 +671,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   // =========================================================================
-  // 2. ESPECIALIDADES POPULARES (SIEMPRE VISIBLE)
+  // 2. ESPECIALIDADES POPULARES (MAESTRA FIJA DE 15 CON CONTEO EN 0 SEGURO)
   // =========================================================================
   Widget _buildEspecialidadesSection(double width) {
     return SliverToBoxAdapter(
@@ -617,56 +705,58 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 ],
               ),
               const SizedBox(height: 15),
-              StreamBuilder<QuerySnapshot>(
-                // 👇 Corregido: Muestra siempre todas las especialidades de la base de datos sin importar qué escriban arriba
-                stream: FirebaseFirestore.instance
+              FutureBuilder<QuerySnapshot>(
+                future: FirebaseFirestore.instance
                     .collection('usuarios')
                     .where('rol', isEqualTo: 'medico')
-                    .snapshots(),
+                    .where('activo', isEqualTo: true)
+                    .get(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    return const SizedBox(
-                      height: 140,
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
-                    return const Text(
-                      'Aún no hay especialidades registradas.',
-                      style: TextStyle(color: Colors.grey),
-                    );
+                  Map<String, int> conteoReal = {};
 
-                  Map<String, int> conteoEspecialidades = {};
-                  for (var doc in snapshot.data!.docs) {
-                    Map<String, dynamic> data =
-                        doc.data() as Map<String, dynamic>;
-                    String esp = (data['especialidad'] ?? 'General')
-                        .toString()
-                        .trim();
-                    if (esp.isEmpty) esp = 'General';
-                    conteoEspecialidades[esp] =
-                        (conteoEspecialidades[esp] ?? 0) + 1;
+                  if (snapshot.hasData && snapshot.data != null) {
+                    for (var doc in snapshot.data!.docs) {
+                      Map<String, dynamic> data =
+                          doc.data() as Map<String, dynamic>;
+                      String esp = (data['especialidad'] ?? '')
+                          .toString()
+                          .trim();
+
+                      if (esp.toLowerCase() == 'dentista' ||
+                          esp.toLowerCase() == 'odontología') {
+                        esp = 'Odontología (Dentista)';
+                      }
+                      if (esp.toLowerCase() == 'ginecología') {
+                        esp = 'Ginecología y Obstetricia';
+                      }
+                      if (esp.toLowerCase() == 'traumatología') {
+                        esp = 'Traumatología y Ortopedia';
+                      }
+
+                      if (esp.isNotEmpty) {
+                        conteoReal[esp] = (conteoReal[esp] ?? 0) + 1;
+                      }
+                    }
                   }
-
-                  var especialidadesOrdenadas = conteoEspecialidades.entries
-                      .toList();
-                  especialidadesOrdenadas.sort(
-                    (a, b) => b.value.compareTo(a.value),
-                  );
 
                   return SizedBox(
                     height: 140,
                     child: ListView.builder(
                       controller: _especialidadesScrollController,
                       scrollDirection: Axis.horizontal,
-                      itemCount: especialidadesOrdenadas.length,
+                      itemCount: las15EspecialidadesLaguna.length,
                       itemBuilder: (context, index) {
-                        var entry = especialidadesOrdenadas[index];
-                        var estilo = _getEspecialidadEstilo(entry.key);
+                        String nombreEspecialidad =
+                            las15EspecialidadesLaguna[index];
+                        int cantidadMedicos =
+                            conteoReal[nombreEspecialidad] ?? 0;
+                        var estilo = _getEspecialidadEstilo(nombreEspecialidad);
+
                         return _itemEspecialidad(
-                          entry.key,
+                          nombreEspecialidad,
                           estilo['icon'] as Widget,
                           estilo['color'] as Color,
-                          entry.value,
+                          cantidadMedicos,
                         );
                       },
                     ),
@@ -710,7 +800,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: color.withOpacity(0.06),
+                backgroundColor: color.withValues(alpha: 0.06),
                 child: iconWidget,
               ),
               const SizedBox(height: 8),
@@ -738,7 +828,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   // =========================================================================
-  // 3. MÉDICOS DESTACADOS (SIEMPRE VISIBLE)
+  // 3. MÉDICOS DESTACADOS Fijos Globales
   // =========================================================================
   Widget _buildMedicosSection(double width) {
     return SliverToBoxAdapter(
@@ -782,7 +872,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
               ),
               const SizedBox(height: 20),
               StreamBuilder<QuerySnapshot>(
-                // 👇 Corregido: Trae siempre a los mejores médicos PRO globales para poblar el carrusel de inicio fijo
                 stream: FirebaseFirestore.instance
                     .collection('usuarios')
                     .where('rol', isEqualTo: 'medico')

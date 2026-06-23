@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import '../screens/lista_doctores_screen.dart'; // 👈 Importamos la pantalla de resultados para la redirección
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   // 👇 CAMBIO 1: El '?' lo vuelve opcional para que las pantallas secundarias no se rompan
@@ -130,7 +131,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     const SizedBox(width: 5),
 
-                    // Desplegable: Especialidades
+                    // Desplegable: Especialidades Homologadas Máster
                     PopupMenuButton<String>(
                       tooltip: 'Seleccionar Especialidad',
                       color: Colors.white,
@@ -153,18 +154,34 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                         if (especialidad == 'ver_todas') {
                           print('Ir a TODAS las especialidades');
                         } else {
-                          print('Filtrando por: $especialidad');
+                          // 👇 Al seleccionar una, nos redirige directo inyectando la especialidad homologada
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ListaDoctoresScreen(
+                                especialidad: especialidad,
+                                ciudad: '',
+                              ),
+                            ),
+                          );
                         }
                       },
                       itemBuilder: (BuildContext context) =>
                           <PopupMenuEntry<String>>[
                             _buildMenuItem('Cardiología'),
                             _buildMenuItem('Dermatología'),
-                            _buildMenuItem('Ginecología'),
-                            _buildMenuItem('Odontología'),
+                            _buildMenuItem('Ginecología y Obstetricia'),
+                            _buildMenuItem('Medicina General'),
+                            _buildMenuItem('Neumología'),
+                            _buildMenuItem('Neurología'),
+                            _buildMenuItem('Nutrición'),
+                            _buildMenuItem('Odontología (Dentista)'),
+                            _buildMenuItem('Oftalmología'),
+                            _buildMenuItem('Otorrinolaringología'),
                             _buildMenuItem('Pediatría'),
                             _buildMenuItem('Psicología'),
-                            _buildMenuItem('Traumatología'),
+                            _buildMenuItem('Psiquiatría'),
+                            _buildMenuItem('Traumatología y Ortopedia'),
                             _buildMenuItem('Urología'),
                             const PopupMenuDivider(),
                             const PopupMenuItem(
