@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../screens/lista_doctores_screen.dart';
+import '../screens/todas_especialidades_screen.dart';
+import '../screens/quienes_somos_screen.dart';
+import '../screens/contacto_screen.dart';
+import '../screens/suscribirse_screen.dart';
 
 class PhoneMenuDrawer extends StatelessWidget {
   const PhoneMenuDrawer({Key? key}) : super(key: key);
@@ -30,9 +35,15 @@ class PhoneMenuDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.info_outline, color: Colors.blue),
             title: const Text('¿Quiénes somos?'),
-            onTap: () => Navigator.pop(
-              context,
-            ), // <-- CORREGIDO (Era onTap, no onPressed)
+            onTap: () {
+              Navigator.pop(context); // Cierra el drawer móvil
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const QuienesSomosScreen(),
+                ),
+              );
+            },
           ),
 
           // 2. Desplegable Ciudad
@@ -40,16 +51,16 @@ class PhoneMenuDrawer extends StatelessWidget {
             leading: const Icon(Icons.location_city, color: Colors.blue),
             title: const Text('Ciudad'),
             children: [
-              _buildSubItem(context, 'Torreón'),
-              _buildSubItem(context, 'Gómez Palacio'),
-              _buildSubItem(context, 'Lerdo'),
-              _buildSubItem(context, 'San Pedro'),
-              _buildSubItem(context, 'Fco. I. Madero'),
-              _buildSubItem(context, 'Matamoros'),
+              _buildSubItemCiudad(context, 'Torreón'),
+              _buildSubItemCiudad(context, 'Gómez Palacio'),
+              _buildSubItemCiudad(context, 'Lerdo'),
+              _buildSubItemCiudad(context, 'San Pedro'),
+              _buildSubItemCiudad(context, 'Fco. I. Madero'),
+              _buildSubItemCiudad(context, 'Matamoros'),
             ],
           ),
 
-          // 3. Desplegable Especialidad
+          // 3. Desplegable Especialidad (Top 10 Alfabético)
           ExpansionTile(
             leading: const Icon(
               Icons.medical_services_outlined,
@@ -57,9 +68,46 @@ class PhoneMenuDrawer extends StatelessWidget {
             ),
             title: const Text('Especialidad'),
             children: [
-              _buildSubItem(context, 'Cardiología'),
-              _buildSubItem(context, 'Pediatría'),
-              _buildSubItem(context, 'Ginecología'),
+              _buildSubItemEspecialidad(context, 'Cardiología'),
+              _buildSubItemEspecialidad(context, 'Dermatología'),
+              _buildSubItemEspecialidad(context, 'Ginecología y Obstetricia'),
+              _buildSubItemEspecialidad(context, 'Medicina General'),
+              _buildSubItemEspecialidad(context, 'Neumología'),
+              _buildSubItemEspecialidad(context, 'Neurología'),
+              _buildSubItemEspecialidad(context, 'Nutrición'),
+              _buildSubItemEspecialidad(context, 'Odontología (Dentista)'),
+              _buildSubItemEspecialidad(context, 'Oftalmología'),
+              _buildSubItemEspecialidad(context, 'Pediatría'),
+
+              // 👇 MODIFICADO: Ahora redirige directo a la nueva pantalla en Grid 👇
+              ListTile(
+                title: const Padding(
+                  padding: EdgeInsets.only(left: 16.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Ver todas las especialidades ',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward, color: Colors.blue, size: 16),
+                    ],
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context); // Cierra el menú lateral móvil
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const TodasEspecialidadesScreen(), // 👈 Redirección directa al Grid
+                    ),
+                  );
+                },
+              ),
             ],
           ),
 
@@ -98,7 +146,16 @@ class PhoneMenuDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.email_outlined, color: Colors.blue),
             title: const Text('Contacto'),
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pop(context); // Cierra el menú móvil
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const ContactoScreen(), // 👈 Redirección añadida
+                ),
+              );
+            },
           ),
 
           const Divider(),
@@ -107,14 +164,28 @@ class PhoneMenuDrawer extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const SuscribirseScreen(), 
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: const Text(
                 'Suscribirse al directorio',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -123,20 +194,57 @@ class PhoneMenuDrawer extends StatelessWidget {
     );
   }
 
-  // Mini-widget CORREGIDO
-  Widget _buildSubItem(BuildContext context, String titulo) {
+  // 🛠️ Sub-item específico para Ciudades con redirección directa
+  Widget _buildSubItemCiudad(BuildContext context, String nombreCiudad) {
     return ListTile(
       title: Padding(
         padding: const EdgeInsets.only(left: 16.0),
         child: Text(
-          titulo,
-          style: const TextStyle(fontSize: 14),
-        ), // <-- CORREGIDO
+          nombreCiudad,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF334155)),
+        ),
       ),
       onTap: () {
-        // <-- CORREGIDO
-        print('Celular eligió: $titulo');
-        Navigator.pop(context);
+        Navigator.pop(context); // Cierra el Drawer
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ListaDoctoresScreen(
+              especialidad: '', // Homologado en español
+              ciudad: nombreCiudad,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 🛠️ Sub-item específico para Especialidades con redirección directa
+  Widget _buildSubItemEspecialidad(
+    BuildContext context,
+    String nombreEspecialidad,
+  ) {
+    return ListTile(
+      title: Padding(
+        padding: const EdgeInsets.only(left: 16.0),
+        child: Text(
+          nombreEspecialidad,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF334155)),
+        ),
+      ),
+      onTap: () {
+        Navigator.pop(context); // Cierra el Drawer
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ListaDoctoresScreen(
+              especialidad: nombreEspecialidad, // Homologado en español
+              ciudad: '',
+            ),
+          ),
+        );
       },
     );
   }

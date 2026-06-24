@@ -3,10 +3,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
-import 'dart:async'; // 👈 Necesario para los Timers de autorotación
+import 'dart:async';
 import 'doctor_profile_screen.dart';
-import 'registro_screen.dart';
 import 'lista_doctores_screen.dart';
+import 'todas_especialidades_screen.dart';
+import 'suscribirse_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
@@ -29,22 +30,6 @@ const List<String> las15EspecialidadesLaguna = [
   'Urología',
 ];
 
-// --- MODELOS ---
-class Especialidad {
-  final String nombre;
-  final dynamic icon;
-  final Color color;
-  final int medicosCount;
-
-  Especialidad({
-    required this.nombre,
-    required this.icon,
-    required this.color,
-    this.medicosCount = 0,
-  });
-}
-
-// --- PANTALLA PRINCIPAL ---
 class MedicosPageScreen extends StatefulWidget {
   const MedicosPageScreen({super.key});
 
@@ -53,12 +38,10 @@ class MedicosPageScreen extends StatefulWidget {
 }
 
 class _MedicosPageScreenState extends State<MedicosPageScreen> {
-  // Controladores para las cajas del buscador avanzado de 2 bloques
   final TextEditingController _especialidadController = TextEditingController();
   final TextEditingController _ciudadBuscadorController =
       TextEditingController();
 
-  // Controladores de Scroll para las rotaciones automáticas
   final ScrollController _especialidadesScrollController = ScrollController();
   final ScrollController _medicosScrollController = ScrollController();
   Timer? _timerEspecialidades;
@@ -70,14 +53,13 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     _iniciarAutoScrolls();
   }
 
-  // Lógica para que las listas populares y destacados roten solas
   void _iniciarAutoScrolls() {
     _timerEspecialidades = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_especialidadesScrollController.hasClients) {
         double maxScroll =
             _especialidadesScrollController.position.maxScrollExtent;
         double currentScroll = _especialidadesScrollController.position.pixels;
-        double targetScroll = currentScroll + 180; // Avanza una burbuja
+        double targetScroll = currentScroll + 180;
 
         if (currentScroll >= maxScroll - 10) {
           _especialidadesScrollController.animateTo(
@@ -99,7 +81,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       if (_medicosScrollController.hasClients) {
         double maxScroll = _medicosScrollController.position.maxScrollExtent;
         double currentScroll = _medicosScrollController.position.pixels;
-        double targetScroll = currentScroll + 340; // Avanza una tarjeta
+        double targetScroll = currentScroll + 340;
 
         if (currentScroll >= maxScroll - 10) {
           _medicosScrollController.animateTo(
@@ -336,7 +318,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           _buildEspecialidadesSection(screenWidth),
           _buildMedicosSection(screenWidth),
           _buildClinicasYFarmaciasSection(screenWidth),
-          _buildBannerSoyMedico(screenWidth),
+          _buildComoFuncionaSection(
+            screenWidth,
+          ), // 👈 Módulo "¿Cómo funciona?" rediseñado estéticamente
+          _buildCategoriasYCiudadesSection(
+            screenWidth,
+          ), // 👈 Matriz Premium en fondo azul con botón "Suscríbete"
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
@@ -344,7 +331,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   // =========================================================================
-  // 1. HERO SECTION PREMIUM CON BUSCADOR DE 2 BLOQUES (ESPECIALIDAD Y CIUDAD)
+  // HERO SECTION PREMIUM CON BUSCADOR DE 2 BLOQUES (ESPECIALIDAD Y CIUDAD)
   // =========================================================================
   Widget _buildHeroSection(double width) {
     bool esPC = width > 850;
@@ -401,7 +388,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     ),
                     const SizedBox(height: 35),
 
-                    // Tarjeta Flotante Multi-Buscador de 2 Bloques
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(18),
@@ -477,15 +463,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           textEditingController: _especialidadController,
           focusNode: FocusNode(),
           optionsBuilder: (TextEditingValue textEditingValue) {
-            // 👇 CORREGIDO: Muestra todas las especialidades al hacer clic si está vacío
-            if (textEditingValue.text.isEmpty) {
-              return las15EspecialidadesLaguna;
-            }
-            return las15EspecialidadesLaguna.where((String option) {
-              return option.toLowerCase().contains(
+            if (textEditingValue.text.isEmpty) return las15EspecialidadesLaguna;
+            return las15EspecialidadesLaguna.where(
+              (String option) => option.toLowerCase().contains(
                 textEditingValue.text.toLowerCase(),
-              );
-            });
+              ),
+            );
           },
           fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
             return TextField(
@@ -515,17 +498,15 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxWidth: 300,
-                    maxHeight: 250, // 👈 Ajustado a 250 para mejor rango visual
+                    maxHeight: 250,
                   ),
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
-                    shrinkWrap:
-                        false, // 👈 CORREGIDO: Fuerte expansión en el contenedor para habilitar scroll interno
                     itemCount: options.length,
                     itemBuilder: (BuildContext context, int index) {
                       final String option = options.elementAt(index);
                       return ListTile(
-                        dense: true, // 👈 Compacto y limpio
+                        dense: true,
                         title: Text(
                           option,
                           style: const TextStyle(
@@ -572,14 +553,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           textEditingController: _ciudadBuscadorController,
           focusNode: FocusNode(),
           optionsBuilder: (TextEditingValue textEditingValue) {
-            if (textEditingValue.text.isEmpty) {
-              return lasCiudades;
-            }
-            return lasCiudades.where((String option) {
-              return option.toLowerCase().contains(
+            if (textEditingValue.text.isEmpty) return lasCiudades;
+            return lasCiudades.where(
+              (String option) => option.toLowerCase().contains(
                 textEditingValue.text.toLowerCase(),
-              );
-            });
+              ),
+            );
           },
           fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
             return TextField(
@@ -609,12 +588,10 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxWidth: 300,
-                    maxHeight: 250, // 👈 Ajustado a 250
+                    maxHeight: 250,
                   ),
                   child: ListView.builder(
                     padding: EdgeInsets.zero,
-                    shrinkWrap:
-                        false, // 👈 CORREGIDO: Permite ver la lista completa con scroll
                     itemCount: options.length,
                     itemBuilder: (BuildContext context, int index) {
                       final String option = options.elementAt(index);
@@ -671,14 +648,14 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   // =========================================================================
-  // 2. ESPECIALIDADES POPULARES (MAESTRA FIJA DE 15 CON CONTEO EN 0 SEGURO)
+  // ESPECIALIDADES POPULARES (MAESTRA FIJA DE 15)
   // =========================================================================
   Widget _buildEspecialidadesSection(double width) {
     return SliverToBoxAdapter(
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
-          padding: const EdgeInsets.fromLTRB(20, 40, 20, 10),
+          padding: const EdgeInsets.fromLTRB(20, 32, 20, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -694,7 +671,15 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const TodasEspecialidadesScreen(),
+                        ),
+                      );
+                    },
                     child: const Row(
                       children: [
                         Text('Ver todas ', style: TextStyle(fontSize: 13)),
@@ -723,19 +708,15 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           .trim();
 
                       if (esp.toLowerCase() == 'dentista' ||
-                          esp.toLowerCase() == 'odontología') {
+                          esp.toLowerCase() == 'odontología')
                         esp = 'Odontología (Dentista)';
-                      }
-                      if (esp.toLowerCase() == 'ginecología') {
+                      if (esp.toLowerCase() == 'ginecología')
                         esp = 'Ginecología y Obstetricia';
-                      }
-                      if (esp.toLowerCase() == 'traumatología') {
+                      if (esp.toLowerCase() == 'traumatología')
                         esp = 'Traumatología y Ortopedia';
-                      }
 
-                      if (esp.isNotEmpty) {
+                      if (esp.isNotEmpty)
                         conteoReal[esp] = (conteoReal[esp] ?? 0) + 1;
-                      }
                     }
                   }
 
@@ -770,65 +751,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
-  Widget _itemEspecialidad(
-    String nombre,
-    Widget iconWidget,
-    Color color,
-    int count,
-  ) {
-    return Container(
-      width: 150,
-      margin: const EdgeInsets.only(right: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ListaDoctoresScreen(especialidad: nombre, ciudad: ''),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: color.withValues(alpha: 0.06),
-                child: iconWidget,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                nombre,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Color(0xFF334155),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$count doctor${count == 1 ? '' : 'es'}',
-                style: const TextStyle(color: Colors.grey, fontSize: 11),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // =========================================================================
-  // 3. MÉDICOS DESTACADOS Fijos Globales
+  // MÉDICOS DESTACADOS Fijos Globales
   // =========================================================================
   Widget _buildMedicosSection(double width) {
     return SliverToBoxAdapter(
@@ -1109,7 +1033,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   // =========================================================================
-  // 4. SECCIÓN COMBINADA: CLÍNICAS RECOMENDADAS Y FARMACIAS CERCANAS
+  // CLÍNICAS RECOMENDADAS Y FARMACIAS CERCANAS
   // =========================================================================
   Widget _buildClinicasYFarmaciasSection(double width) {
     bool esPC = width > 950;
@@ -1171,7 +1095,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: esPC
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1314,115 +1238,115 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   // =========================================================================
-  // 5. BANNER REGISTRO DE MÉDICOS ("¿ERES ESPECIALISTA?")
+  // 📥 SECCIÓN: ¿CÓMO FUNCIONA? ADAPTADA A TU SISTEMA DE WHATSAPP DIRECTO
   // =========================================================================
-  Widget _buildBannerSoyMedico(double width) {
+  Widget _buildComoFuncionaSection(double width) {
     return SliverToBoxAdapter(
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
+          margin: const EdgeInsets.only(top: 32, bottom: 12),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(60, 40, 20, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        '¿Eres especialista?',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 36,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        'Únete al directorio médico más moderno de la Comarca Lagunera y haz crecer tu consultorio.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-                      _beneficioItem('Perfil profesional en minutos'),
-                      _beneficioItem('Mayor visibilidad para pacientes'),
-                      _beneficioItem('Conexión directa a tu WhatsApp'),
-                      const SizedBox(height: 35),
-                      ElevatedButton.icon(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegistroScreen(),
-                          ),
-                        ),
-                        icon: const Icon(Icons.rocket_launch, size: 18),
-                        label: const Text(
-                          'Crear mi perfil gratis',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF1E3A8A),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 35,
-                            vertical: 20,
-                          ),
-                          elevation: 5,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              const Text(
+                '¿Cómo funciona?',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                  letterSpacing: -0.5,
                 ),
               ),
-              if (width > 800)
-                Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20, right: 40),
-                    child: AspectRatio(
-                      aspectRatio: 1.0,
-                      child: Image.asset(
-                        'assets/images/doctor_banner.png',
-                        fit: BoxFit.contain,
-                        alignment: Alignment.bottomCenter,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                              Icons.person,
-                              size: 150,
-                              color: Colors.white24,
+              const SizedBox(height: 24),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return constraints.maxWidth > 750
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            // 💻 VERSIÓN PC: Cada uno lleva: Número, Icono, Color, Título y Descripción
+                            _buildStepItem(
+                              '1',
+                              Icons.search_rounded,
+                              Colors.blue,
+                              'Busca',
+                              'Encuentra al especialista o clínica que necesitas.',
                             ),
-                      ),
-                    ),
-                  ),
-                ),
+                            _buildStepItem(
+                              '2',
+                              Icons.badge_rounded,
+                              Colors.teal,
+                              'Elige',
+                              'Explora perfiles validados con cédula y dirección.',
+                            ),
+                            _buildStepItem(
+                              '3',
+                              Icons.chat_rounded,
+                              Colors.green,
+                              'Agenda',
+                              'Contacta directo al consultorio por WhatsApp.',
+                            ),
+                            _buildStepItem(
+                              '4',
+                              Icons.healing_rounded,
+                              Colors.orange,
+                              'Asiste',
+                              'Acude a tu cita médica y cuida de tu salud.',
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            // 📱 VERSIÓN MÓVIL: Todos con sus 5 parámetros en orden exacto
+                            _buildStepItemHorizontal(
+                              '1',
+                              Icons.search_rounded,
+                              Colors.blue,
+                              'Busca',
+                              'Encuentra al especialista o clínica que necesitas.',
+                            ),
+                            const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                            _buildStepItemHorizontal(
+                              '2',
+                              Icons.badge_rounded,
+                              Colors.teal,
+                              'Elige',
+                              'Explora perfiles validados con cédula y dirección.',
+                            ), 
+                            const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                            _buildStepItemHorizontal(
+                              '3',
+                              Icons.chat_rounded,
+                              Colors.green,
+                              'Agenda',
+                              'Contacta directo al consultorio por WhatsApp.',
+                            ),
+                            const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                            _buildStepItemHorizontal(
+                              '4',
+                              Icons.healing_rounded,
+                              Colors.orange,
+                              'Asiste',
+                              'Acude a tu cita médica y cuida de tu salud.',
+                            ),
+                          ],
+                        );
+                },
+              ),
             ],
           ),
         ),
@@ -1430,29 +1354,382 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
-  Widget _beneficioItem(String texto) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
-      child: Row(
+  Widget _buildStepItem(
+    String numero,
+    IconData icon,
+    Color colorMaestro,
+    String titulo,
+    String desc,
+  ) {
+    return Expanded(
+      child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(2),
-            decoration: const BoxDecoration(
-              color: Colors.white24,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colorMaestro.withOpacity(0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check, color: Colors.white, size: 14),
+            child: Icon(icon, color: colorMaestro, size: 26),
           ),
-          const SizedBox(width: 12),
-          Text(
-            texto,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$numero. ',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colorMaestro,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                titulo,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              desc,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: Color(0xFF64748B),
+                height: 1.3,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStepItemHorizontal(
+    String numero,
+    IconData icon,
+    Color colorMaestro,
+    String titulo,
+    String desc,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colorMaestro.withOpacity(0.08),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: colorMaestro, size: 22),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$numero. $titulo',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =========================================================================
+  // 📥 SECCIÓN FINAL: MATRIZ DE CATEGORÍAS EN FONDO AZUL CORPORATIVO PREMIUM
+  // =========================================================================
+  Widget _buildCategoriasYCiudadesSection(double width) {
+    bool esPC = width > 900;
+
+    return SliverToBoxAdapter(
+      child: Container(
+        width: double.infinity,
+        color: const Color(0xFF1E3A8A), // 👈 Fondo azul profundo corporativo
+        padding: const EdgeInsets.symmetric(vertical: 48),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Médicos por categoría y ciudad',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white, // Texto en blanco brillante
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                esPC
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _buildColumnaCiudad(
+                              'Médicos en Torreón',
+                              'Torreón',
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildColumnaCiudad(
+                              'Médicos en Gómez Palacio',
+                              'Gómez Palacio',
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildColumnaCiudad(
+                              'Médicos en Lerdo',
+                              'Lerdo',
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          _buildMiniBannerInscripcion(), // Tarjeta publicitaria homologada
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          _buildColumnaCiudad('Médicos en Torreón', 'Torreón'),
+                          const SizedBox(height: 16),
+                          _buildColumnaCiudad(
+                            'Médicos en Gómez Palacio',
+                            'Gómez Palacio',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildColumnaCiudad('Médicos en Lerdo', 'Lerdo'),
+                          const SizedBox(height: 24),
+                          _buildMiniBannerInscripcion(fullWidth: true),
+                        ],
+                      ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColumnaCiudad(String tituloHeader, String nombreCiudad) {
+    final List<String> top5Categorias = [
+      'Cardiólogos',
+      'Pediatras',
+      'Ginecólogos',
+      'Dentistas',
+      'Dermatólogos',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(
+          0.06,
+        ), // Fondo translúcido sutil sobre el azul oscuro
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tituloHeader,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: Color(0xFF38BDF8), // Azul celeste brillante muy legible
+            ),
+          ),
+          const SizedBox(height: 14),
+          ...top5Categorias.map((cat) {
+            String specialtyFilter = cat;
+            if (cat == 'Cardiólogos') specialtyFilter = 'Cardiología';
+            if (cat == 'Pediatras') specialtyFilter = 'Pediatría';
+            if (cat == 'Ginecólogos')
+              specialtyFilter = 'Ginecología y Obstetricia';
+            if (cat == 'Dentistas') specialtyFilter = 'Odontología (Dentista)';
+            if (cat == 'Dermatólogos') specialtyFilter = 'Dermatología';
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ListaDoctoresScreen(
+                          especialidad: specialtyFilter,
+                          ciudad: nombreCiudad,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    '$cat en $nombreCiudad',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: Color(
+                        0xFFE2E8F0,
+                      ), // Gris claro ultra suave premium
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniBannerInscripcion({bool fullWidth = false}) {
+    return Container(
+      width: fullWidth ? double.infinity : 270,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(
+          0xFF0284C7,
+        ), // Azul vibrante para destacar la tarjeta
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.15)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '¿Eres médico?',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Suscríbete al directorio y llega a más pacientes en la región.', // 👈 Modificado por "Suscríbete"
+            style: TextStyle(
+              color: Color(0xFFE0F2FE),
+              fontSize: 12.5,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SuscribirseScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF0369A1),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: const Text(
+                'Suscríbete',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+              ), // 👈 Modificado por "Suscríbete"
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // BURBUJAS ROTATIVAS POPULARES
+  // =========================================================================
+  Widget _itemEspecialidad(
+    String nombre,
+    Widget iconWidget,
+    Color color,
+    int count,
+  ) {
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                ListaDoctoresScreen(especialidad: nombre, ciudad: ''),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: color.withOpacity(0.06),
+                child: iconWidget,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                nombre,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Color(0xFF334155),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$count doctor${count == 1 ? '' : 'es'}',
+                style: const TextStyle(color: Colors.grey, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

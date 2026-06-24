@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // Tus rutas de pantallas
 import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
-// (Nota: Si doctor_profile_screen.dart no está en la carpeta /screens, ajusta ese import)
+import 'package:directorios_laguna/screens/admin_dashboard_screen.dart'; // 👈 1. IMPORTADO: Panel administrativo asegurado
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,10 +27,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
 
       // --- MAGIA DE ENLACES ---
-      // Quitamos "home" y definimos la ruta inicial
       initialRoute: '/',
       onGenerateRoute: (settings) {
-        // Si el enlace empieza con "/perfil"...
+        // 🔐 2. INTERCEPTOR DE ENTRADA SECRETA ADMINISTRATIVA
+        // Si escribes esta ruta exacta en el navegador, te manda directo al Dashboard
+        if (settings.name != null &&
+            settings.name == '/control-maestro-laguna-99') {
+          return MaterialPageRoute(
+            builder: (context) => const AdminDashboardScreen(),
+          );
+        }
+
+        // Si el enlace empieza con "/perfil"... (Tu código original intacto)
         if (settings.name != null && settings.name!.startsWith('/perfil')) {
           final uri = Uri.parse(settings.name!);
           final doctorId = uri.queryParameters['id']; // Sacamos el ID del link
@@ -43,7 +51,7 @@ class MyApp extends StatelessWidget {
           }
         }
 
-        // Si no es un link de perfil, abrimos el Home normal
+        // Si no es un link de perfil ni la ruta administrativa, abrimos el Home normal
         return MaterialPageRoute(
           builder: (context) => const MedicosPageScreen(),
         );
@@ -53,7 +61,7 @@ class MyApp extends StatelessWidget {
 }
 
 // --- PANTALLA PUENTE ---
-// Esta pantalla carga 1 segundo mientras va a Firebase por los datos del link
+// Esta pantalla carga 1 segundo mientras va a Firebase por los datos del link (Tu código original intacto)
 class CargarPerfilPuente extends StatelessWidget {
   final String doctorId;
 
@@ -86,8 +94,12 @@ class CargarPerfilPuente extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () =>
-                        Navigator.pushReplacementNamed(context, '/'),
+                    onPressed: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MedicosPageScreen(),
+                      ),
+                    ),
                     child: const Text('Volver al inicio'),
                   ),
                 ],

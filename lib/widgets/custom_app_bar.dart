@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../screens/lista_doctores_screen.dart'; // 👈 Importamos la pantalla de resultados para la redirección
+import '../screens/lista_doctores_screen.dart';
+import '../screens/todas_especialidades_screen.dart';
+import '../screens/quienes_somos_screen.dart';
+import '../screens/contacto_screen.dart';
+import '../screens/suscribirse_screen.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  // 👇 CAMBIO 1: El '?' lo vuelve opcional para que las pantallas secundarias no se rompan
   final Function(String)? onCiudadSeleccionada;
 
-  const CustomAppBar({
-    Key? key,
-    this.onCiudadSeleccionada, // 👇 CAMBIO 2: Le quitamos el 'required'
-  }) : super(key: key);
+  const CustomAppBar({Key? key, this.onCiudadSeleccionada}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -111,13 +111,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const QuienesSomosScreen(), // 👈 Agregado aquí
+                          ),
+                        );
+                      },
                       child: Text('¿Quiénes somos?', style: menuStyle),
                     ),
                     const SizedBox(width: 5),
 
-                    // Menú de Ciudad
+                    // Menú de Ciudad Corregido para Redirigir si es necesario
                     _buildDropdownMenu(
+                      context: context,
                       label: 'Ciudad',
                       style: menuStyle,
                       items: [
@@ -131,7 +140,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     const SizedBox(width: 5),
 
-                    // Desplegable: Especialidades Homologadas Máster
+                    // --- DESPLEGABLE DE ESPECIALIDADES ---
                     PopupMenuButton<String>(
                       tooltip: 'Seleccionar Especialidad',
                       color: Colors.white,
@@ -152,9 +161,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                       onSelected: (String especialidad) {
                         if (especialidad == 'ver_todas') {
-                          print('Ir a TODAS las especialidades');
+                          // 👇 CORREGIDO: Ahora redirige de forma directa a tu nuevo Grid global de especialidades
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TodasEspecialidadesScreen(),
+                            ),
+                          );
                         } else {
-                          // 👇 Al seleccionar una, nos redirige directo inyectando la especialidad homologada
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -177,21 +192,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                             _buildMenuItem('Nutrición'),
                             _buildMenuItem('Odontología (Dentista)'),
                             _buildMenuItem('Oftalmología'),
-                            _buildMenuItem('Otorrinolaringología'),
-                            _buildMenuItem('Pediatría'),
-                            _buildMenuItem('Psicología'),
-                            _buildMenuItem('Psiquiatría'),
-                            _buildMenuItem('Traumatología y Ortopedia'),
-                            _buildMenuItem('Urología'),
+                            _buildMenuItem(
+                              'Pediatría',
+                            ), // 👈 Cortado estratégicamente en la 10 alfabética
                             const PopupMenuDivider(),
                             const PopupMenuItem(
                               value: 'ver_todas',
-                              child: Text(
-                                'Ver todas las especialidades →',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Ver todas las especialidades',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: Colors.blue,
+                                    size: 16,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -223,14 +246,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ContactoScreen(),
+                          ),
+                        );
+                      },
                       child: Text('Contacto', style: menuStyle),
                     ),
 
                     const SizedBox(width: 15),
 
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const SuscribirseScreen(), 
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         elevation: 0,
@@ -256,8 +294,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // Molde del Menú Desplegable Ajustado
+  // Molde del Menú Desplegable Inteligente con Redirección Integrada
   Widget _buildDropdownMenu({
+    required BuildContext context,
     required String label,
     required TextStyle style,
     required List<String> items,
@@ -275,9 +314,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
       ),
-      // 👇 CAMBIO 3: Usamos "?.call" para que solo se ejecute si la pantalla implementó el filtro
       onSelected: (String valorElegido) {
-        onCiudadSeleccionada?.call(valorElegido);
+        if (onCiudadSeleccionada != null) {
+          onCiudadSeleccionada!.call(valorElegido);
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ListaDoctoresScreen(especialidad: '', ciudad: valorElegido),
+            ),
+          );
+        }
       },
       itemBuilder: (context) =>
           items.map((item) => _buildMenuItem(item)).toList(),
