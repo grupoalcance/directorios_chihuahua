@@ -9,6 +9,25 @@ class AuthService {
   // Obtener el ID del usuario actual (si está logueado)
   String? get currentUserId => _auth.currentUser?.uid;
 
+  // Stream para escuchar si hay un usuario autenticado en tiempo real
+  Stream<User?> get estadoAutenticacion => _auth.authStateChanges();
+
+  Future<Map<String, dynamic>?> getDatosUsuarioActual() async {
+    try {
+      String? uid = currentUserId;
+      if (uid == null) return null;
+
+      DocumentSnapshot doc = await _db.collection('usuarios').doc(uid).get();
+      if (doc.exists) {
+        return doc.data() as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print("Error al obtener datos de usuario: $e");
+      return null;
+    }
+  }
+
   // --- REGISTRO ---
   Future<String?> registrarUsuario({
     required String email,
@@ -36,7 +55,6 @@ class AuthService {
         'rol': rol,
         'uid': userCredential.user!.uid,
         'fecha_registro': DateTime.now(),
-        // 👇 AQUÍ ESTÁ LA NUEVA MAGIA DEL NEGOCIO 👇
         // Si es médico entra APAGADO (false), si es paciente entra PRENDIDO (true)
         'activo': rol == 'medico' ? false : true,
       };
@@ -117,6 +135,8 @@ class AuthService {
         return "El formato del correo no es válido.";
       case 'weak-password':
         return "La contraseña es muy débil (usa al menos 6 caracteres).";
+      case 'user-disabled':
+        return "Esta cuenta ha sido desactivada por el administrador.";
       default:
         return e.message ?? "Ocurrió un error inesperado.";
     }

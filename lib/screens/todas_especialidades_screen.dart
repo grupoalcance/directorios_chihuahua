@@ -3,8 +3,18 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../screens/lista_doctores_screen.dart';
 
-class TodasEspecialidadesScreen extends StatelessWidget {
+class TodasEspecialidadesScreen extends StatefulWidget {
   const TodasEspecialidadesScreen({Key? key}) : super(key: key);
+
+  @override
+  State<TodasEspecialidadesScreen> createState() =>
+      _TodasEspecialidadesScreenState();
+}
+
+class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
+  final TextEditingController _searchMunicipioController =
+      TextEditingController();
+  String _municipioFiltrado = "";
 
   // 📝 EL CATÁLOGO COMPLETO DE ESPECIALIDADES EN ORDEN ALFABÉTICO (A-Z) CON COLORES CORPORATIVOS
   static const List<Map<String, dynamic>> _especialidades = [
@@ -156,31 +166,30 @@ class TodasEspecialidadesScreen extends StatelessWidget {
   ];
 
   @override
+  void dispose() {
+    _searchMunicipioController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
 
-    // Grid responsivo matemáticamente calculado para que se vea premium
     int crossAxisCount = 4;
     if (width < 600) {
-      crossAxisCount = 2; // Celulares (2 columnas limpias)
+      crossAxisCount = 2;
     } else if (width < 1000) {
-      crossAxisCount = 3; // Tablets
+      crossAxisCount = 3;
     }
 
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF8FAFC,
-      ), // Fondo premium ultra claro (Slate 50)
-      appBar: const CustomAppBar(), // 👈 Integrada la barra superior homologada
-      drawer: width < 1100
-          ? const PhoneMenuDrawer()
-          : null, // Desplegable en móvil
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(),
+      drawer: width < 1100 ? const PhoneMenuDrawer() : null,
       body: SingleChildScrollView(
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 1200,
-            ), // Alineado con la web principal
+            constraints: const BoxConstraints(maxWidth: 1200),
             padding: EdgeInsets.symmetric(
               horizontal: width < 600 ? 16.0 : 24.0,
               vertical: 32.0,
@@ -188,25 +197,90 @@ class TodasEspecialidadesScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Título de la sección estilizado
                 const Text(
                   'Catálogo Completo de Especialidades',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B), // Slate 800
+                    color: Color(0xFF1E293B),
                     letterSpacing: -0.5,
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Explora todas las ramas médicas disponibles en la Comarca Laguna para encontrar a tu médico.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF64748B), // Slate 500
+                  style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 25),
+
+                // =========================================================================
+                // 🔍 BARRA DE FILTRADO DE MUNICIPIOS HOMOLOGADA
+                // =========================================================================
+                Container(
+                  margin: const EdgeInsets.only(bottom: 32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchMunicipioController,
+                    onChanged: (value) {
+                      setState(() {
+                        _municipioFiltrado = value.trim();
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText:
+                          'Filtrar por municipio (Ej. Torreón, Gómez Palacio, Lerdo...)',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.location_on,
+                        color: Colors.blue,
+                      ),
+                      suffixIcon: _municipioFiltrado.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: Colors.grey),
+                              onPressed: () {
+                                _searchMunicipioController.clear();
+                                setState(() {
+                                  _municipioFiltrado = "";
+                                });
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 16.0,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(
+                          color: Colors.blue,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 32),
 
                 // Grid de tarjetas de especialidades completas
                 GridView.builder(
@@ -216,9 +290,7 @@ class TodasEspecialidadesScreen extends StatelessWidget {
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: width < 600
-                        ? 1.05
-                        : 1.2, // Proporción perfecta para el texto
+                    childAspectRatio: width < 600 ? 1.05 : 1.2,
                   ),
                   itemCount: _especialidades.length,
                   itemBuilder: (context, index) {
@@ -227,8 +299,7 @@ class TodasEspecialidadesScreen extends StatelessWidget {
                       context,
                       item['nombre'] as String,
                       item['icono'] as IconData,
-                      item['color']
-                          as Color, // 👈 Pasamos el color dinámico aquí
+                      item['color'] as Color,
                     );
                   },
                 ),
@@ -240,12 +311,11 @@ class TodasEspecialidadesScreen extends StatelessWidget {
     );
   }
 
-  // Widget constructor de cada Tarjeta Médica Estilizada
   Widget _buildEspecialidadCard(
     BuildContext context,
     String nombre,
     IconData icono,
-    Color colorEspecialidad, // 👈 Recibimos el color correspondiente
+    Color colorEspecialidad,
   ) {
     return InkWell(
       onTap: () {
@@ -253,8 +323,9 @@ class TodasEspecialidadesScreen extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => ListaDoctoresScreen(
-              especialidad: nombre, // Filtro nativo en español
-              ciudad: '',
+              especialidad: nombre,
+              ciudad:
+                  _municipioFiltrado, // 👈 Se inyecta de forma nativa la búsqueda de la barra
             ),
           ),
         );
@@ -264,9 +335,7 @@ class TodasEspecialidadesScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-          ), // Borde sutil (Slate 200)
+          border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.01),
@@ -280,31 +349,22 @@ class TodasEspecialidadesScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Círculo contenedor del Icono con fondo pastel dinámico
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorEspecialidad.withOpacity(
-                    0.09,
-                  ), // 👈 Fondo pastel calculado en vivo basado en su color maestro
+                  color: colorEspecialidad.withOpacity(0.09),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icono,
-                  color:
-                      colorEspecialidad, // 👈 Color corporativo asignado al icono
-                  size: 28,
-                ),
+                child: Icon(icono, color: colorEspecialidad, size: 28),
               ),
               const SizedBox(height: 14),
-              // Texto de la especialidad
               Text(
                 nombre,
-                textAlign: TextAlign.center, // Alineación nativa corregida
+                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Color(0xFF334155), // Slate 700
+                  color: Color(0xFF334155),
                   fontWeight: FontWeight.w600,
                   fontSize: 13.5,
                 ),

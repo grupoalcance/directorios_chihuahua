@@ -3,7 +3,7 @@ import 'registro_screen.dart';
 import '../services/auth_service.dart';
 import 'medicos_page_screen.dart';
 import '../widgets/custom_app_bar.dart';
-import 'admin_dashboard_screen.dart'; // <-- IMPORTAMOS TU PANEL DE CONTROL MAESTRO
+import 'admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,17 +19,14 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
-  // --- NUEVA FUNCIÓN: MOSTRAR VENTANA DE RECUPERACIÓN ---
   void _mostrarDialogoRecuperarPassword() {
     final TextEditingController _resetEmailController = TextEditingController();
-    // Si el usuario ya había escrito su correo en la pantalla de login, se lo copiamos aquí para ahorrarle tiempo
     _resetEmailController.text = _emailController.text;
 
     showDialog(
       context: context,
       builder: (context) {
-        bool isSending =
-            false; // Para mostrar ruedita de carga dentro de la ventanita
+        bool isSending = false;
 
         return StatefulBuilder(
           builder: (context, setStateDialog) {
@@ -92,9 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           setStateDialog(() => isSending = false);
 
                           if (!mounted) return;
-                          Navigator.pop(context); // Cerramos la ventanita
+                          Navigator.pop(context);
 
-                          // Mostramos mensaje de éxito o error en la pantalla principal
                           if (resultado == "success") {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -193,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Bienvenido de vuelta',
+                    'Acceso para Pacientes',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -202,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Ingresa a tu cuenta para gestionar tu perfil o buscar especialistas en la Laguna.',
+                    'Inicia sesión con tu cuenta de paciente para poder calificar y dejar opiniones en los perfiles de los doctores.',
                     style: TextStyle(
                       color: Colors.blueGrey,
                       fontSize: 14,
@@ -289,8 +285,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _isLoading
                           ? null
                           : () async {
-                              if (_emailController.text.trim().isEmpty ||
-                                  _passwordController.text.trim().isEmpty) {
+                              final emailLimpio = _emailController.text.trim();
+                              final passwordLimpia = _passwordController.text
+                                  .trim();
+
+                              if (emailLimpio.isEmpty ||
+                                  passwordLimpia.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
@@ -309,24 +309,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               setState(() => _isLoading = true);
 
+                              // 1. Intentar inicio de sesión básico en Authentication
                               String? resultado = await AuthService()
                                   .iniciarSesion(
-                                    email: _emailController.text.trim(),
-                                    password: _passwordController.text.trim(),
+                                    email: emailLimpio,
+                                    password: passwordLimpia,
                                   );
 
-                              if (mounted) {
-                                setState(() => _isLoading = false);
-                              }
-
                               if (resultado == "success") {
+                                // 2. Obtener el documento completo del usuario desde Firestore
+                                Map<String, dynamic>? datosUsuario =
+                                    await AuthService().getDatosUsuarioActual();
+
                                 if (mounted) {
-                                  // 👇 AQUÍ ESTÁ EL TRUCO DE ADMINISTRADOR 👇
-                                  if (_emailController.text
-                                          .trim()
-                                          .toLowerCase() ==
-                                      'sistemas@agenciaalcance.com') {
-                                    // <-- CAMBIA ESTO POR TU CORREO
+                                  setState(() => _isLoading = false);
+                                }
+
+                                // 3. Si por problemas de red o Firebase no se encuentra el documento
+                                if (datosUsuario == null) {
+                                  await AuthService().cerrarSesion();
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Error al verificar tu perfil en el servidor.',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                  return;
+                                }
+
+                                String rolUsuario = datosUsuario['rol'] ?? '';
+
+                                if (mounted) {
+                                  // 🏢 COMPROBACIÓN MAESTRA: Si el rol es admin en Firestore o es tu correo de respaldo
+                                  if (rolUsuario == 'admin' ||
+                                      emailLimpio.toLowerCase() ==
+                                          'sistemas@agenciaalcance.com') {
                                     Navigator.pushAndRemoveUntil(
                                       context,
                                       MaterialPageRoute(
@@ -335,8 +357,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       (route) => false,
                                     );
-                                  } else {
-                                    // Éxito: Mandamos a la pantalla principal normal
+                                  }
+                                  // 🩺 ACCESO DE PACIENTES VERIFICADOS
+                                  else if (rolUsuario == 'paciente') {
                                     Navigator.pushAndRemoveUntil(
                                       context,
                                       MaterialPageRoute(
@@ -346,9 +369,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                       (route) => false,
                                     );
                                   }
+                                  // 🚨 RESTRICCIÓN: Bloquear perfiles médicos y forzar el logout de seguridad
+                                  else {
+                                    await AuthService().cerrarSesion();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Acceso denegado. Este portal es de uso exclusivo para pacientes.',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        backgroundColor: Colors.orange,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
                                 }
                               } else {
+                                // Error en credenciales básicas (Contraseña incorrecta, usuario inexistente, etc.)
                                 if (mounted) {
+                                  setState(() => _isLoading = false);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(

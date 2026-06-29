@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'medicos_page_screen.dart';
-import '../widgets/custom_app_bar.dart'; // <-- IMPORTAMOS LA NUEVA BARRA
-import 'textos_legales_screen.dart'; // <-- IMPORTAMOS LA PANTALLA LEGAL
+import '../widgets/custom_app_bar.dart';
+import 'textos_legales_screen.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -12,13 +12,15 @@ class RegistroScreen extends StatefulWidget {
 }
 
 class _RegistroScreenState extends State<RegistroScreen> {
-  bool _isDoctor = true;
+  // El rol se fuerza estrictamente a false (No es médico, es Paciente)
+  final bool _isDoctor = false;
+
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   bool _aceptaTerminos = false;
 
-  // Controladores comunes
+  // Controladores exclusivos para el registro de Pacientes
   final _nombreController = TextEditingController();
   final _apellidosController = TextEditingController();
   final _telefonoController = TextEditingController();
@@ -26,49 +28,28 @@ class _RegistroScreenState extends State<RegistroScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Controladores exclusivos de Doctor
-  final _cedulaController = TextEditingController();
-  final _whatsappController = TextEditingController();
-  final _direccionController = TextEditingController();
-  final _otraEspecialidadController = TextEditingController();
-
-  final List<String> _listaEspecialidades = [
-    'Cardiología',
-    'Pediatría',
-    'Ginecología',
-    'Dentista',
-    'Neurología',
-    'Traumatología',
-    'Otra',
-  ];
-  String? _especialidadSeleccionada;
-
-  final List<String> _listaCiudades = [
-    'Torreón, Coah.',
-    'Gómez Palacio, Dgo.',
-    'Lerdo, Dgo.',
-    'Matamoros, Coah.',
-    'Francisco I. Madero, Coah.',
-    'San Pedro, Coah.',
-  ];
-  String? _ciudadSeleccionada;
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _apellidosController.dispose();
+    _telefonoController.dispose();
+    _correoController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Color base
-      appBar: const CustomAppBar(), // <-- LA LÍNEA MÁGICA
+      backgroundColor: Colors.white,
+      appBar: const CustomAppBar(),
       body: Container(
-        // 👇 ENVOLVEMOS EL CONTENIDO EN ESTE CONTAINER 👇
         width: double.infinity,
         height: double.infinity,
-        // 👇 AQUÍ ESTÁ EL DEGRADADO SUAVE
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFEBF4FF), // Un azul muy, muy clarito arriba
-              Colors.white, // Se difumina a blanco hacia abajo
-            ],
+            colors: [Color(0xFFEBF4FF), Colors.white],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -77,9 +58,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
           child: SingleChildScrollView(
             child: Container(
               constraints: const BoxConstraints(maxWidth: 500),
-              margin: const EdgeInsets.symmetric(
-                vertical: 40,
-              ), // Margen arriba y abajo
+              margin: const EdgeInsets.symmetric(vertical: 40),
               padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -97,7 +76,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 children: [
                   const Center(
                     child: Text(
-                      'Crear una cuenta',
+                      'Registro de Paciente',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -105,88 +84,17 @@ class _RegistroScreenState extends State<RegistroScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 30),
-
-                  // --- SELECTOR DE ROL ---
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _isDoctor = true),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: _isDoctor
-                                    ? Colors.blue
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: _isDoctor
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.blue.withOpacity(0.3),
-                                          blurRadius: 8,
-                                        ),
-                                      ]
-                                    : [],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Soy Médico',
-                                  style: TextStyle(
-                                    color: _isDoctor
-                                        ? Colors.white
-                                        : Colors.grey.shade600,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _isDoctor = false),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: !_isDoctor
-                                    ? Colors.blue
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: !_isDoctor
-                                    ? [
-                                        BoxShadow(
-                                          color: Colors.blue.withOpacity(0.3),
-                                          blurRadius: 8,
-                                        ),
-                                      ]
-                                    : [],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Soy Paciente',
-                                  style: TextStyle(
-                                    color: !_isDoctor
-                                        ? Colors.white
-                                        : Colors.grey.shade600,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 10),
+                  const Center(
+                    child: Text(
+                      'Crea tu cuenta para dejar opiniones y calificaciones verificadas a tus médicos de confianza.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.blueGrey, fontSize: 13.5),
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // --- FORMULARIO DINÁMICO ---
+                  // --- FORMULARIO PARA PACIENTES ---
                   Row(
                     children: [
                       Expanded(
@@ -209,7 +117,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   const SizedBox(height: 15),
 
                   _buildTextField(
-                    _isDoctor ? 'Teléfono (Consultorio)' : 'Teléfono celular',
+                    'Teléfono celular',
                     _telefonoController,
                     icon: Icons.phone,
                     isNumber: true,
@@ -217,52 +125,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   ),
                   const SizedBox(height: 15),
 
-                  // Campos EXCLUSIVOS del Doctor
-                  if (_isDoctor) ...[
-                    _buildTextField(
-                      'WhatsApp / Celular (Opcional)',
-                      _whatsappController,
-                      icon: Icons.phone_android,
-                      isNumber: true,
-                      isRequired: false, // <-- EL ÚNICO OPCIONAL
-                    ),
-                    const SizedBox(height: 15),
-
-                    _buildDropdownCiudad(isRequired: true),
-                    const SizedBox(height: 15),
-
-                    _buildTextField(
-                      'Calle y Número del Consultorio',
-                      _direccionController,
-                      icon: Icons.location_on_outlined,
-                      isRequired: true, // <-- AHORA ES OBLIGATORIO
-                    ),
-                    const SizedBox(height: 15),
-
-                    _buildDropdownEspecialidad(isRequired: true),
-                    const SizedBox(height: 15),
-
-                    if (_especialidadSeleccionada == 'Otra') ...[
-                      _buildTextField(
-                        '¿Cuál es tu especialidad?',
-                        _otraEspecialidadController,
-                        icon: Icons.edit_outlined,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 15),
-                    ],
-
-                    _buildTextField(
-                      'Cédula Profesional',
-                      _cedulaController,
-                      icon: Icons.badge_outlined,
-                      isNumber: true,
-                      isRequired: true, // <-- AHORA ES OBLIGATORIO
-                    ),
-                    const SizedBox(height: 15),
-                  ],
-
-                  // Campos Comunes (Credenciales)
                   _buildTextField(
                     'Correo electrónico',
                     _correoController,
@@ -356,7 +218,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // --- AQUÍ ESTÁ EL CAMBIO PARA HACERLO CLICKABLE ---
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
@@ -391,7 +252,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                           ),
                         ),
                       ),
-                      // ---------------------------------------------------
                     ],
                   ),
                   const SizedBox(height: 30),
@@ -455,9 +315,8 @@ class _RegistroScreenState extends State<RegistroScreen> {
     );
   }
 
-  // --- LÓGICA DE VALIDACIÓN Y REGISTRO ---
+  // --- LÓGICA DE VALIDACIÓN Y REGISTRO EXCLUSIVO DE PACIENTES ---
   Future<void> _ejecutarRegistro() async {
-    // 1. Validar campos obligatorios generales
     if (_nombreController.text.trim().isEmpty ||
         _apellidosController.text.trim().isEmpty ||
         _telefonoController.text.trim().isEmpty ||
@@ -469,32 +328,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       return;
     }
 
-    // 2. Validar campos obligatorios de Doctor
-    if (_isDoctor) {
-      if (_ciudadSeleccionada == null) {
-        _mostrarError('Por favor selecciona la ciudad de tu consultorio.');
-        return;
-      }
-      if (_direccionController.text.trim().isEmpty) {
-        _mostrarError('Por favor ingresa la calle y número de tu consultorio.');
-        return;
-      }
-      if (_especialidadSeleccionada == null) {
-        _mostrarError('Por favor selecciona tu especialidad.');
-        return;
-      }
-      if (_especialidadSeleccionada == 'Otra' &&
-          _otraEspecialidadController.text.trim().isEmpty) {
-        _mostrarError('Por favor especifica cuál es tu especialidad.');
-        return;
-      }
-      if (_cedulaController.text.trim().isEmpty) {
-        _mostrarError('Por favor ingresa tu Cédula Profesional.');
-        return;
-      }
-    }
-
-    // 3. Validar Reglas de Contraseña (Mínimo 8, 1 mayúscula, 1 número)
+    // Validar Reglas de Contraseña (Mínimo 8, 1 mayúscula, 1 número)
     String password = _passwordController.text.trim();
     if (password.length < 8) {
       _mostrarError('La contraseña debe tener al menos 8 caracteres.');
@@ -509,44 +343,26 @@ class _RegistroScreenState extends State<RegistroScreen> {
       return;
     }
 
-    // 4. Validar que las contraseñas coincidan
     if (password != _confirmPasswordController.text.trim()) {
       _mostrarError('Las contraseñas no coinciden. Verifícalas por favor.');
       return;
     }
 
-    // 5. Validar Términos y Condiciones
     if (!_aceptaTerminos) {
       _mostrarError('Debes aceptar los términos y privacidad para continuar.');
       return;
     }
 
-    // Si todo está perfecto, iniciamos el registro
     setState(() => _isLoading = true);
 
-    String especialidadFinal = '';
-    String direccionFinal = '';
-
-    if (_isDoctor) {
-      especialidadFinal = _especialidadSeleccionada == 'Otra'
-          ? _otraEspecialidadController.text.trim()
-          : _especialidadSeleccionada ?? 'General';
-
-      direccionFinal =
-          '${_direccionController.text.trim()}, $_ciudadSeleccionada';
-    }
-
+    // Ejecutar llamada mandando estrictamente el rol 'paciente'
     String? resultado = await AuthService().registrarUsuario(
       email: _correoController.text.trim(),
       password: password,
       nombre: _nombreController.text.trim(),
       apellidos: _apellidosController.text.trim(),
       telefono: _telefonoController.text.trim(),
-      rol: _isDoctor ? 'medico' : 'paciente',
-      especialidad: _isDoctor ? especialidadFinal : null,
-      cedula: _isDoctor ? _cedulaController.text.trim() : null,
-      whatsapp: _isDoctor ? _whatsappController.text.trim() : null,
-      direccion: _isDoctor ? direccionFinal : null,
+      rol: 'paciente', // 👈 Rol de paciente nativo inalterable
     );
 
     if (mounted) {
@@ -555,94 +371,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
     if (resultado == "success") {
       if (mounted) {
-        if (_isDoctor) {
-          // 👇 NUEVA PANTALLA DE ESPERA PARA DOCTORES 👇
-          showDialog(
-            context: context,
-            barrierDismissible: false, // No se puede cerrar picando afuera
-            builder: (BuildContext context) {
-              return AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                contentPadding: const EdgeInsets.all(30),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 60,
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-                    const Text(
-                      '¡Registro Exitoso!',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1F36),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    const Text(
-                      'Tu perfil ha sido creado y se encuentra bajo revisión. Un asesor de Médicos Laguna se pondrá en contacto contigo muy pronto vía WhatsApp para afinar los detalles de tu membresía y activar tu cuenta.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black54,
-                        height: 1.5,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Lo mandamos al inicio (ya logueado pero como inactivo)
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MedicosPageScreen(),
-                            ),
-                            (route) => false,
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Ir a Inicio',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        } else {
-          // Pacientes pasan directo
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MedicosPageScreen()),
-            (route) => false,
-          );
-        }
+        // Los pacientes pasan directo al inicio asíncrono ya logueados y activos
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MedicosPageScreen()),
+          (route) => false,
+        );
       }
     } else {
       if (mounted) {
@@ -662,13 +396,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
           ),
         ),
         backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior
-            .floating, // Hace que se vea como una burbuja elegante
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  // --- WIDGETS AUXILIARES PARA EL FORMULARIO ---
+  // --- WIDGETS AUXILIARES ---
 
   Widget _buildLabelRequired(String text, {bool isRequired = true}) {
     return RichText(
@@ -691,85 +424,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDropdownCiudad({bool isRequired = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabelRequired('Ciudad del Consultorio', isRequired: isRequired),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _ciudadSeleccionada,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          decoration: InputDecoration(
-            prefixIcon: const Icon(
-              Icons.location_city_outlined,
-              color: Colors.grey,
-            ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          hint: const Text(
-            'Selecciona tu ciudad',
-            style: TextStyle(fontSize: 14),
-          ),
-          items: _listaCiudades.map((String ciudad) {
-            return DropdownMenuItem<String>(value: ciudad, child: Text(ciudad));
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _ciudadSeleccionada = newValue;
-            });
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownEspecialidad({bool isRequired = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabelRequired('Especialidad', isRequired: isRequired),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _especialidadSeleccionada,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          decoration: InputDecoration(
-            prefixIcon: const Icon(
-              Icons.medical_services_outlined,
-              color: Colors.grey,
-            ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          hint: const Text(
-            'Selecciona tu especialidad',
-            style: TextStyle(fontSize: 14),
-          ),
-          items: _listaEspecialidades.map((String esp) {
-            return DropdownMenuItem<String>(value: esp, child: Text(esp));
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _especialidadSeleccionada = newValue;
-              if (newValue != 'Otra') {
-                _otraEspecialidadController.clear();
-              }
-            });
-          },
-        ),
-      ],
     );
   }
 

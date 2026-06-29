@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/custom_app_bar.dart'; // <-- IMPORTAMOS LA NUEVA BARRA
+import '../widgets/custom_app_bar.dart';
+import '../services/auth_service.dart'; // 👈 IMPORTADO: Para unificar el signOut seguro
 
 class PacienteDashboardScreen extends StatefulWidget {
   const PacienteDashboardScreen({super.key});
@@ -11,13 +12,11 @@ class PacienteDashboardScreen extends StatefulWidget {
       _PacienteDashboardScreenState();
 }
 
-// Agregamos SingleTickerProviderStateMixin para poder usar Tabs
 class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
 
-  // Controladores básicos
   final TextEditingController _nombreCtrl = TextEditingController();
   final TextEditingController _apellidosCtrl = TextEditingController();
   final TextEditingController _telefonoCtrl = TextEditingController();
@@ -28,7 +27,7 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // 3 Pestañas
+    _tabController = TabController(length: 3, vsync: this);
     _loadPacienteData();
   }
 
@@ -40,15 +39,26 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
           .doc(user.uid)
           .get();
       if (doc.exists) {
-        setState(() {
-          userData = doc.data() as Map<String, dynamic>;
-          _nombreCtrl.text = userData?['nombre'] ?? '';
-          _apellidosCtrl.text = userData?['apellidos'] ?? '';
-          _telefonoCtrl.text = userData?['telefono'] ?? '';
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            userData = doc.data() as Map<String, dynamic>;
+            _nombreCtrl.text = userData?['nombre'] ?? '';
+            _apellidosCtrl.text = userData?['apellidos'] ?? '';
+            _telefonoCtrl.text = userData?['telefono'] ?? '';
+            _isLoading = false;
+          });
+        }
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _nombreCtrl.dispose();
+    _apellidosCtrl.dispose();
+    _telefonoCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _saveData() async {
@@ -66,17 +76,19 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
         .doc(user!.uid)
         .update(datosActualizados);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          '¡Datos actualizados con éxito!',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '¡Datos actualizados con éxito!',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    setState(() => _isLoading = false);
+      );
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -87,7 +99,7 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: const CustomAppBar(), // <-- LA LÍNEA MÁGICA
+      appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -97,7 +109,6 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  // --- LA BARRA DE PESTAÑAS ---
                   TabBar(
                     controller: _tabController,
                     labelColor: Colors.blue,
@@ -111,16 +122,14 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
                   ),
                   const SizedBox(height: 30),
 
-                  // --- EL CONTENIDO DE LAS PESTAÑAS ---
                   SizedBox(
-                    height:
-                        800, // Altura base para que el contenido scrollee bien
+                    height: 800,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        _buildEditProfileForm(), // Pestaña 1
-                        _buildMisResenasTab(), // Pestaña 2
-                        _buildFavoritosTab(), // Pestaña 3
+                        _buildEditProfileForm(),
+                        _buildMisResenasTab(),
+                        _buildFavoritosTab(),
                       ],
                     ),
                   ),
@@ -133,9 +142,6 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
     );
   }
 
-  // ==========================================
-  // PESTAÑA 1: EDITAR PERFIL
-  // ==========================================
   Widget _buildEditProfileForm() {
     return Container(
       padding: const EdgeInsets.all(30),
@@ -200,14 +206,10 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
     );
   }
 
-  // ==========================================
-  // PESTAÑA 2: MIS RESEÑAS
-  // ==========================================
   Widget _buildMisResenasTab() {
     final String myUid = FirebaseAuth.instance.currentUser!.uid;
 
     return StreamBuilder<QuerySnapshot>(
-      // ATENCIÓN: collectionGroup busca la carpeta 'resenas' en TODOS los doctores
       stream: FirebaseFirestore.instance
           .collectionGroup('resenas')
           .where('paciente_id', isEqualTo: myUid)
@@ -218,11 +220,9 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
         }
 
         if (snapshot.hasError) {
-          debugPrint("EL ERROR ES: ${snapshot.error}");
-
           return const Center(
             child: Text(
-              'Error al cargar las reseñas. (Recuerda crear el índice en Firebase)',
+              'Error al cargar las reseñas.',
               style: TextStyle(color: Colors.red),
             ),
           );
@@ -304,14 +304,10 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
     );
   }
 
-  // ==========================================
-  // PESTAÑA 3: FAVORITOS
-  // ==========================================
   Widget _buildFavoritosTab() {
     final String myUid = FirebaseAuth.instance.currentUser!.uid;
 
     return StreamBuilder<QuerySnapshot>(
-      // Buscamos en la carpeta 'favoritos' dentro del perfil del paciente
       stream: FirebaseFirestore.instance
           .collection('usuarios')
           .doc(myUid)
@@ -335,8 +331,7 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
           itemBuilder: (context, index) {
             var favorito =
                 snapshot.data!.docs[index].data() as Map<String, dynamic>;
-            String docId =
-                snapshot.data!.docs[index].id; // El ID del doctor guardado
+            String docId = snapshot.data!.docs[index].id;
 
             return ListTile(
               contentPadding: const EdgeInsets.symmetric(
@@ -360,7 +355,6 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
               trailing: IconButton(
                 icon: const Icon(Icons.favorite, color: Colors.red),
                 onPressed: () {
-                  // Borrar de favoritos
                   FirebaseFirestore.instance
                       .collection('usuarios')
                       .doc(myUid)
@@ -375,8 +369,6 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
       },
     );
   }
-
-  // --- WIDGETS AUXILIARES ---
 
   Widget _emptyStateMessage(IconData icon, String message) {
     return Column(
@@ -458,8 +450,15 @@ class _PacienteDashboardScreenState extends State<PacienteDashboardScreen>
           const Spacer(),
           TextButton.icon(
             onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.popUntil(context, (route) => route.isFirst);
+              // 🛠️ Cambiado para limpiar la sesión en cascada y regresarlo a la raíz limpia
+              await AuthService().cerrarSesion();
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
+              }
             },
             icon: const Icon(Icons.logout, color: Colors.red),
             label: const Text(

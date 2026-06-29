@@ -7,7 +7,7 @@ import 'doctor_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/custom_app_bar.dart';
 
-class ListaDoctoresScreen extends StatelessWidget {
+class ListaDoctoresScreen extends StatefulWidget {
   final String especialidad;
   final String ciudad;
 
@@ -16,6 +16,20 @@ class ListaDoctoresScreen extends StatelessWidget {
     required this.especialidad,
     this.ciudad = '',
   }) : super(key: key);
+
+  @override
+  State<ListaDoctoresScreen> createState() => _ListaDoctoresScreenState();
+}
+
+class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _textoFiltrado = "";
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // --- FUNCIÓN PARA WHATSAPP ---
   Future<void> _abrirWhatsApp(String whatsapp) async {
@@ -35,11 +49,15 @@ class ListaDoctoresScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String textoFiltro = especialidad.isNotEmpty
-        ? especialidad
+    // Detectamos si la pantalla se abrió buscando una Ciudad en general
+    bool esBusquedaPorCiudad =
+        widget.ciudad.isNotEmpty && widget.especialidad.isEmpty;
+
+    String textoFiltro = widget.especialidad.isNotEmpty
+        ? widget.especialidad
         : 'Especialistas';
-    if (ciudad.isNotEmpty) {
-      textoFiltro += ' en $ciudad';
+    if (widget.ciudad.isNotEmpty) {
+      textoFiltro += ' en ${widget.ciudad}';
     }
 
     // --- CONSTRUCCIÓN DE LA QUERY BASE DE FIREBASE ---
@@ -53,9 +71,7 @@ class ListaDoctoresScreen extends StatelessWidget {
       appBar: const CustomAppBar(),
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(
-            maxWidth: 1100,
-          ), // Ajustado para dar aire en PC
+          constraints: const BoxConstraints(maxWidth: 1100),
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +89,78 @@ class ListaDoctoresScreen extends StatelessWidget {
                 'Contacta directamente a los mejores especialistas.',
                 style: TextStyle(color: Colors.grey),
               ),
-              const SizedBox(height: 25),
+              const SizedBox(height: 20),
+
+              // =========================================================================
+              // 🔍 BARRA DE BÚSQUEDA HÍBRIDA E INTELIGENTE (CIUDAD VS ESPECIALIDAD)
+              // =========================================================================
+              Container(
+                margin: const EdgeInsets.only(bottom: 25),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _textoFiltrado = value.trim().toLowerCase();
+                    });
+                  },
+                  decoration: InputDecoration(
+                    // 👇 MÁGICO: Si buscó por ciudad, el hint le pide buscar especialidad. Si buscó por especialidad, le pide municipio.
+                    hintText: esBusquedaPorCiudad
+                        ? 'Filtrar por especialidad (Ej. Dentista, Cardiólogo, Pediatra...)'
+                        : 'Filtrar por municipio (Ej. Torreón, Gómez Palacio, Lerdo...)',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(
+                      esBusquedaPorCiudad
+                          ? Icons.medical_services_outlined
+                          : Icons.location_on,
+                      color: Colors.blue,
+                    ),
+                    suffixIcon: _textoFiltrado.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _textoFiltrado = "";
+                              });
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16.0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: const BorderSide(
+                        color: Colors.blue,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
 
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
@@ -93,7 +180,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                       return _buildNoResults();
                     }
 
-                    // --- 🛠️ FILTRADO INTELIGENTE LOCAL CORREGIDO PARA TU ESTRUCTURA 🛠️ ---
+                    // --- FILTRADO INTERNO DINÁMICO ---
                     var docsFiltrados = snapshot.data!.docs.where((doc) {
                       Map<String, dynamic> data =
                           doc.data() as Map<String, dynamic>;
@@ -102,15 +189,25 @@ class ListaDoctoresScreen extends StatelessWidget {
                       Map<String, dynamic> primerConsultorio =
                           consultorios.isNotEmpty ? consultorios[0] : {};
 
-                      // 1. FILTRO DE CIUDAD
-                      if (ciudad.isNotEmpty) {
-                        String ciudadDoc = (primerConsultorio['ciudad'] ?? '')
-                            .toString()
+                      String ciudadDoc = (primerConsultorio['ciudad'] ?? '')
+                          .toString()
+                          .toLowerCase()
+                          .trim();
+
+                      String espDoctor = (data['especialidad'] ?? '')
+                          .toString()
+                          .toLowerCase()
+                          .trim();
+
+                      // =========================================================================
+                      // ESCENARIO 1: EL USUARIO FILTRÓ POR CIUDAD DESDE LA NAVBAR
+                      // =========================================================================
+                      if (esBusquedaPorCiudad) {
+                        // 1. Forzar que el doctor pertenezca a la ciudad seleccionada en el menú
+                        String ciudadBusqueda = widget.ciudad
                             .toLowerCase()
                             .trim();
-                        String ciudadBusqueda = ciudad.toLowerCase().trim();
-
-                        bool matchCiudad =
+                        bool matchCiudadBase =
                             ciudadDoc == ciudadBusqueda ||
                             (ciudadBusqueda.contains('torreón') &&
                                 ciudadDoc.contains('torreon')) ||
@@ -121,42 +218,74 @@ class ListaDoctoresScreen extends StatelessWidget {
                             (ciudadBusqueda.contains('gomez') &&
                                 ciudadDoc.contains('gómez'));
 
-                        if (!matchCiudad) return false;
+                        if (!matchCiudadBase) return false;
+
+                        // 2. Aplicar la barra de texto sobre la ESPECIALIDAD
+                        if (_textoFiltrado.isNotEmpty) {
+                          if (!espDoctor.contains(_textoFiltrado)) return false;
+                        }
+                      }
+                      // =========================================================================
+                      // ESCENARIO 2: EL USUARIO FILTRÓ POR ESPECIALIDAD DESDE LA NAVBAR
+                      // =========================================================================
+                      else {
+                        // 1. Filtrar por la barra de entrada de texto (MUNICIPIO)
+                        if (_textoFiltrado.isNotEmpty) {
+                          String direccionDoc =
+                              (primerConsultorio['direccion'] ?? '')
+                                  .toString()
+                                  .toLowerCase()
+                                  .trim();
+
+                          bool matchBarra =
+                              ciudadDoc.contains(_textoFiltrado) ||
+                              direccionDoc.contains(_textoFiltrado);
+                          if (!matchBarra) return false;
+                        }
+
+                        // 2. Filtrar por la especialidad base asignada
+                        if (widget.especialidad.isNotEmpty) {
+                          String espBusqueda = widget.especialidad
+                              .toLowerCase()
+                              .trim();
+
+                          if (espBusqueda.contains('uroginecología') ||
+                              espBusqueda.contains('uroginecologia')) {
+                            if (!(espDoctor.contains('uroginecología') ||
+                                espDoctor.contains('uroginecologia')))
+                              return false;
+                          } else if (espBusqueda.contains('odontología') ||
+                              espBusqueda.contains('dentista')) {
+                            if (!(espDoctor.contains('odontología') ||
+                                espDoctor.contains('dentista') ||
+                                espDoctor.contains('odontologia')))
+                              return false;
+                          } else if (espBusqueda.contains('ginecología') ||
+                              espBusqueda.contains('ginecologia')) {
+                            if (!(espDoctor.contains('ginecología') ||
+                                espDoctor.contains('ginecologia')))
+                              return false;
+                          } else if (espBusqueda.contains('traumatología') ||
+                              espBusqueda.contains('traumatologia')) {
+                            if (!(espDoctor.contains('traumatología') ||
+                                espDoctor.contains('traumatologia') ||
+                                espDoctor.contains('ortopedia')))
+                              return false;
+                          } else {
+                            if (espDoctor != espBusqueda) return false;
+                          }
+                        }
+
+                        // 3. Filtrar por ciudad complementaria (si se inyectara desde TodasEspecialidades)
+                        if (widget.ciudad.isNotEmpty) {
+                          String ciudadBusqueda = widget.ciudad
+                              .toLowerCase()
+                              .trim();
+                          if (!ciudadDoc.contains(ciudadBusqueda)) return false;
+                        }
                       }
 
-                      // 2. FILTRO DE ESPECIALIDAD INTELIGENTE
-                      if (especialidad.isEmpty) return true;
-
-                      String espDoctor = (data['especialidad'] ?? '')
-                          .toString()
-                          .toLowerCase()
-                          .trim();
-                      String espBusqueda = especialidad.toLowerCase().trim();
-
-                      if (espBusqueda.contains('uroginecología') ||
-                          espBusqueda.contains('uroginecologia')) {
-                        return espDoctor.contains('uroginecología') ||
-                            espDoctor.contains('uroginecologia');
-                      }
-                      if (espBusqueda.contains('odontología') ||
-                          espBusqueda.contains('dentista')) {
-                        return espDoctor.contains('odontología') ||
-                            espDoctor.contains('dentista') ||
-                            espDoctor.contains('odontologia');
-                      }
-                      if (espBusqueda.contains('ginecología') ||
-                          espBusqueda.contains('ginecologia')) {
-                        return espDoctor.contains('ginecología') ||
-                            espDoctor.contains('ginecologia');
-                      }
-                      if (espBusqueda.contains('traumatología') ||
-                          espBusqueda.contains('traumatologia')) {
-                        return espDoctor.contains('traumatología') ||
-                            espDoctor.contains('traumatologia') ||
-                            espDoctor.contains('ortopedia');
-                      }
-
-                      return espDoctor == espBusqueda;
+                      return true;
                     }).toList();
 
                     if (docsFiltrados.isEmpty) {
@@ -176,7 +305,6 @@ class ListaDoctoresScreen extends StatelessWidget {
                       return 0;
                     });
 
-                    // 👇 REEMPLAZADO: GridView.builder con mainAxisExtent fijo para forzar simetría matemática exacta
                     return GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: MediaQuery.of(context).size.width > 750
@@ -184,8 +312,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                             : 1,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
-                        mainAxisExtent:
-                            310, // 👈 Forzamos la altura matemática exacta de la tarjeta
+                        mainAxisExtent: 310,
                       ),
                       itemCount: docsFiltrados.length,
                       itemBuilder: (context, index) {
@@ -233,7 +360,7 @@ class ListaDoctoresScreen extends StatelessWidget {
                           data,
                           iniciales.toUpperCase(),
                           '$nombre $apellidos'.trim(),
-                          data['especialidad'] ?? especialidad,
+                          data['especialidad'] ?? widget.especialidad,
                           data['cedula'] ?? 'S/N',
                           direccionDoctor,
                           telefonoDoctor,
@@ -325,7 +452,7 @@ class ListaDoctoresScreen extends StatelessWidget {
   ) {
     String? fotoUrl = doctorData['foto_url'];
     return Container(
-      padding: const EdgeInsets.all(20), // Un poco más compacto interno
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -400,7 +527,7 @@ class ListaDoctoresScreen extends StatelessWidget {
           _contactRow(Icons.location_on, Colors.blue, address),
           const SizedBox(height: 5),
           _contactRow(Icons.phone, Colors.blue, phone),
-          const Spacer(), // 👈 MÁGICO: Empuja el botón al borde exacto
+          const Spacer(),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
@@ -445,7 +572,7 @@ class ListaDoctoresScreen extends StatelessWidget {
     String? fotoUrl = doctorData['foto_url'];
     int totalResenas = doctorData['reseñas_count'] ?? 0;
     return Container(
-      padding: const EdgeInsets.all(20), // Un poco más compacto interno
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -567,7 +694,7 @@ class ListaDoctoresScreen extends StatelessWidget {
           _contactRow(Icons.location_on, Colors.blue, address),
           const SizedBox(height: 5),
           _contactRow(Icons.phone, Colors.blue, phone),
-          const Spacer(), // 👈 MÁGICO: Alinea la base de la tarjeta Pro perfectamente abajo
+          const Spacer(),
           Column(
             children: [
               SizedBox(
@@ -641,8 +768,7 @@ class ListaDoctoresScreen extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            maxLines:
-                2, // 👈 Evita que empuje el diseño si la dirección es muy larga
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.blueGrey,
