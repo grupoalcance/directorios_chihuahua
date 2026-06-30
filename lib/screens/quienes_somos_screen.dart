@@ -338,7 +338,7 @@ class QuienesSomosScreen extends StatelessWidget {
                 )
               : Column(
                   children: [
-                    _datoMetrico('+25', 'Especialidades Médicas'),
+                    _datoMetrico('+100', 'Especialidades y Subespecialidades Médicas'),
                     const Divider(color: Colors.white24, height: 30),
                     _datoMetrico('6', 'Ciudades de Cobertura'),
                   ],

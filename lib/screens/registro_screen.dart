@@ -76,7 +76,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 children: [
                   const Center(
                     child: Text(
-                      'Registro de Paciente',
+                      'Registro',
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -362,7 +362,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
       nombre: _nombreController.text.trim(),
       apellidos: _apellidosController.text.trim(),
       telefono: _telefonoController.text.trim(),
-      rol: 'paciente', // 👈 Rol de paciente nativo inalterable
+      rol: 'paciente',
     );
 
     if (mounted) {

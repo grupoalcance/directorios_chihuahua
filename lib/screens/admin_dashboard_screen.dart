@@ -5,7 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:async';
 import 'doctor_dashboard_screen.dart';
 import 'medicos_page_screen.dart';
-import 'establishment_dashboard_screen.dart'; // 👈 1. IMPORTADO: Vinculación con tu pantalla unificada de edición
+import 'establishment_dashboard_screen.dart'; 
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
