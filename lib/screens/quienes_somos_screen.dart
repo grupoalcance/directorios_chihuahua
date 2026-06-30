@@ -332,7 +332,7 @@ class QuienesSomosScreen extends StatelessWidget {
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _datoMetrico('+25', 'Especialidades Médicas'),
+                    _datoMetrico('+100', 'Especialidades y Subespecialidades Médicas'),
                     _datoMetrico('6', 'Ciudades de Cobertura'),
                   ],
                 )
