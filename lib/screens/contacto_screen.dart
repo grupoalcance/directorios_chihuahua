@@ -17,7 +17,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
   final TextEditingController _mensajeController = TextEditingController();
 
   // 📞 COLOCA AQUÍ TU NÚMERO DE WHATSAPP CON LADA (52 para México)
-  final String _numeroSoporte = '528717207195';
+  final String _numeroSoporte = '528714178277';
 
   @override
   void dispose() {
@@ -178,7 +178,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
           color: Colors.green,
           titulo: 'Soporte WhatsApp',
           desc: 'Atención rápida para dudas o registros médicos.',
-          datoDestacado: '871 720 7195',
+          datoDestacado: '871 417 8277',
           onTap: () => _abrirWhatsApp(
             mensaje:
                 'Hola, me comunico desde la sección de Contacto de Médicos Laguna, me gustaría recibir más información.',
