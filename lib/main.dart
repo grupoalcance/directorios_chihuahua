@@ -3,10 +3,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Tus rutas de pantallas
+// Tus rutas de pantallas mapeadas correctamente
 import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
-import 'package:directorios_laguna/screens/admin_dashboard_screen.dart'; // 👈 1. IMPORTADO: Panel administrativo asegurado
+import 'package:directorios_laguna/screens/admin_dashboard_screen.dart';
+import 'package:directorios_laguna/screens/login_screen.dart'; // 👈 IMPORTADO: Para el acceso oculto seguro
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,32 +27,37 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
 
-      // --- MAGIA DE ENLACES ---
+      // --- MAGIA DE ENLACES CRUZADOS Y RUTAS WEB ---
       initialRoute: '/',
       onGenerateRoute: (settings) {
-        // 🔐 2. INTERCEPTOR DE ENTRADA SECRETA ADMINISTRATIVA
-        // Si escribes esta ruta exacta en el navegador, te manda directo al Dashboard
-        if (settings.name != null &&
-            settings.name == '/control-maestro-laguna-99') {
+        // 🔑 1. INTERCEPTOR DE ACCESO OCULTO PARA ADMINISTRADORES Y DOCTORES
+        // Al escribir tudominio.com/#/ingresar en producción, saltará la pantalla de login de forma segura
+        if (settings.name != null && settings.name == '/ingresar') {
+          return MaterialPageRoute(builder: (context) => const LoginScreen());
+        }
+
+        // 📊 2. RUTA RESPALDO PARA EL DASHBOARD DE ADMINISTRACIÓN
+        if (settings.name != null && settings.name == '/admin_dashboard') {
           return MaterialPageRoute(
             builder: (context) => const AdminDashboardScreen(),
           );
         }
 
-        // Si el enlace empieza con "/perfil"... (Tu código original intacto)
+        // 🩺 3. ENLACES COMPARTIDOS DIRECTOS (Tu código original intacto)
         if (settings.name != null && settings.name!.startsWith('/perfil')) {
           final uri = Uri.parse(settings.name!);
-          final doctorId = uri.queryParameters['id']; // Sacamos el ID del link
+          final doctorId =
+              uri.queryParameters['id']; // Extraemos el ID del médico del link
 
           if (doctorId != null && doctorId.isNotEmpty) {
-            // Lo mandamos a nuestra pantalla puente
+            // Mandamos al usuario a nuestra pantalla puente de carga
             return MaterialPageRoute(
               builder: (context) => CargarPerfilPuente(doctorId: doctorId),
             );
           }
         }
 
-        // Si no es un link de perfil ni la ruta administrativa, abrimos el Home normal
+        // 🏠 4. RUTA POR DEFECTO: Si el link no coincide con nada, abre el Home principal
         return MaterialPageRoute(
           builder: (context) => const MedicosPageScreen(),
         );
@@ -60,8 +66,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// --- PANTALLA PUENTE ---
-// Esta pantalla carga 1 segundo mientras va a Firebase por los datos del link (Tu código original intacto)
+// --- PANTALLA PUENTE DE CARGA NATIVA ---
 class CargarPerfilPuente extends StatelessWidget {
   final String doctorId;
 
@@ -107,10 +112,10 @@ class CargarPerfilPuente extends StatelessWidget {
             );
           }
 
-          // Si lo encuentra, extraemos los datos y abrimos el perfil
+          // Si el registro existe en Firestore, armamos el mapa e inyectamos su UID
           Map<String, dynamic> data =
               snapshot.data!.data() as Map<String, dynamic>;
-          data['uid'] = snapshot.data!.id; // Aseguramos que lleve su ID
+          data['uid'] = snapshot.data!.id;
 
           return DoctorProfileScreen(doctorData: data);
         },

@@ -189,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Acceso para Pacientes',
+                    'Portal de Acceso',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -198,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Inicia sesión con tu cuenta de paciente para poder calificar y dejar opiniones en los perfiles de los doctores.',
+                    'Ingresa tus credenciales autorizadas de acceso para pacientes o administradores del directorio médico regional.',
                     style: TextStyle(
                       color: Colors.blueGrey,
                       fontSize: 14,
@@ -309,7 +309,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               setState(() => _isLoading = true);
 
-                              // 1. Intentar inicio de sesión básico en Authentication
                               String? resultado = await AuthService()
                                   .iniciarSesion(
                                     email: emailLimpio,
@@ -317,7 +316,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   );
 
                               if (resultado == "success") {
-                                // 2. Obtener el documento completo del usuario desde Firestore
                                 Map<String, dynamic>? datosUsuario =
                                     await AuthService().getDatosUsuarioActual();
 
@@ -325,7 +323,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   setState(() => _isLoading = false);
                                 }
 
-                                // 3. Si por problemas de red o Firebase no se encuentra el documento
                                 if (datosUsuario == null) {
                                   await AuthService().cerrarSesion();
                                   if (mounted) {
@@ -345,27 +342,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                 String rolUsuario = datosUsuario['rol'] ?? '';
 
                                 if (mounted) {
-                                  // 🏢 COMPROBACIÓN MAESTRA: Si el rol es admin en Firestore o es tu correo de respaldo
+                                  // 🏢 COMPROBACIÓN MAESTRA DE ROLES USANDO RUTAS WEB ROBUSTAS
                                   if (rolUsuario == 'admin' ||
                                       emailLimpio.toLowerCase() ==
                                           'sistemas@agenciaalcance.com') {
-                                    Navigator.pushAndRemoveUntil(
+                                    // Utiliza la estructura nativa para limpiar la pila web de navegación
+                                    Navigator.pushNamedAndRemoveUntil(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const AdminDashboardScreen(),
-                                      ),
+                                      '/admin_dashboard',
                                       (route) => false,
                                     );
                                   }
                                   // 🩺 ACCESO DE PACIENTES VERIFICADOS
                                   else if (rolUsuario == 'paciente') {
-                                    Navigator.pushAndRemoveUntil(
+                                    Navigator.pushNamedAndRemoveUntil(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const MedicosPageScreen(),
-                                      ),
+                                      '/',
                                       (route) => false,
                                     );
                                   }
@@ -375,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                          'Acceso denegado. Este portal es de uso exclusivo para pacientes.',
+                                          'Acceso denegado. Este portal es de uso exclusivo para cuentas autorizadas.',
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
@@ -388,7 +380,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   }
                                 }
                               } else {
-                                // Error en credenciales básicas (Contraseña incorrecta, usuario inexistente, etc.)
                                 if (mounted) {
                                   setState(() => _isLoading = false);
                                   ScaffoldMessenger.of(context).showSnackBar(
