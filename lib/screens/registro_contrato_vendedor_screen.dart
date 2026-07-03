@@ -300,16 +300,22 @@ class _RegistroContratoVendedorScreenState
           .add(contratoPayload);
 
       if (mounted) {
+        // 1. Alerta de éxito al usuario
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('¡Expediente de Directorio Registrado con Éxito!'),
             backgroundColor: Colors.green,
           ),
         );
+
+        // 2. Reseteo de controles en memoria para evitar residuos
         _formKey.currentState!.reset();
         _firmaClienteController.clear();
         _firmaAsesorController.clear();
         setState(() => _isSaving = false);
+
+        // 🚀 3. REDIRECCIONAMIENTO DIRECTO AL MONITOR DE AUDITORÍA
+        Navigator.pushReplacementNamed(context, '/admin_contratos');
       }
     } catch (e) {
       if (mounted) {

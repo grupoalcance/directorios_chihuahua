@@ -15,6 +15,8 @@ import '../screens/lista_farmacias_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/paciente_dashboard_screen.dart';
+import '../screens/admin_contratos_dashboard_screen.dart'; // 🔑 Importación añadida para contratos
+import '../screens/admin_dashboard_screen.dart'; // 🔑 Importación añadida para admin general
 import '../services/auth_service.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -86,6 +88,60 @@ class _CustomAppBarState extends State<CustomAppBar> {
     final Uri url = Uri.parse(urlStr);
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint('No se pudo abrir el enlace publicitario');
+    }
+  }
+
+  // 🔑 MÉTODO OPERATIVO DE ENRUTAMIENTO DINÁMICO POR ROL DE USUARIO
+  Future<void> _redirigirPanelSegunRol(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      // Consultamos el rol de la cuenta dentro de tu colección 'usuarios'
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+
+      if (!context.mounted) return;
+
+      if (userDoc.exists && userDoc.data() != null) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        String rol = (userData['rol'] ?? 'paciente')
+            .toString()
+            .trim()
+            .toLowerCase();
+
+        if (rol == 'vendedor') {
+          // 🚀 Si es vendedor, va directo al monitor operativo de contratos
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AdminContratosDashboardScreen(),
+            ),
+          );
+          return;
+        } else if (rol == 'admin') {
+          // 🚀 Si eres tú, va directo al dashboard maestro general
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AdminDashboardScreen(),
+            ),
+          );
+          return;
+        }
+      }
+
+      // 🚀 Por defecto, si es paciente o no tiene rol definido, va a su panel clásico
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PacienteDashboardScreen(),
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error al validar el rol de redirección: $e");
     }
   }
 
@@ -471,12 +527,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     const SizedBox(width: 15),
 
                     // =========================================================================
-                    // 🔐 CONTROL DE ACCESO EXCLUSIVO DE PACIENTES (BOTÓN "INICIAR SESIÓN" REMOVIDO)
+                    // 🔐 CONTROL DE ACCESO INTERACTIVO MULTI-ROL (REDIRECCIÓN REPARADA)
                     // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
                       builder: (context, snapshot) {
-                        // CASO UNICO: PACIENTE LOGUEADO -> Burbuja "Mi Cuenta" con submenú interactivo
                         if (snapshot.hasData && snapshot.data != null) {
                           return PopupMenuButton<String>(
                             color: Colors.white,
@@ -484,13 +539,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             elevation: 4,
                             onSelected: (String valor) async {
                               if (valor == 'ir_panel') {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const PacienteDashboardScreen(),
-                                  ),
-                                );
+                                // 🔑 LLAMADA AL FILTRO POR ROLES EN LUGAR DE MANDAR DIRECTO A PACIENTE
+                                _redirigirPanelSegunRol(context);
                               } else if (valor == 'cerrar_sesion') {
                                 await AuthService().cerrarSesion();
                                 if (context.mounted) {
@@ -584,14 +634,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           );
                         }
 
-                        // VISITANTE ANÓNIMO -> No se muestra ningún elemento o botón de inicio de sesión
                         return const SizedBox.shrink();
                       },
                     ),
 
                     const SizedBox(width: 10),
 
-                    // 🏢 BOTÓN ADICIONAL INTACTO: Registro/Membresías de Doctores
                     ElevatedButton(
                       onPressed: () => Navigator.push(
                         context,

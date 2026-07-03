@@ -9,6 +9,7 @@ import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
 import 'package:directorios_laguna/screens/admin_dashboard_screen.dart';
 import 'package:directorios_laguna/screens/login_screen.dart';
 import 'package:directorios_laguna/screens/registro_contrato_vendedor_screen.dart';
+import 'package:directorios_laguna/screens/admin_contratos_dashboard_screen.dart'; // 👈 1. IMPORTACIÓN CORREGIDA AQUÍ
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +59,16 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        // 🩺 4. ENLACES COMPARTIDOS DIRECTOS (Tu código original intacto)
+        // 📂 4. ¡LA PIEZA FALTANTE!: REGISTRO Y ACTIVACIÓN DE LA RUTA DE CONTRATOS
+        if (routeName != null &&
+            (routeName == '/admin_contratos' ||
+                routeName.contains('admin_contratos'))) {
+          return MaterialPageRoute(
+            builder: (context) => const AdminContratosDashboardScreen(),
+          );
+        }
+
+        // 🩺 5. ENLACES COMPARTIDOS DIRECTOS (Tu código original intacto)
         if (routeName != null && routeName.startsWith('/perfil')) {
           final uri = Uri.parse(routeName);
           final doctorId =
@@ -72,7 +82,7 @@ class MyApp extends StatelessWidget {
           }
         }
 
-        // 🏠 5. RUTA POR DEFECTO: Si el link no coincide con nada, abre el Home principal
+        // 🏠 6. RUTA POR DEFECTO: Si el link no coincide con nada, abre el Home principal
         return MaterialPageRoute(
           builder: (context) => const MedicosPageScreen(),
         );
