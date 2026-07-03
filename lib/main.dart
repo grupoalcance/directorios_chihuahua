@@ -33,23 +33,25 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         final String? routeName = settings.name;
 
-        // 🔑 1. INTERCEPTOR DE ACCESO OCULTO PARA ADMINISTRADORES Y DOCTORES
-        // Al escribir tudominio.com/#/ingresar en producción, saltará la pantalla de login de forma segura
-        if (routeName == '/ingresar') {
+        // 🔑 1. INTERCEPTOR FLEXIBLE DE ACCESO OCULTO PARA LOGIN (Inmune a variaciones de hash web)
+        if (routeName != null &&
+            (routeName == '/ingresar' || routeName.contains('ingresar'))) {
           return MaterialPageRoute(builder: (context) => const LoginScreen());
         }
 
         // 📊 2. RUTA RESPALDO PARA EL DASHBOARD DE ADMINISTRACIÓN
-        if (routeName == '/admin_dashboard') {
+        if (routeName != null &&
+            (routeName == '/admin_dashboard' ||
+                routeName.contains('admin_dashboard'))) {
           return MaterialPageRoute(
             builder: (context) => const AdminDashboardScreen(),
           );
         }
 
-        // 📝 3. REGISTRO DE CONTRATOS PARA VENDEDORES (URL DE CONTRATOS AJUSTADA)
+        // 📝 3. REGISTRO DE CONTRATOS PARA VENDEDORES (Filtro ultra tolerante para la URL)
         if (routeName != null &&
             (routeName == '/captura-contratos' ||
-                routeName.endsWith('/captura-contratos'))) {
+                routeName.contains('captura-contratos'))) {
           return MaterialPageRoute(
             builder: (context) => const RegistroContratoVendedorScreen(),
           );
