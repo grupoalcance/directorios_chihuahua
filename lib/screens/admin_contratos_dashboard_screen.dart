@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
+import '../services/auth_service.dart'; // 👈 IMPORTACIÓN SINCRO DE TU NUEVO SERVICIO
 
 class AdminContratosDashboardScreen extends StatefulWidget {
   const AdminContratosDashboardScreen({super.key});
 
   @override
-  State<AdminContratosDashboardScreen> createState() => _AdminContratosDashboardScreenState();
+  State<AdminContratosDashboardScreen> createState() =>
+      _AdminContratosDashboardScreenState();
 }
 
-class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardScreen> {
+class _AdminContratosDashboardScreenState
+    extends State<AdminContratosDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -61,7 +64,9 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF0F172A),
                         side: const BorderSide(color: Color(0xFFE2E8F0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         elevation: 0,
                       ),
                     ),
@@ -87,7 +92,9 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error al conectar con el servidor: ${snapshot.error}'));
+          return Center(
+            child: Text('Error al conectar con el servidor: ${snapshot.error}'),
+          );
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -111,11 +118,18 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
             ),
             child: const Column(
               children: [
-                Icon(Icons.assignment_late_outlined, size: 48, color: Color(0xFF94A3B8)),
+                Icon(
+                  Icons.assignment_late_outlined,
+                  size: 48,
+                  color: Color(0xFF94A3B8),
+                ),
                 SizedBox(height: 12),
                 Text(
                   'No se han encontrado contratos registrados por los vendedores.',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF475569),
+                  ),
                 ),
               ],
             ),
@@ -133,15 +147,47 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowColor: MaterialStateProperty.all(const Color(0xFFF8FAFC)),
+                headingRowColor: MaterialStateProperty.all(
+                  const Color(0xFFF8FAFC),
+                ),
                 dataRowHeight: 64,
                 columns: const [
-                  DataColumn(label: Text('Establecimiento / Médico', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Vendedor', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Estatus Pago', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Firmas', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Alta Web', style: TextStyle(fontWeight: FontWeight.bold))),
-                  DataColumn(label: Text('Auditoría', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(
+                    label: Text(
+                      'Establecimiento / Médico',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Vendedor',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Estatus Pago',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Firmas',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Alta Web',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'Auditoría',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
                 rows: documentos.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
@@ -149,62 +195,92 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
                   final metadata = data['metadata'] ?? {};
                   final firmas = metadata['firmas_digitalizadas'] ?? {};
 
-                  String medico = perfil['nombre_establecimiento'] ?? 'Sin nombre';
+                  String medico =
+                      perfil['nombre_establecimiento'] ?? 'Sin nombre';
                   String vendedor = metadata['asesor_comercial'] ?? 'N/A';
                   bool pagado = metadata['pagado'] ?? false;
-                  bool clienteFirmo = firmas['cliente_firmo'] ?? false;
-                  bool asesorFirmo  = firmas['asesor_firmo'] ?? false;
+                  bool clienteFirmo = firmas['cliente_firmó'] ?? false;
+                  bool asesorFirmo = firmas['asesor_firmó'] ?? false;
                   bool deAlta = perfil['activo'] ?? false;
 
-                  return DataRow(cells: [
-                    DataCell(Text(medico, style: const TextStyle(fontWeight: FontWeight.w600))),
-                    DataCell(Text(vendedor)),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: pagado ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(20),
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Text(
+                          medico,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
-                        child: Text(
-                          pagado ? 'PAGADO' : 'PENDIENTE',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: pagado ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                      ),
+                      DataCell(Text(vendedor)),
+                      DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: pagado
+                                ? const Color(0xFFDCFCE7)
+                                : const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            pagado ? 'PAGADO' : 'PENDIENTE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: pagado
+                                  ? const Color(0xFF15803D)
+                                  : const Color(0xFFB91C1C),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Row(
-                        children: [
-                          Icon(Icons.person_outline, size: 16, color: clienteFirmo ? Colors.green : Colors.red),
-                          const SizedBox(width: 4),
-                          Icon(Icons.badge_outlined, size: 16, color: asesorFirmo ? Colors.green : Colors.red),
-                        ],
-                      ),
-                    ),
-                    DataCell(
-                      Icon(
-                        deAlta ? Icons.cloud_done_rounded : Icons.cloud_upload_outlined,
-                        color: deAlta ? Colors.green : Colors.amber.shade700,
-                        size: 20,
-                      ),
-                    ),
-                    DataCell(
-                      ElevatedButton(
-                        onPressed: () => _verDetalleContrato(doc.id, data),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      DataCell(
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              size: 16,
+                              color: clienteFirmo ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.badge_outlined,
+                              size: 16,
+                              color: asesorFirmo ? Colors.green : Colors.red,
+                            ),
+                          ],
                         ),
-                        child: const Text('Auditar Contracto', style: TextStyle(fontSize: 12)),
                       ),
-                    ),
-                  ]);
+                      DataCell(
+                        Icon(
+                          deAlta
+                              ? Icons.cloud_done_rounded
+                              : Icons.cloud_upload_outlined,
+                          color: deAlta ? Colors.green : Colors.amber.shade700,
+                          size: 20,
+                        ),
+                      ),
+                      DataCell(
+                        ElevatedButton(
+                          onPressed: () => _verDetalleContrato(doc.id, data),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          child: const Text(
+                            'Auditar Contrato',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
                 }).toList(),
               ),
             ),
@@ -244,12 +320,19 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          perfil['nombre_establecimiento'] ?? 'Expediente Legal',
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          perfil['nombre_establecimiento'] ??
+                              'Expediente Legal',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           'Código único de Registro: $docId',
-                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -268,9 +351,9 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
                       titulo: 'Firmante y Poder Legal',
                       icon: Icons.draw_rounded,
                       datos: [
-                        'Nombre del Firmante: ${metadata['nombre_firmante']}',
-                        'Cargo del Puesto: ${metadata['puesto_cargo']}',
-                        'Teléfono de Verificación: ${metadata['telefono_firmante']}',
+                        'Nombre del Firmante: ${metadata['nombre_firmante'] ?? "N/A"}',
+                        'Cargo del Puesto: ${metadata['puesto_cargo'] ?? "N/A"}',
+                        'Teléfono de Verificación: ${metadata['telefono_firmante'] ?? "N/A"}',
                         'Firma de Cliente: ${metadata['firmas_digitalizadas']?['cliente_firmó'] == true ? "Firmado Digitalmente" : "Falta Firma"}',
                         'Firma de Asesor: ${metadata['firmas_digitalizadas']?['asesor_firmó'] == true ? "Firmado Digitalmente" : "Falta Firma"}',
                       ],
@@ -280,9 +363,9 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
                       icon: Icons.monetization_on_outlined,
                       datos: [
                         'Estatus de Liquidación: ${metadata['pagado'] == true ? "PAGADO COMPLETO" : "PAGO PENDIENTE"}',
-                        'Fecha de Alta Solicitada: ${perfil['inicio_directorio']}',
-                        'Especialidad Médica: ${perfil['especialidad']}',
-                        'Correo para Facturación: ${perfil['email_factura']}',
+                        'Fecha de Alta Solicitada: ${perfil['inicio_directorio'] ?? "N/A"}',
+                        'Especialidad Médica: ${perfil['especialidad'] ?? "N/A"}',
+                        'Correo para Facturación: ${perfil['email_factura'] ?? "N/A"}',
                       ],
                     ),
                     _buildSeccionAuditoria(
@@ -315,37 +398,73 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFCBD5E1)),
                         fixedSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      child: const Text('Cerrar Auditoría', style: TextStyle(color: Color(0xFF475569))),
+                      child: const Text(
+                        'Cerrar Auditoría',
+                        style: TextStyle(color: Color(0xFF475569)),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        // Autoriza el alta y lo publica automáticamente en la web
-                        await FirebaseFirestore.instance
-                            .collection('registro_contratos')
-                            .doc(docId)
-                            .update({'perfil_medico.activo': true});
+                        // 1. Congelamos referencias de navegación seguras anti-async gaps web
+                        final navigator = Navigator.of(context);
+                        final messenger = ScaffoldMessenger.of(context);
 
-                        if (mounted) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
+                        // 2. Disparamos la clonación estructurada real en Firestore
+                        final authService = AuthService();
+                        bool exito = await authService
+                            .migrarContratoAPerfilPublico(
+                              contratoId: docId,
+                              contratoData: data,
+                            );
+
+                        if (!mounted) return;
+                        navigator
+                            .pop(); // Cierra el modal lateral de forma segura
+
+                        if (exito) {
+                          messenger.showSnackBar(
                             const SnackBar(
-                              content: Text('¡Contrato auditado, aprobado y dado de alta en la web pública!'),
+                              content: Text(
+                                '¡Contrato auditado, aprobado y dado de alta en la web pública!',
+                              ),
                               backgroundColor: Colors.green,
+                            ),
+                          );
+                        } else {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Error al procesar la clonación del expediente hacia perfiles públicos.',
+                              ),
+                              backgroundColor: Colors.red,
                             ),
                           );
                         }
                       },
-                      icon: const Icon(Icons.verified_user_outlined, color: Colors.white),
-                      label: const Text('Aprobar Contrato y Dar de Alta', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      icon: const Icon(
+                        Icons.verified_user_outlined,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Aprobar Contrato y Dar de Alta',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0061E0),
                         fixedSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
@@ -358,7 +477,11 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
     );
   }
 
-  Widget _buildSeccionAuditoria({required String titulo, required IconData icon, required List<String> datos}) {
+  Widget _buildSeccionAuditoria({
+    required String titulo,
+    required IconData icon,
+    required List<String> datos,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Column(
@@ -368,7 +491,14 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
             children: [
               Icon(icon, size: 18, color: const Color(0xFF64748B)),
               const SizedBox(width: 8),
-              Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
+              Text(
+                titulo,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -382,10 +512,21 @@ class _AdminContratosDashboardScreenState extends State<AdminContratosDashboardS
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: datos.map((dato) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3.0),
-                child: Text(dato, style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4)),
-              )).toList(),
+              children: datos
+                  .map(
+                    (dato) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3.0),
+                      child: Text(
+                        dato,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF475569),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ],

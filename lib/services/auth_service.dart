@@ -153,4 +153,61 @@ class AuthService {
       return e.toString();
     }
   }
+
+  // =========================================================================
+  // 🚀 AUTORIZAR CONTRATO Y EXPEDIR PERFIL PÚBLICO
+  // =========================================================================
+  Future<bool> migrarContratoAPerfilPublico({
+    required String contratoId,
+    required Map<String, dynamic> contratoData,
+  }) async {
+    try {
+      final perfil = contratoData['perfil_medico'] ?? {};
+      final ubicacion = contratoData['ubicacion_consultorio'] ?? {};
+      final redes = contratoData['redes_sociales'] ?? {};
+      final servicios = contratoData['servicios_destacados'] ?? [];
+
+      // Convertimos la lista de servicios dinámicos de forma segura
+      List<String> serviciosLimpios = List<String>.from(servicios);
+
+      // Reorganizamos la información para que coincida con tu buscador público
+      Map<String, dynamic> nuevoPerfilMedico = {
+        'uid': contratoId,
+        'nombre': perfil['nombre_establecimiento'] ?? 'Médico Registrado',
+        'apellidos': '',
+        'email': perfil['email_factura'] ?? '',
+        'telefono': ubicacion['telefonos_citas'] ?? '',
+        'rol': 'medico',
+        'especialidad': perfil['especialidad'] ?? 'General',
+        'tipo_perfil': 'vip', // Entra directo como perfil destacado de agencia
+        'activo': true, // Visible inmediatamente para los pacientes
+        'fecha_registro': FieldValue.serverTimestamp(),
+        'servicios': serviciosLimpios,
+        'redes_sociales': redes,
+        'consultorios': [
+          {
+            'nombre': 'Consultorio Principal',
+            'direccion':
+                'C. ${ubicacion['calle'] ?? ""} #${ubicacion['numero'] ?? ""}, Col. ${ubicacion['colonia'] ?? ""}, ${ubicacion['ciudad'] ?? ""}',
+            'telefono': ubicacion['telefonos_citas'] ?? '',
+            'whatsapp': redes['sitio_web'] ?? '',
+            'coordenadas_gps': ubicacion['ubicacion_gps'] ?? '',
+          },
+        ],
+      };
+
+      // 1. Inyectamos los datos formateados en la colección de la web pública
+      await _db.collection('usuarios').doc(contratoId).set(nuevoPerfilMedico);
+
+      // 2. Actualizamos la bandera del contrato de origen para sincronizar el historial
+      await _db.collection('registro_contratos').doc(contratoId).update({
+        'perfil_medico.activo': true,
+      });
+
+      return true;
+    } catch (e) {
+      print("Error crítico en la migración del contrato: $e");
+      return false;
+    }
+  }
 }

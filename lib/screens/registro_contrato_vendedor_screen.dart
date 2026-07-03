@@ -54,7 +54,8 @@ class _HighlightTextEditingControllers {
   final telefonoFirmante = TextEditingController();
   final contratoDel = TextEditingController();
   final contratoAl = TextEditingController();
-  final notasAdicionales = TextEditingController();
+  final notasAdicionales =
+      TextEditingController(); // 🔑 Mapeado de forma uniforme
   final asesorComercial = TextEditingController();
 
   void dispose() {
@@ -163,7 +164,6 @@ class _RegistroContratoVendedorScreenState
     BuildContext context,
     TextEditingController controller,
   ) async {
-    // 1. Validamos que el contexto siga activo antes de lanzar el calendario
     if (!mounted) return;
 
     DateTime? picked = await showDatePicker(
@@ -186,7 +186,6 @@ class _RegistroContratoVendedorScreenState
       },
     );
 
-    // 2. Control estricto anti-crash: Solo si de verdad seleccionó una fecha y la pantalla sigue viva
     if (picked != null && mounted) {
       try {
         final String fechaFormateada = DateFormat('dd/MM/yyyy').format(picked);
@@ -195,7 +194,6 @@ class _RegistroContratoVendedorScreenState
         });
       } catch (e) {
         debugPrint('Error al formatear la fecha seleccionada: $e');
-        // Respaldo manual directo si el formateador fallara en la web por caché
         setState(() {
           controller.text =
               "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
@@ -286,7 +284,8 @@ class _RegistroContratoVendedorScreenState
           'cliente_firmó': !_firmaClienteController.isEmpty,
           'asesor_firmó': !_firmaAsesorController.isEmpty,
         },
-        'notes_internas': _ctrl.notasAdicionales.text.trim(),
+        'notes_internas': _ctrl.notasAdicionales.text
+            .trim(), // 🔑 Sincronizado contra nulos
       },
       'perfil_medico': {
         'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
@@ -1365,7 +1364,7 @@ class _RegistroContratoVendedorScreenState
   }
 
   // =========================================================================
-  // 🎨 COMPONENTES INTERNOS DE ESTILIZACIÓN PREMIUM (MÉTODOS AGREGADOS COMPLETIOS)
+  // 🎨 COMPONENTES INTERNOS DE ESTILIZACIÓN PREMIUM
   // =========================================================================
   Widget _buildSectionCard({
     required String title,

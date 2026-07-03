@@ -66,14 +66,13 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
   void _iniciarAutoScrolls() {
     _timerEspecialidades = Timer.periodic(const Duration(seconds: 3), (timer) {
-      // 🔑 SOLUCIÓN CRÍTICA: Validamos que el árbol de widgets ya tenga posiciones físicas pintadas en la Web
-      if (_especialidadesScrollController.hasClients &&
-          _especialidadesScrollController.positions.isNotEmpty) {
+      // Validamos estrictamente que el controlador tenga clientes vinculados activos
+      if (_especialidadesScrollController.hasClients) {
         try {
+          // 🔑 SOLUCIÓN: Usamos directamente la propiedad 'offset' que es nativa y segura en Web
+          double currentScroll = _especialidadesScrollController.offset;
           double maxScroll =
               _especialidadesScrollController.position.maxScrollExtent;
-          double currentScroll =
-              _especialidadesScrollController.position.pixels;
           double targetScroll = currentScroll + 180;
 
           if (currentScroll >= maxScroll - 10) {
@@ -90,18 +89,17 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             );
           }
         } catch (e) {
-          debugPrint('Evitando crash de scroll en especialidades: $e');
+          // En caso de desajuste dinámico de la ventana, evitamos romper el hilo de JS
+          debugPrint('Scroll auto-recuperado en especialidades: $e');
         }
       }
     });
 
     _timerMedicos = Timer.periodic(const Duration(seconds: 4), (timer) {
-      // 🔑 SOLUCIÓN CRÍTICA: Validamos también el contenedor de médicos destacados contra nulos
-      if (_medicosScrollController.hasClients &&
-          _medicosScrollController.positions.isNotEmpty) {
+      if (_medicosScrollController.hasClients) {
         try {
+          double currentScroll = _medicosScrollController.offset;
           double maxScroll = _medicosScrollController.position.maxScrollExtent;
-          double currentScroll = _medicosScrollController.position.pixels;
           double targetScroll = currentScroll + 340;
 
           if (currentScroll >= maxScroll - 10) {
@@ -118,7 +116,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             );
           }
         } catch (e) {
-          debugPrint('Evitando crash de scroll en médicos destacados: $e');
+          debugPrint('Scroll auto-recuperado en médicos destacados: $e');
         }
       }
     });
