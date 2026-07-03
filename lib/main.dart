@@ -7,7 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
 import 'package:directorios_laguna/screens/admin_dashboard_screen.dart';
-import 'package:directorios_laguna/screens/login_screen.dart'; // 👈 IMPORTADO: Para el acceso oculto seguro
+import 'package:directorios_laguna/screens/login_screen.dart';
+import 'package:directorios_laguna/screens/registro_contrato_vendedor_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,22 +31,33 @@ class MyApp extends StatelessWidget {
       // --- MAGIA DE ENLACES CRUZADOS Y RUTAS WEB ---
       initialRoute: '/',
       onGenerateRoute: (settings) {
+        final String? routeName = settings.name;
+
         // 🔑 1. INTERCEPTOR DE ACCESO OCULTO PARA ADMINISTRADORES Y DOCTORES
         // Al escribir tudominio.com/#/ingresar en producción, saltará la pantalla de login de forma segura
-        if (settings.name != null && settings.name == '/ingresar') {
+        if (routeName == '/ingresar') {
           return MaterialPageRoute(builder: (context) => const LoginScreen());
         }
 
         // 📊 2. RUTA RESPALDO PARA EL DASHBOARD DE ADMINISTRACIÓN
-        if (settings.name != null && settings.name == '/admin_dashboard') {
+        if (routeName == '/admin_dashboard') {
           return MaterialPageRoute(
             builder: (context) => const AdminDashboardScreen(),
           );
         }
 
-        // 🩺 3. ENLACES COMPARTIDOS DIRECTOS (Tu código original intacto)
-        if (settings.name != null && settings.name!.startsWith('/perfil')) {
-          final uri = Uri.parse(settings.name!);
+        // 📝 3. REGISTRO DE CONTRATOS PARA VENDEDORES (URL DE CONTRATOS AJUSTADA)
+        if (routeName != null &&
+            (routeName == '/captura-contratos' ||
+                routeName.endsWith('/captura-contratos'))) {
+          return MaterialPageRoute(
+            builder: (context) => const RegistroContratoVendedorScreen(),
+          );
+        }
+
+        // 🩺 4. ENLACES COMPARTIDOS DIRECTOS (Tu código original intacto)
+        if (routeName != null && routeName.startsWith('/perfil')) {
+          final uri = Uri.parse(routeName);
           final doctorId =
               uri.queryParameters['id']; // Extraemos el ID del médico del link
 
@@ -57,7 +69,7 @@ class MyApp extends StatelessWidget {
           }
         }
 
-        // 🏠 4. RUTA POR DEFECTO: Si el link no coincide con nada, abre el Home principal
+        // 🏠 5. RUTA POR DEFECTO: Si el link no coincide con nada, abre el Home principal
         return MaterialPageRoute(
           builder: (context) => const MedicosPageScreen(),
         );
