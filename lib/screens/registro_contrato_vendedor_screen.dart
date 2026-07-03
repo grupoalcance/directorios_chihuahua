@@ -163,6 +163,9 @@ class _RegistroContratoVendedorScreenState
     BuildContext context,
     TextEditingController controller,
   ) async {
+    // 1. Validamos que el contexto siga activo antes de lanzar el calendario
+    if (!mounted) return;
+
     DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -183,10 +186,21 @@ class _RegistroContratoVendedorScreenState
       },
     );
 
-    if (picked != null) {
-      setState(() {
-        controller.text = DateFormat('dd/MM/yyyy').format(picked);
-      });
+    // 2. Control estricto anti-crash: Solo si de verdad seleccionó una fecha y la pantalla sigue viva
+    if (picked != null && mounted) {
+      try {
+        final String fechaFormateada = DateFormat('dd/MM/yyyy').format(picked);
+        setState(() {
+          controller.text = fechaFormateada;
+        });
+      } catch (e) {
+        debugPrint('Error al formatear la fecha seleccionada: $e');
+        // Respaldo manual directo si el formateador fallara en la web por caché
+        setState(() {
+          controller.text =
+              "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+        });
+      }
     }
   }
 
@@ -1051,8 +1065,7 @@ class _RegistroContratoVendedorScreenState
 
                   // ✍️ SECCIÓN 7
                   _buildSectionCard(
-                    title:
-                        '7. Cierre de Contrato y Validación de Pago',
+                    title: '7. Cierre de Contrato y Validación de Pago',
                     icon: Icons.border_color_outlined,
                     children: [
                       LayoutBuilder(
@@ -1211,7 +1224,7 @@ class _RegistroContratoVendedorScreenState
                                   children: [
                                     _buildTextField(
                                       label: 'Notas Especiales / Observaciones',
-                                     controller: _ctrl.notasAdicionales,
+                                      controller: _ctrl.notasAdicionales,
                                       maxLines: 2,
                                     ),
                                     const SizedBox(height: 16),
