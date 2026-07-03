@@ -66,46 +66,59 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
   void _iniciarAutoScrolls() {
     _timerEspecialidades = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_especialidadesScrollController.hasClients) {
-        double maxScroll =
-            _especialidadesScrollController.position.maxScrollExtent;
-        double currentScroll = _especialidadesScrollController.position.pixels;
-        double targetScroll = currentScroll + 180;
+      // 🔑 SOLUCIÓN CRÍTICA: Validamos que el árbol de widgets ya tenga posiciones físicas pintadas en la Web
+      if (_especialidadesScrollController.hasClients &&
+          _especialidadesScrollController.positions.isNotEmpty) {
+        try {
+          double maxScroll =
+              _especialidadesScrollController.position.maxScrollExtent;
+          double currentScroll =
+              _especialidadesScrollController.position.pixels;
+          double targetScroll = currentScroll + 180;
 
-        if (currentScroll >= maxScroll - 10) {
-          _especialidadesScrollController.animateTo(
-            0,
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
-          );
-        } else {
-          _especialidadesScrollController.animateTo(
-            targetScroll,
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
-          );
+          if (currentScroll >= maxScroll - 10) {
+            _especialidadesScrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+            );
+          } else {
+            _especialidadesScrollController.animateTo(
+              targetScroll,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+            );
+          }
+        } catch (e) {
+          debugPrint('Evitando crash de scroll en especialidades: $e');
         }
       }
     });
 
     _timerMedicos = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_medicosScrollController.hasClients) {
-        double maxScroll = _medicosScrollController.position.maxScrollExtent;
-        double currentScroll = _medicosScrollController.position.pixels;
-        double targetScroll = currentScroll + 340;
+      // 🔑 SOLUCIÓN CRÍTICA: Validamos también el contenedor de médicos destacados contra nulos
+      if (_medicosScrollController.hasClients &&
+          _medicosScrollController.positions.isNotEmpty) {
+        try {
+          double maxScroll = _medicosScrollController.position.maxScrollExtent;
+          double currentScroll = _medicosScrollController.position.pixels;
+          double targetScroll = currentScroll + 340;
 
-        if (currentScroll >= maxScroll - 10) {
-          _medicosScrollController.animateTo(
-            0,
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.easeInOut,
-          );
-        } else {
-          _medicosScrollController.animateTo(
-            targetScroll,
-            duration: const Duration(milliseconds: 1000),
-            curve: Curves.easeInOut,
-          );
+          if (currentScroll >= maxScroll - 10) {
+            _medicosScrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.easeInOut,
+            );
+          } else {
+            _medicosScrollController.animateTo(
+              targetScroll,
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.easeInOut,
+            );
+          }
+        } catch (e) {
+          debugPrint('Evitando crash de scroll en médicos destacados: $e');
         }
       }
     });
@@ -458,12 +471,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           _buildMedicosSection(screenWidth),
           _buildClinicasYFarmaciasSection(screenWidth),
           _buildComoFuncionaSection(screenWidth),
-
-          // =========================================================================
-          // 📊 SECCIÓN EXCLUSIVA DE ENLACES CRUZADOS MÓDULO DE MÉDICOS
-          // =========================================================================
           _buildSeccionMedicosCruzados(),
-
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
@@ -862,7 +870,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           nombreEspecialidad,
                           estilo['icon'] as Widget,
                           estilo['color'] as Color,
-                          cantidadMedicos, // 👈 CORREGIDO: Parámetro posicional directo sin la etiqueta 'count:'
+                          cantidadMedicos,
                         );
                       },
                     ),

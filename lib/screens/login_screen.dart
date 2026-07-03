@@ -342,18 +342,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                 String rolUsuario = datosUsuario['rol'] ?? '';
 
                                 if (mounted) {
-                                  // 🏢 COMPROBACIÓN MAESTRA DE ROLES USANDO RUTAS WEB ROBUSTAS
+                                  // 🏢 1. ACCESO PARA ADMINISTRADORES
                                   if (rolUsuario == 'admin' ||
                                       emailLimpio.toLowerCase() ==
                                           'sistemas@agenciaalcance.com') {
-                                    // Utiliza la estructura nativa para limpiar la pila web de navegación
                                     Navigator.pushNamedAndRemoveUntil(
                                       context,
                                       '/admin_dashboard',
                                       (route) => false,
                                     );
                                   }
-                                  // 🩺 ACCESO DE PACIENTES VERIFICADOS
+                                  // 📝 2. NUEVO ACCESO PARA VENDEDORES AUTORIZADOS
+                                  else if (rolUsuario == 'vendedor') {
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/captura-contratos',
+                                      (route) => false,
+                                    );
+                                  }
+                                  // 🩺 3. ACCESO DE PACIENTES VERIFICADOS
                                   else if (rolUsuario == 'paciente') {
                                     Navigator.pushNamedAndRemoveUntil(
                                       context,
@@ -361,7 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       (route) => false,
                                     );
                                   }
-                                  // 🚨 RESTRICCIÓN: Bloquear perfiles médicos y forzar el logout de seguridad
+                                  // 🚨 RESTRICCIÓN: Bloquear accesos inválidos
                                   else {
                                     await AuthService().cerrarSesion();
                                     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import 'package:signature/signature.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../services/auth_service.dart';
-import 'package:intl/intl.dart';
 
 class RegistroContratoVendedorScreen extends StatefulWidget {
   const RegistroContratoVendedorScreen({super.key});
@@ -17,7 +18,7 @@ class RegistroContratoVendedorScreen extends StatefulWidget {
 class _HighlightTextEditingControllers {
   // Sección 1: Datos de Registro y Membresía
   final nombreMedico = TextEditingController();
-  final especialidad = TextEditingController();
+  final specialty = TextEditingController();
   final fechaRegistro = TextEditingController(
     text: DateFormat('dd/MM/yyyy').format(DateTime.now()),
   );
@@ -58,7 +59,7 @@ class _HighlightTextEditingControllers {
 
   void dispose() {
     nombreMedico.dispose();
-    especialidad.dispose();
+    specialty.dispose();
     fechaRegistro.dispose();
     inicioDirectorio.dispose();
     gratuitoDel.dispose();
@@ -96,14 +97,25 @@ class _RegistroContratoVendedorScreenState
   final _formKey = GlobalKey<FormState>();
   final _ctrl = _HighlightTextEditingControllers();
 
-  // Estados para Switches y Dropdowns del PDF
+  // Controladores para las firmas digitales táctiles
+  final SignatureController _firmaClienteController = SignatureController(
+    penStrokeWidth: 3,
+    penColor: const Color(0xFF0F172A),
+    exportBackgroundColor: Colors.transparent,
+  );
+
+  final SignatureController _firmaAsesorController = SignatureController(
+    penStrokeWidth: 3,
+    penColor: const Color(0xFF0F172A),
+    exportBackgroundColor: Colors.transparent,
+  );
+
   String _avisoHospital = 'No';
   String _avisoIndividual = 'No';
   String _ayudaTramiteAviso = 'No';
   String _estacionamiento = 'No';
   String _statusPago = 'No';
 
-  // Checkboxes de Días de Consulta
   final Map<String, bool> _diasSeleccionados = {
     'Lunes': true,
     'Martes': true,
@@ -114,7 +126,6 @@ class _RegistroContratoVendedorScreenState
     'Domingo': false,
   };
 
-  // Controladores de Horarios por tipo de actividad
   final Map<String, Map<String, String>> _horariosActividad = {
     'Consulta': {'de': '09:00', 'a': '18:00'},
     'Emergencias': {'de': '00:00', 'a': '23:59'},
@@ -122,7 +133,6 @@ class _RegistroContratoVendedorScreenState
     'Privado': {'de': '--:--', 'a': '--:--'},
   };
 
-  // Lista dinámica de servicios destacados (Máximo 10)
   final List<TextEditingController> _serviciosControllers = List.generate(
     10,
     (_) => TextEditingController(),
@@ -141,27 +151,52 @@ class _RegistroContratoVendedorScreenState
   @override
   void dispose() {
     _ctrl.dispose();
+    _firmaClienteController.dispose();
+    _firmaAsesorController.dispose();
     for (var c in _serviciosControllers) {
       c.dispose();
     }
     super.dispose();
   }
 
-  // =========================================================================
-  // 🔐 CONTROL DE ACCESO ULTRA SEGURO POR ROL DE VENDEDOR
-  // =========================================================================
+  Future<void> _seleccionarFecha(
+    BuildContext context,
+    TextEditingController controller,
+  ) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+      locale: const Locale('es', 'ES'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF0061E0),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF1E293B),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        controller.text = DateFormat('dd/MM/yyyy').format(picked);
+      });
+    }
+  }
+
   Future<void> _verificarPermisosVendedor() async {
-    // 1. Verificación contra nulos inicial
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      debugPrint('Acceso denegado: No hay una sesión activa de usuario.');
       _denegarAcceso();
       return;
     }
-
-    // 2. Declaramos 'rol' aquí arriba para que TODA la función pueda usarla
     String rol = 'desconocido';
-
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('usuarios')
@@ -170,11 +205,9 @@ class _RegistroContratoVendedorScreenState
 
       if (userDoc.exists && userDoc.data() != null) {
         final userData = userDoc.data() as Map<String, dynamic>;
-
         if (userData.containsKey('rol') && userData['rol'] != null) {
           rol = userData['rol'].toString().trim();
         }
-
         if (rol == 'vendedor' || rol == 'admin') {
           setState(() {
             _isAuthorized = true;
@@ -183,12 +216,8 @@ class _RegistroContratoVendedorScreenState
           return;
         }
       }
-
-      // Ahora ya no marcará error porque 'rol' existe en este bloque
-      debugPrint('Acceso denegado: El rol "$rol" no está autorizado.');
       _denegarAcceso();
     } catch (e) {
-      debugPrint('Error crítico en verificación de rol: $e');
       _denegarAcceso();
     }
   }
@@ -199,20 +228,27 @@ class _RegistroContratoVendedorScreenState
         _isAuthorized = false;
         _isCheckingRole = false;
       });
-      // Rebota de forma inmediata al usuario común hacia la raíz pública
       Navigator.pushReplacementNamed(context, '/');
     }
   }
 
-  // =========================================================================
-  // 💾 PROCESAMIENTO Y GUARDADO HACIA FIRESTORE
-  // =========================================================================
   Future<void> _guardarContratoDirectorio() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_firmaClienteController.isEmpty || _firmaAsesorController.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Por favor, ambas firmas son obligatorias antes de guardar.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
 
-    // Mapeamos los servicios que el vendedor haya escrito
     List<String> listaServicios = [];
     for (var controller in _serviciosControllers) {
       if (controller.text.trim().isNotEmpty) {
@@ -232,12 +268,16 @@ class _RegistroContratoVendedorScreenState
           'al': _ctrl.contratoAl.text.trim(),
         },
         'pagado': _statusPago == 'Si',
-        'notas_internas': _ctrl.notasAdicionales.text.trim(),
+        'firmas_digitalizadas': {
+          'cliente_firmó': !_firmaClienteController.isEmpty,
+          'asesor_firmó': !_firmaAsesorController.isEmpty,
+        },
+        'notes_internas': _ctrl.notasAdicionales.text.trim(),
       },
       'perfil_medico': {
         'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
-        'especialidad': _ctrl.especialidad.text.trim(),
-        'activo': true, // Queda activo por defecto al registrarse
+        'especialidad': _ctrl.specialty.text.trim(),
+        'activo': true,
         'fecha_registro': _ctrl.fechaRegistro.text.trim(),
         'inicio_directorio': _ctrl.inicioDirectorio.text.trim(),
         'periodo_gratuito': {
@@ -285,7 +325,6 @@ class _RegistroContratoVendedorScreenState
     };
 
     try {
-      // Guarda todo el expediente unificado en una colección de control administrativo
       await FirebaseFirestore.instance
           .collection('registro_contratos')
           .add(contratoPayload);
@@ -298,6 +337,8 @@ class _RegistroContratoVendedorScreenState
           ),
         );
         _formKey.currentState!.reset();
+        _firmaClienteController.clear();
+        _firmaAsesorController.clear();
         setState(() => _isSaving = false);
       }
     } catch (e) {
@@ -339,7 +380,6 @@ class _RegistroContratoVendedorScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- ENCABEZADO DE MÓDULO ---
                   const Text(
                     'Registro de Médicos para Directorio Web',
                     style: TextStyle(
@@ -359,211 +399,404 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 30),
 
-                  // =========================================================================
-                  // 🏢 SECCIÓN 1: DATOS GENERALES Y CONTRATO
-                  // =========================================================================
+                  // 🏢 SECCIÓN 1
                   _buildSectionCard(
                     title: '1. Identificación del Médico y Periodo de Contrato',
                     icon: Icons.assignment_ind_outlined,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: _buildTextField(
-                              label: 'Nombre del Médico o Establecimiento *',
-                              controller: _ctrl.nombreMedico,
-                              validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: _buildTextField(
-                              label: 'Especialidad Médica o Actividad *',
-                              controller: _ctrl.especialidad,
-                              validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 600;
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: useVertical ? 1 : 2,
+                                    child: _buildTextField(
+                                      label:
+                                          'Nombre del Médico o Establecimiento *',
+                                      controller: _ctrl.nombreMedico,
+                                      validator: (v) =>
+                                          v!.isEmpty ? 'Requerido' : null,
+                                    ),
+                                  ),
+                                  if (!useVertical) const SizedBox(width: 16),
+                                  if (!useVertical)
+                                    Expanded(
+                                      flex: 1,
+                                      child: _buildTextField(
+                                        label:
+                                            'Especialidad Médica o Actividad *',
+                                        controller: _ctrl.specialty,
+                                        validator: (v) =>
+                                            v!.isEmpty ? 'Requerido' : null,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              if (useVertical) const SizedBox(height: 16),
+                              if (useVertical)
+                                _buildTextField(
+                                  label: 'Especialidad Médica o Actividad *',
+                                  controller: _ctrl.specialty,
+                                  validator: (v) =>
+                                      v!.isEmpty ? 'Requerido' : null,
+                                ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Fecha de Registro',
-                              controller: _ctrl.fechaRegistro,
-                              enabled: false,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Inicio en el Directorio (dd/mm/aaaa)',
-                              controller: _ctrl.inicioDirectorio,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Periodo Gratuito (Del)',
-                              controller: _ctrl.gratuitoDel,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Periodo Gratuito (Al)',
-                              controller: _ctrl.gratuitoAl,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 750;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Fecha de Registro',
+                                      controller: _ctrl.fechaRegistro,
+                                      enabled: false,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Inicio en el Directorio',
+                                      controller: _ctrl.inicioDirectorio,
+                                      readOnly: true,
+                                      onTap: () => _seleccionarFecha(
+                                        context,
+                                        _ctrl.inicioDirectorio,
+                                      ),
+                                      suffixIcon: const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Periodo Gratuito (Del)',
+                                      controller: _ctrl.gratuitoDel,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Periodo Gratuito (Al)',
+                                      controller: _ctrl.gratuitoAl,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Fecha de Registro',
+                                        controller: _ctrl.fechaRegistro,
+                                        enabled: false,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Inicio en el Directorio',
+                                        controller: _ctrl.inicioDirectorio,
+                                        readOnly: true,
+                                        onTap: () => _seleccionarFecha(
+                                          context,
+                                          _ctrl.inicioDirectorio,
+                                        ),
+                                        suffixIcon: const Icon(
+                                          Icons.calendar_today_outlined,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Periodo Gratuito (Del)',
+                                        controller: _ctrl.gratuitoDel,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Periodo Gratuito (Al)',
+                                        controller: _ctrl.gratuitoAl,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  // =========================================================================
-                  // 🛡️ SECCIÓN 2: REGULACIÓN SANITARIA Y AVISOS de PUBLICIDAD
-                  // =========================================================================
+                  // 🛡️ SECCIÓN 2
                   _buildSectionCard(
                     title: '2. Regulación Sanitaria e Inicio de Facturación',
                     icon: Icons.gavel_rounded,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildRadioRow(
-                              label:
-                                  '¿Cuenta con Aviso de Publicidad el Hospital en el que trabaja?',
-                              value: _avisoHospital,
-                              onChanged: (v) =>
-                                  setState(() => _avisoHospital = v!),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Número de Aviso Hospital',
-                              controller: _ctrl.avisoHospitalNum,
-                              enabled: _avisoHospital == 'Si',
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildRadioRow(
+                                      label:
+                                          '¿Cuenta con Aviso de Publicidad el Hospital en el que trabaja?',
+                                      value: _avisoHospital,
+                                      onChanged: (v) =>
+                                          setState(() => _avisoHospital = v!),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildTextField(
+                                      label: 'Número de Aviso Hospital',
+                                      controller: _ctrl.avisoHospitalNum,
+                                      enabled: _avisoHospital == 'Si',
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildRadioRow(
+                                        label:
+                                            '¿Cuenta con Aviso de Publicidad el Hospital en el que trabaja?',
+                                        value: _avisoHospital,
+                                        onChanged: (v) =>
+                                            setState(() => _avisoHospital = v!),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Número de Aviso Hospital',
+                                        controller: _ctrl.avisoHospitalNum,
+                                        enabled: _avisoHospital == 'Si',
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const Divider(height: 32),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildRadioRow(
-                              label:
-                                  '¿Cuenta con Aviso de Publicidad Individual?',
-                              value: _avisoIndividual,
-                              onChanged: (v) =>
-                                  setState(() => _avisoIndividual = v!),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Número de Aviso Individual',
-                              controller: _ctrl.avisoIndividualNum,
-                              enabled: _avisoIndividual == 'Si',
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildRadioRow(
+                                      label:
+                                          '¿Cuenta con Aviso de Publicidad Individual?',
+                                      value: _avisoIndividual,
+                                      onChanged: (v) =>
+                                          setState(() => _avisoIndividual = v!),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildTextField(
+                                      label: 'Número de Aviso Individual',
+                                      controller: _ctrl.avisoIndividualNum,
+                                      enabled: _avisoIndividual == 'Si',
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildRadioRow(
+                                        label:
+                                            '¿Cuenta con Aviso de Publicidad Individual?',
+                                        value: _avisoIndividual,
+                                        onChanged: (v) => setState(
+                                          () => _avisoIndividual = v!,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Número de Aviso Individual',
+                                        controller: _ctrl.avisoIndividualNum,
+                                        enabled: _avisoIndividual == 'Si',
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const Divider(height: 32),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildRadioRow(
-                              label:
-                                  '¿Requiere que le ayuden a tramitar el aviso como Médico Individual?',
-                              value: _ayudaTramiteAviso,
-                              onChanged: (v) =>
-                                  setState(() => _ayudaTramiteAviso = v!),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Inicio de Facturación (De)',
-                              controller: _ctrl.inicioFacturacionDe,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Inicio de Facturación (Del)',
-                              controller: _ctrl.inicioFacturacionDel,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 750;
+                          return useVertical
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildRadioRow(
+                                      label:
+                                          '¿Requiere que le ayuden a tramitar el aviso como Médico Individual?',
+                                      value: _ayudaTramiteAviso,
+                                      onChanged: (v) => setState(
+                                        () => _ayudaTramiteAviso = v!,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Inicio de Facturación (De)',
+                                      controller: _ctrl.inicioFacturacionDe,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Inicio de Facturación (Del)',
+                                      controller: _ctrl.inicioFacturacionDel,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildRadioRow(
+                                        label:
+                                            '¿Requiere que le ayuden a tramitar el aviso como Médico Individual?',
+                                        value: _ayudaTramiteAviso,
+                                        onChanged: (v) => setState(
+                                          () => _ayudaTramiteAviso = v!,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Inicio de Facturación (De)',
+                                        controller: _ctrl.inicioFacturacionDe,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Inicio de Facturación (Del)',
+                                        controller: _ctrl.inicioFacturacionDel,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  // =========================================================================
-                  // 📍 SECCIÓN 3: UBICACIÓN Y GEO-LOCALIZACIÓN
-                  // =========================================================================
+                  // 📍 SECCIÓN 3
                   _buildSectionCard(
                     title: '3. Ubicación Geográfica del Establecimiento',
                     icon: Icons.map_outlined,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: _buildTextField(
-                              label: 'Calle',
-                              controller: _ctrl.direccionCalle,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: _buildTextField(
-                              label: 'No. Exterior/Interior',
-                              controller: _ctrl.direccionNum,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 2,
-                            child: _buildTextField(
-                              label: 'Colonia o Fraccionamiento',
-                              controller: _ctrl.direccionColonia,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Calle',
+                                      controller: _ctrl.direccionCalle,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'No. Exterior/Interior',
+                                      controller: _ctrl.direccionNum,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Colonia o Fraccionamiento',
+                                      controller: _ctrl.direccionColonia,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 3,
+                                      child: _buildTextField(
+                                        label: 'Calle',
+                                        controller: _ctrl.direccionCalle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 1,
+                                      child: _buildTextField(
+                                        label: 'No. Exterior/Interior',
+                                        controller: _ctrl.direccionNum,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 2,
+                                      child: _buildTextField(
+                                        label: 'Colonia o Fraccionamiento',
+                                        controller: _ctrl.direccionColonia,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Ciudad o Municipio',
-                              controller: _ctrl.direccionCiudad,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Coordenadas GPS (Link o Lat, Lon)',
-                              controller: _ctrl.ubicacionGps,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Teléfonos para Reservar Citas',
-                              controller: _ctrl.telefonosCitas,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 750;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Ciudad o Municipio',
+                                      controller: _ctrl.direccionCiudad,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label:
+                                          'Coordenadas GPS (Link o Lat, Lon)',
+                                      controller: _ctrl.ubicacionGps,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Teléfonos para Reservar Citas',
+                                      controller: _ctrl.telefonosCitas,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Ciudad o Municipio',
+                                        controller: _ctrl.direccionCiudad,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label:
+                                            'Coordenadas GPS (Link o Lat, Lon)',
+                                        controller: _ctrl.ubicacionGps,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Teléfonos para Reservar Citas',
+                                        controller: _ctrl.telefonosCitas,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const SizedBox(height: 16),
                       _buildRadioRow(
@@ -575,9 +808,7 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // =========================================================================
-                  // 🗓️ SECCIÓN 4: AGENDA DE ATENCIÓN Y HORARIOS MULTI-TURNO
-                  // =========================================================================
+                  // 🗓️ SECCIÓN 4
                   _buildSectionCard(
                     title: '4. Días de Consulta y Configuración de Horarios',
                     icon: Icons.calendar_month_outlined,
@@ -593,6 +824,7 @@ class _RegistroContratoVendedorScreenState
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 12,
+                        runSpacing: 8,
                         children: _diasSeleccionados.keys.map((dia) {
                           return FilterChip(
                             label: Text(dia),
@@ -619,29 +851,39 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // =========================================================================
-                  // Checking list: SECCIÓN 5: LISTADO DE SERVICIOS (MAX 10)
-                  // =========================================================================
+                  // 🩺 SECCIÓN 5
                   _buildSectionCard(
                     title:
                         '5. Servicios Destacados que Ofrecen en el Consultorio (Máximo 10)',
                     icon: Icons.medical_services_outlined,
                     children: [
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 10,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisExtent: 65,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 8,
-                            ),
-                        itemBuilder: (context, index) {
-                          return _buildTextField(
-                            label: 'Servicio ${index + 1}',
-                            controller: _serviciosControllers[index],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          int crossAxisCount = constraints.maxWidth < 650
+                              ? 1
+                              : 2;
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 10,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  mainAxisExtent: 85,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 8,
+                                ),
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                child: _buildTextField(
+                                  label: 'Servicio ${index + 1}',
+                                  controller: _serviciosControllers[index],
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -649,176 +891,420 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // =========================================================================
-                  // 🌐 SECCIÓN 6: REDES SOCIALES Y EXPEDIENTE DIGITAL
-                  // =========================================================================
+                  // 🌐 SECCIÓN 6
                   _buildSectionCard(
                     title: '6. Canales Digitales y Enlaces de Archivos Anexos',
                     icon: Icons.cloud_circle_outlined,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Enlace de Facebook',
-                              controller: _ctrl.fbLink,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Enlace de Instagram',
-                              controller: _ctrl.igLink,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 600;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Enlace de Facebook',
+                                      controller: _ctrl.fbLink,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Enlace de Instagram',
+                                      controller: _ctrl.igLink,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Enlace de Facebook',
+                                        controller: _ctrl.fbLink,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Enlace de Instagram',
+                                        controller: _ctrl.igLink,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Enlace de Tik Tok',
-                              controller: _ctrl.tkLink,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Enlace de Sitio Web',
-                              controller: _ctrl.webLink,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 600;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Enlace de Tik Tok',
+                                      controller: _ctrl.tkLink,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Enlace de Sitio Web',
+                                      controller: _ctrl.webLink,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Enlace de Tik Tok',
+                                        controller: _ctrl.tkLink,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Enlace de Sitio Web',
+                                        controller: _ctrl.webLink,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const Divider(height: 32),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'URL Foto del Médico (Drive / Storage)',
-                              controller: _ctrl.fotoMedicoUrl,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'URL Foto Fachada/Consultorio',
-                              controller: _ctrl.fotoConsultorioUrl,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label:
+                                          'URL Foto del Médico (Drive / Storage)',
+                                      controller: _ctrl.fotoMedicoUrl,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'URL Foto Fachada/Consultorio',
+                                      controller: _ctrl.fotoConsultorioUrl,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label:
+                                            'URL Foto del Médico (Drive / Storage)',
+                                        controller: _ctrl.fotoMedicoUrl,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'URL Foto Fachada/Consultorio',
+                                        controller: _ctrl.fotoConsultorioUrl,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'URL Logotipo Alta Resolución',
-                              controller: _ctrl.logoResolucionUrl,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Email envío de Facturas',
-                              controller: _ctrl.emailFactura,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'URL Logotipo Alta Resolución',
+                                      controller: _ctrl.logoResolucionUrl,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Email envío de Facturas',
+                                      controller: _ctrl.emailFactura,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'URL Logotipo Alta Resolución',
+                                        controller: _ctrl.logoResolucionUrl,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Email envío de Facturas',
+                                        controller: _ctrl.emailFactura,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  // =========================================================================
-                  // ✍️ SECCIÓN 7: CIERRE DE CONTRATO Y ASESOR COMERCIAL
-                  // =========================================================================
+                  // ✍️ SECCIÓN 7
                   _buildSectionCard(
                     title:
-                        '7. Cierre de Contrato y Validación de Validación de Pago',
+                        '7. Cierre de Contrato y Validación de Pago',
                     icon: Icons.border_color_outlined,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Nombre del Firmante (Cliente) *',
-                              controller: _ctrl.nombreFirmante,
-                              validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Puesto o Cargo *',
-                              controller: _ctrl.puestoCargo,
-                              validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Teléfono de Contacto',
-                              controller: _ctrl.telefonoFirmante,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 750;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Nombre del Firmante (Cliente) *',
+                                      controller: _ctrl.nombreFirmante,
+                                      validator: (v) =>
+                                          v!.isEmpty ? 'Requerido' : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Puesto o Cargo *',
+                                      controller: _ctrl.puestoCargo,
+                                      validator: (v) =>
+                                          v!.isEmpty ? 'Requerido' : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Teléfono de Contacto',
+                                      controller: _ctrl.telefonoFirmante,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label:
+                                            'Nombre del Firmante (Cliente) *',
+                                        controller: _ctrl.nombreFirmante,
+                                        validator: (v) =>
+                                            v!.isEmpty ? 'Requerido' : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Puesto o Cargo *',
+                                        controller: _ctrl.puestoCargo,
+                                        validator: (v) =>
+                                            v!.isEmpty ? 'Requerido' : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Teléfono de Contacto',
+                                        controller: _ctrl.telefonoFirmante,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Periodo de Contrato (Del)',
-                              controller: _ctrl.contratoDel,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              label: 'Periodo de Contrato (Al)',
-                              controller: _ctrl.contratoAl,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildRadioRow(
-                              label: '¿Contrato Pagado?',
-                              value: _statusPago,
-                              onChanged: (v) =>
-                                  setState(() => _statusPago = v!),
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 750;
+                          return useVertical
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Periodo de Contrato (Del)',
+                                      controller: _ctrl.contratoDel,
+                                      readOnly: true,
+                                      onTap: () => _seleccionarFecha(
+                                        context,
+                                        _ctrl.contratoDel,
+                                      ),
+                                      suffixIcon: const Icon(
+                                        Icons.date_range_outlined,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Periodo de Contrato (Al)',
+                                      controller: _ctrl.contratoAl,
+                                      readOnly: true,
+                                      onTap: () => _seleccionarFecha(
+                                        context,
+                                        _ctrl.contratoAl,
+                                      ),
+                                      suffixIcon: const Icon(
+                                        Icons.date_range_outlined,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildRadioRow(
+                                      label: '¿Contrato Pagado?',
+                                      value: _statusPago,
+                                      onChanged: (v) =>
+                                          setState(() => _statusPago = v!),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Periodo de Contrato (Del)',
+                                        controller: _ctrl.contratoDel,
+                                        readOnly: true,
+                                        onTap: () => _seleccionarFecha(
+                                          context,
+                                          _ctrl.contratoDel,
+                                        ),
+                                        suffixIcon: const Icon(
+                                          Icons.date_range_outlined,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Periodo de Contrato (Al)',
+                                        controller: _ctrl.contratoAl,
+                                        readOnly: true,
+                                        onTap: () => _seleccionarFecha(
+                                          context,
+                                          _ctrl.contratoAl,
+                                        ),
+                                        suffixIcon: const Icon(
+                                          Icons.date_range_outlined,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildRadioRow(
+                                        label: '¿Contrato Pagado?',
+                                        value: _statusPago,
+                                        onChanged: (v) =>
+                                            setState(() => _statusPago = v!),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: _buildTextField(
-                              label: 'Notas Especiales / Observaciones',
-                              controller: _ctrl.notasAdicionales,
-                              maxLines: 2,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: _buildTextField(
-                              label: 'Nombre del Asesor Comercial *',
-                              controller: _ctrl.asesorComercial,
-                              validator: (v) => v!.isEmpty ? 'Requerido' : null,
-                            ),
-                          ),
-                        ],
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 700;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Notas Especiales / Observaciones',
+                                     controller: _ctrl.notasAdicionales,
+                                      maxLines: 2,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Nombre del Asesor Comercial *',
+                                      controller: _ctrl.asesorComercial,
+                                      validator: (v) =>
+                                          v!.isEmpty ? 'Requerido' : null,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: _buildTextField(
+                                        label:
+                                            'Notas Especiales / Observaciones',
+                                        controller: _ctrl.notasAdicionales,
+                                        maxLines: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 1,
+                                      child: _buildTextField(
+                                        label: 'Nombre del Asesor Comercial *',
+                                        controller: _ctrl.asesorComercial,
+                                        validator: (v) =>
+                                            v!.isEmpty ? 'Requerido' : null,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
+                      ),
+
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Divider(color: Color(0xFFCBD5E1), thickness: 1),
+                      ),
+
+                      const Text(
+                        'Firmas de Conformidad del Acuerdo',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool compactFirmas = constraints.maxWidth < 650;
+                          return compactFirmas
+                              ? Column(
+                                  children: [
+                                    _buildSignatureBox(
+                                      title:
+                                          'Firma del Cliente (Médico / Representante)',
+                                      controller: _firmaClienteController,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildSignatureBox(
+                                      title: 'Firma del Asesor Comercial',
+                                      controller: _firmaAsesorController,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildSignatureBox(
+                                        title: 'Firma del Cliente (Médico)',
+                                        controller: _firmaClienteController,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    Expanded(
+                                      child: _buildSignatureBox(
+                                        title: 'Firma del Asesor Comercial',
+                                        controller: _firmaAsesorController,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
                       ),
                     ],
                   ),
                   const SizedBox(height: 40),
 
-                  // --- ACCIÓN PRINCIPAL DE CARGA ---
+                  // --- BOTÓN PRINCIPAL ---
                   SizedBox(
                     width: double.infinity,
                     height: 54,
@@ -866,7 +1352,7 @@ class _RegistroContratoVendedorScreenState
   }
 
   // =========================================================================
-  // 🎨 COMPONENTES INTERNOS DE ESTILIZACIÓN PREMIUM
+  // 🎨 COMPONENTES INTERNOS DE ESTILIZACIÓN PREMIUM (MÉTODOS AGREGADOS COMPLETIOS)
   // =========================================================================
   Widget _buildSectionCard({
     required String title,
@@ -895,12 +1381,14 @@ class _RegistroContratoVendedorScreenState
             children: [
               Icon(icon, color: const Color(0xFF0061E0), size: 22),
               const SizedBox(width: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
               ),
             ],
@@ -921,6 +1409,9 @@ class _RegistroContratoVendedorScreenState
     required TextEditingController controller,
     String? Function(String?)? validator,
     bool enabled = true,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    Widget? suffixIcon,
     int maxLines = 1,
   }) {
     return Column(
@@ -928,6 +1419,8 @@ class _RegistroContratoVendedorScreenState
       children: [
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 12.5,
@@ -939,6 +1432,8 @@ class _RegistroContratoVendedorScreenState
           controller: controller,
           validator: validator,
           enabled: enabled,
+          readOnly: readOnly,
+          onTap: onTap,
           maxLines: maxLines,
           style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
           decoration: InputDecoration(
@@ -946,6 +1441,7 @@ class _RegistroContratoVendedorScreenState
             fillColor: enabled
                 ? const Color(0xFFF8FAFC)
                 : const Color(0xFFF1F5F9),
+            suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -1003,89 +1499,153 @@ class _RegistroContratoVendedorScreenState
     );
   }
 
+  Widget _buildSignatureBox({
+    required String title,
+    required SignatureController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFCBD5E1)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Signature(
+              controller: controller,
+              height: 140,
+              backgroundColor: const Color(0xFFF8FAFC),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: () => controller.clear(),
+            icon: const Icon(
+              Icons.delete_sweep_outlined,
+              size: 16,
+              color: Colors.redAccent,
+            ),
+            label: const Text(
+              'Limpiar Trazo',
+              style: TextStyle(fontSize: 11, color: Colors.redAccent),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildGridHorarios() {
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2),
-        1: FlexColumnWidth(2),
-        2: FlexColumnWidth(2),
-      },
-      // 👈 CAMBIADO AQUÍ: Nombre correcto del parámetro para tablas de Flutter
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: _horariosActividad.keys.map((actividad) {
-        return TableRow(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                actividad,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool compactMode = constraints.maxWidth < 500;
+        return Table(
+          columnWidths: compactMode
+              ? const {
+                  0: FlexColumnWidth(1.5),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                }
+              : const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(2),
+                  2: FlexColumnWidth(2),
+                },
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          children: _horariosActividad.keys.map((actividad) {
+            return TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    actividad,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                children: [
-                  const Text(
-                    'De: ',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 36,
-                      child: TextFormField(
-                        initialValue: _horariosActividad[actividad]!['de'],
-                        onChanged: (val) =>
-                            _horariosActividad[actividad]!['de'] = val,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'De: ',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          height: 36,
+                          child: TextFormField(
+                            initialValue: _horariosActividad[actividad]!['de'],
+                            onChanged: (val) =>
+                                _horariosActividad[actividad]!['de'] = val,
+                            style: const TextStyle(fontSize: 13),
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                children: [
-                  const Text(
-                    'A: ',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 36,
-                      child: TextFormField(
-                        initialValue: _horariosActividad[actividad]!['a'],
-                        onChanged: (val) =>
-                            _horariosActividad[actividad]!['a'] = val,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'A: ',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      Expanded(
+                        child: SizedBox(
+                          height: 36,
+                          child: TextFormField(
+                            initialValue: _horariosActividad[actividad]!['a'],
+                            onChanged: (val) =>
+                                _horariosActividad[actividad]!['a'] = val,
+                            style: const TextStyle(fontSize: 13),
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }

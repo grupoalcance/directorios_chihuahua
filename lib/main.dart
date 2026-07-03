@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-// Tus rutas de pantallas mapeadas correctamente
 import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
 import 'package:directorios_laguna/screens/admin_dashboard_screen.dart';
@@ -12,6 +13,7 @@ import 'package:directorios_laguna/screens/registro_contrato_vendedor_screen.dar
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
