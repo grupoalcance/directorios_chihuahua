@@ -151,11 +151,16 @@ class _RegistroContratoVendedorScreenState
   // 🔐 CONTROL DE ACCESO ULTRA SEGURO POR ROL DE VENDEDOR
   // =========================================================================
   Future<void> _verificarPermisosVendedor() async {
+    // 1. Verificación contra nulos inicial
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
+      debugPrint('Acceso denegado: No hay una sesión activa de usuario.');
       _denegarAcceso();
       return;
     }
+
+    // 2. Declaramos 'rol' aquí arriba para que TODA la función pueda usarla
+    String rol = 'desconocido';
 
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -163,11 +168,13 @@ class _RegistroContratoVendedorScreenState
           .doc(user.uid)
           .get();
 
-      if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>? ?? {};
-        String rol = userData['rol'] ?? '';
+      if (userDoc.exists && userDoc.data() != null) {
+        final userData = userDoc.data() as Map<String, dynamic>;
 
-        // Permite la entrada única a administradores y al rol específico de vendedor
+        if (userData.containsKey('rol') && userData['rol'] != null) {
+          rol = userData['rol'].toString().trim();
+        }
+
         if (rol == 'vendedor' || rol == 'admin') {
           setState(() {
             _isAuthorized = true;
@@ -176,8 +183,12 @@ class _RegistroContratoVendedorScreenState
           return;
         }
       }
+
+      // Ahora ya no marcará error porque 'rol' existe en este bloque
+      debugPrint('Acceso denegado: El rol "$rol" no está autorizado.');
       _denegarAcceso();
     } catch (e) {
+      debugPrint('Error crítico en verificación de rol: $e');
       _denegarAcceso();
     }
   }
