@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -16,7 +17,7 @@ class RegistroContratoVendedorScreen extends StatefulWidget {
 }
 
 class _HighlightTextEditingControllers {
-  // Sección 1: Datos de Registro y Membresía
+  // Section 1: Datos de Registro y Membresia
   final nombreMedico = TextEditingController();
   final specialty = TextEditingController();
   final fechaRegistro = TextEditingController(
@@ -30,7 +31,7 @@ class _HighlightTextEditingControllers {
   final inicioFacturacionDe = TextEditingController();
   final inicioFacturacionDel = TextEditingController();
 
-  // Sección 2: Ubicación
+  // Section 2: Ubicacion
   final direccionCalle = TextEditingController();
   final direccionNum = TextEditingController();
   final direccionColonia = TextEditingController();
@@ -38,7 +39,7 @@ class _HighlightTextEditingControllers {
   final ubicacionGps = TextEditingController();
   final telefonosCitas = TextEditingController();
 
-  // Sección 3: Redes Sociales y Anexos (Links/URLs)
+  // Section 3: Redes Sociales y Anexos (Links/URLs)
   final fbLink = TextEditingController();
   final igLink = TextEditingController();
   final tkLink = TextEditingController();
@@ -48,14 +49,13 @@ class _HighlightTextEditingControllers {
   final logoResolucionUrl = TextEditingController();
   final emailFactura = TextEditingController();
 
-  // Sección 4: Firmas y Control
+  // Section 4: Firmas y Control
   final nombreFirmante = TextEditingController();
   final puestoCargo = TextEditingController();
   final telefonoFirmante = TextEditingController();
   final contratoDel = TextEditingController();
   final contratoAl = TextEditingController();
-  final notasAdicionales =
-      TextEditingController(); // 🔑 Mapeado de forma uniforme
+  final notasAdicionales = TextEditingController();
   final asesorComercial = TextEditingController();
 
   void dispose() {
@@ -98,7 +98,7 @@ class _RegistroContratoVendedorScreenState
   final _formKey = GlobalKey<FormState>();
   final _ctrl = _HighlightTextEditingControllers();
 
-  // Controladores para las firmas digitales táctiles
+  // Controladores para las firmas digitales tactiles
   final SignatureController _firmaClienteController = SignatureController(
     penStrokeWidth: 3,
     penColor: const Color(0xFF0F172A),
@@ -158,48 +158,6 @@ class _RegistroContratoVendedorScreenState
       c.dispose();
     }
     super.dispose();
-  }
-
-  Future<void> _seleccionarFecha(
-    BuildContext context,
-    TextEditingController controller,
-  ) async {
-    if (!mounted) return;
-
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
-      locale: const Locale('es', 'ES'),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF0061E0),
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF1E293B),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && mounted) {
-      try {
-        final String fechaFormateada = DateFormat('dd/MM/yyyy').format(picked);
-        setState(() {
-          controller.text = fechaFormateada;
-        });
-      } catch (e) {
-        debugPrint('Error al formatear la fecha seleccionada: $e');
-        setState(() {
-          controller.text =
-              "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
-        });
-      }
-    }
   }
 
   Future<void> _verificarPermisosVendedor() async {
@@ -284,8 +242,7 @@ class _RegistroContratoVendedorScreenState
           'cliente_firmó': !_firmaClienteController.isEmpty,
           'asesor_firmó': !_firmaAsesorController.isEmpty,
         },
-        'notes_internas': _ctrl.notasAdicionales.text
-            .trim(), // 🔑 Sincronizado contra nulos
+        'notes_internas': _ctrl.notasAdicionales.text.trim(),
       },
       'perfil_medico': {
         'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
@@ -476,25 +433,20 @@ class _RegistroContratoVendedorScreenState
                                     _buildTextField(
                                       label: 'Inicio en el Directorio',
                                       controller: _ctrl.inicioDirectorio,
-                                      readOnly: true,
-                                      onTap: () => _seleccionarFecha(
-                                        context,
-                                        _ctrl.inicioDirectorio,
-                                      ),
-                                      suffixIcon: const Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 18,
-                                      ),
+                                      keyboardType: TextInputType.datetime,
+                                      hintText: 'dd/mm/aaaa',
                                     ),
                                     const SizedBox(height: 16),
                                     _buildTextField(
                                       label: 'Periodo Gratuito (Del)',
                                       controller: _ctrl.gratuitoDel,
+                                      hintText: 'dd/mm/aaaa',
                                     ),
                                     const SizedBox(height: 16),
                                     _buildTextField(
                                       label: 'Periodo Gratuito (Al)',
                                       controller: _ctrl.gratuitoAl,
+                                      hintText: 'dd/mm/aaaa',
                                     ),
                                   ],
                                 )
@@ -512,15 +464,8 @@ class _RegistroContratoVendedorScreenState
                                       child: _buildTextField(
                                         label: 'Inicio en el Directorio',
                                         controller: _ctrl.inicioDirectorio,
-                                        readOnly: true,
-                                        onTap: () => _seleccionarFecha(
-                                          context,
-                                          _ctrl.inicioDirectorio,
-                                        ),
-                                        suffixIcon: const Icon(
-                                          Icons.calendar_today_outlined,
-                                          size: 18,
-                                        ),
+                                        keyboardType: TextInputType.datetime,
+                                        hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -528,6 +473,7 @@ class _RegistroContratoVendedorScreenState
                                       child: _buildTextField(
                                         label: 'Periodo Gratuito (Del)',
                                         controller: _ctrl.gratuitoDel,
+                                        hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -535,6 +481,7 @@ class _RegistroContratoVendedorScreenState
                                       child: _buildTextField(
                                         label: 'Periodo Gratuito (Al)',
                                         controller: _ctrl.gratuitoAl,
+                                        hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
                                   ],
@@ -769,7 +716,8 @@ class _RegistroContratoVendedorScreenState
                                   children: [
                                     _buildTextField(
                                       label: 'Ciudad o Municipio',
-                                      controller: _ctrl.direccionCiudad,
+                                      controller: _ctrl
+                                          .direccionCiudad, // 🔑 CORREGIDO EL ESPACIO EN BLANCO
                                     ),
                                     const SizedBox(height: 16),
                                     _buildTextField(
@@ -789,7 +737,8 @@ class _RegistroContratoVendedorScreenState
                                     Expanded(
                                       child: _buildTextField(
                                         label: 'Ciudad o Municipio',
-                                        controller: _ctrl.direccionCiudad,
+                                        controller: _ctrl
+                                            .direccionCiudad, // 🔑 CORREGIDO EL ESPACIO EN BLANCO
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -1135,29 +1084,15 @@ class _RegistroContratoVendedorScreenState
                                     _buildTextField(
                                       label: 'Periodo de Contrato (Del)',
                                       controller: _ctrl.contratoDel,
-                                      readOnly: true,
-                                      onTap: () => _seleccionarFecha(
-                                        context,
-                                        _ctrl.contratoDel,
-                                      ),
-                                      suffixIcon: const Icon(
-                                        Icons.date_range_outlined,
-                                        size: 18,
-                                      ),
+                                      keyboardType: TextInputType.datetime,
+                                      hintText: 'dd/mm/aaaa',
                                     ),
                                     const SizedBox(height: 16),
                                     _buildTextField(
                                       label: 'Periodo de Contrato (Al)',
                                       controller: _ctrl.contratoAl,
-                                      readOnly: true,
-                                      onTap: () => _seleccionarFecha(
-                                        context,
-                                        _ctrl.contratoAl,
-                                      ),
-                                      suffixIcon: const Icon(
-                                        Icons.date_range_outlined,
-                                        size: 18,
-                                      ),
+                                      keyboardType: TextInputType.datetime,
+                                      hintText: 'dd/mm/aaaa',
                                     ),
                                     const SizedBox(height: 16),
                                     _buildRadioRow(
@@ -1174,15 +1109,8 @@ class _RegistroContratoVendedorScreenState
                                       child: _buildTextField(
                                         label: 'Periodo de Contrato (Del)',
                                         controller: _ctrl.contratoDel,
-                                        readOnly: true,
-                                        onTap: () => _seleccionarFecha(
-                                          context,
-                                          _ctrl.contratoDel,
-                                        ),
-                                        suffixIcon: const Icon(
-                                          Icons.date_range_outlined,
-                                          size: 18,
-                                        ),
+                                        keyboardType: TextInputType.datetime,
+                                        hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -1190,15 +1118,8 @@ class _RegistroContratoVendedorScreenState
                                       child: _buildTextField(
                                         label: 'Periodo de Contrato (Al)',
                                         controller: _ctrl.contratoAl,
-                                        readOnly: true,
-                                        onTap: () => _seleccionarFecha(
-                                          context,
-                                          _ctrl.contratoAl,
-                                        ),
-                                        suffixIcon: const Icon(
-                                          Icons.date_range_outlined,
-                                          size: 18,
-                                        ),
+                                        keyboardType: TextInputType.datetime,
+                                        hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -1424,6 +1345,8 @@ class _RegistroContratoVendedorScreenState
     bool readOnly = false,
     VoidCallback? onTap,
     Widget? suffixIcon,
+    TextInputType keyboardType = TextInputType.text,
+    String? hintText,
     int maxLines = 1,
   }) {
     return Column(
@@ -1446,10 +1369,17 @@ class _RegistroContratoVendedorScreenState
           enabled: enabled,
           readOnly: readOnly,
           onTap: onTap,
+          keyboardType: keyboardType,
           maxLines: maxLines,
+          // 🔑 FORMATEADOR INTELIGENTE INTEGRADO:
+          inputFormatters: keyboardType == TextInputType.datetime
+              ? [FormateadorMascaraFecha()]
+              : null,
           style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B)),
           decoration: InputDecoration(
             filled: true,
+            hintText: hintText,
+            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
             fillColor: enabled
                 ? const Color(0xFFF8FAFC)
                 : const Color(0xFFF1F5F9),
@@ -1544,7 +1474,7 @@ class _RegistroContratoVendedorScreenState
         ),
         const SizedBox(height: 4),
         Align(
-          alignment: Alignment.centerRight,
+          alignment: CalendarWithVisibility.centerRight,
           child: TextButton.icon(
             onPressed: () => controller.clear(),
             icon: const Icon(
@@ -1658,6 +1588,49 @@ class _RegistroContratoVendedorScreenState
           }).toList(),
         );
       },
+    );
+  }
+}
+
+class CalendarWithVisibility {
+  static const Alignment centerRight = Alignment.centerRight;
+}
+
+// =========================================================================
+// 🚀 CLASE FORMATEADORA INTEGRADA (MÁSCARA DE FECHAS AUTOMÁTICA)
+// =========================================================================
+class FormateadorMascaraFecha extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+
+    if (text.length < oldValue.text.length) {
+      return newValue;
+    }
+
+    var numeroSolo = text.replaceAll('/', '');
+    var buffer = StringBuffer();
+
+    if (numeroSolo.length > 8) {
+      numeroSolo = numeroSolo.substring(0, 8);
+    }
+
+    for (int i = 0; i < numeroSolo.length; i++) {
+      buffer.write(numeroSolo[i]);
+      var index = i + 1;
+      if (index == 2 && index != numeroSolo.length) {
+        buffer.write('/');
+      } else if (index == 4 && index != numeroSolo.length) {
+        buffer.write('/');
+      }
+    }
+
+    return TextEditingValue(
+      text: buffer.toString(),
+      selection: TextSelection.collapsed(offset: buffer.length),
     );
   }
 }
