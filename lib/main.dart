@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
