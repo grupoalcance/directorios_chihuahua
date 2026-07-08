@@ -28,8 +28,8 @@ class _HighlightTextEditingControllers {
   final gratuitoAl = TextEditingController();
   final avisoHospitalNum = TextEditingController();
   final avisoIndividualNum = TextEditingController();
-  final inicioFacturacionDe = TextEditingController();
-  final inicioFacturacionDel = TextEditingController();
+  final inicioFacturacionDe =
+      TextEditingController(); // Usado para la fecha de facturación
 
   // Section 2: Ubicacion
   final direccionCalle = TextEditingController();
@@ -68,7 +68,6 @@ class _HighlightTextEditingControllers {
     avisoHospitalNum.dispose();
     avisoIndividualNum.dispose();
     inicioFacturacionDe.dispose();
-    inicioFacturacionDel.dispose();
     direccionCalle.dispose();
     direccionNum.dispose();
     direccionColonia.dispose();
@@ -116,6 +115,10 @@ class _RegistroContratoVendedorScreenState
   String _ayudaTramiteAviso = 'No';
   String _estacionamiento = 'No';
   String _statusPago = 'No';
+
+  // 📈 VARIABLES PARA LOS CHECKBOXES EXCLUSIVOS DE FACTURACIÓN
+  String _tipoFacturacionSeleccionado =
+      'Único'; // Puede ser 'Único' o 'Meses a facturar'
 
   final Map<String, bool> _diasSeleccionados = {
     'Lunes': true,
@@ -264,7 +267,8 @@ class _RegistroContratoVendedorScreenState
         'requiere_ayuda_tramite': _ayudaTramiteAviso == 'Si',
         'inicio_facturacion': {
           'de': _ctrl.inicioFacturacionDe.text.trim(),
-          'del': _ctrl.inicioFacturacionDel.text.trim(),
+          'modalidad':
+              _tipoFacturacionSeleccionado, // Almacena 'Único' o 'Meses a facturar'
         },
       },
       'ubicacion_consultorio': {
@@ -300,7 +304,6 @@ class _RegistroContratoVendedorScreenState
           .add(contratoPayload);
 
       if (mounted) {
-        // 1. Alerta de éxito al usuario
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('¡Expediente de Directorio Registrado con Éxito!'),
@@ -308,13 +311,11 @@ class _RegistroContratoVendedorScreenState
           ),
         );
 
-        // 2. Reseteo de controles en memoria para evitar residuos
         _formKey.currentState!.reset();
         _firmaClienteController.clear();
         _firmaAsesorController.clear();
         setState(() => _isSaving = false);
 
-        // 🚀 3. REDIRECCIONAMIENTO DIRECTO AL MONITOR DE AUDITORÍA
         Navigator.pushReplacementNamed(context, '/admin_contratos');
       }
     } catch (e) {
@@ -615,15 +616,15 @@ class _RegistroContratoVendedorScreenState
                                     _buildTextField(
                                       label: 'Inicio de Facturación (De)',
                                       controller: _ctrl.inicioFacturacionDe,
+                                      keyboardType: TextInputType.datetime,
+                                      hintText: 'dd/mm/aaaa',
                                     ),
                                     const SizedBox(height: 16),
-                                    _buildTextField(
-                                      label: 'Inicio de Facturación (Del)',
-                                      controller: _ctrl.inicioFacturacionDel,
-                                    ),
+                                    _buildCheckboxFacturacionOptions(),
                                   ],
                                 )
                               : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Expanded(
                                       child: _buildRadioRow(
@@ -640,14 +641,13 @@ class _RegistroContratoVendedorScreenState
                                       child: _buildTextField(
                                         label: 'Inicio de Facturación (De)',
                                         controller: _ctrl.inicioFacturacionDe,
+                                        keyboardType: TextInputType.datetime,
+                                        hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
-                                      child: _buildTextField(
-                                        label: 'Inicio de Facturación (Del)',
-                                        controller: _ctrl.inicioFacturacionDel,
-                                      ),
+                                      child: _buildCheckboxFacturacionOptions(),
                                     ),
                                   ],
                                 );
@@ -722,8 +722,7 @@ class _RegistroContratoVendedorScreenState
                                   children: [
                                     _buildTextField(
                                       label: 'Ciudad o Municipio',
-                                      controller: _ctrl
-                                          .direccionCiudad, // 🔑 CORREGIDO EL ESPACIO EN BLANCO
+                                      controller: _ctrl.direccionCiudad,
                                     ),
                                     const SizedBox(height: 16),
                                     _buildTextField(
@@ -743,8 +742,7 @@ class _RegistroContratoVendedorScreenState
                                     Expanded(
                                       child: _buildTextField(
                                         label: 'Ciudad o Municipio',
-                                        controller: _ctrl
-                                            .direccionCiudad, // 🔑 CORREGIDO EL ESPACIO EN BLANCO
+                                        controller: _ctrl.direccionCiudad,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -796,6 +794,7 @@ class _RegistroContratoVendedorScreenState
                         children: _diasSeleccionados.keys.map((dia) {
                           return FilterChip(
                             label: Text(dia),
+                            // 🔑 CORREGIDO AQUÍ: Acceso directo al mapa booleano para limpiar el error de compilación
                             selected: _diasSeleccionados[dia]!,
                             onSelected: (val) =>
                                 setState(() => _diasSeleccionados[dia] = val),
@@ -1019,7 +1018,7 @@ class _RegistroContratoVendedorScreenState
 
                   // ✍️ SECCIÓN 7
                   _buildSectionCard(
-                    title: '7. Cierre de Contrato y Validación de Pago',
+                    title: '7. Cierre de Contrato y Validation de Pago',
                     icon: Icons.border_color_outlined,
                     children: [
                       LayoutBuilder(
@@ -1293,6 +1292,70 @@ class _RegistroContratoVendedorScreenState
   // =========================================================================
   // 🎨 COMPONENTES INTERNOS DE ESTILIZACIÓN PREMIUM
   // =========================================================================
+
+  Widget _buildCheckboxFacturacionOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const Text(
+          'Modalidad de Facturación',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12.5,
+            color: Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: CheckboxListTile(
+                  title: const Text('Único', style: TextStyle(fontSize: 13.5)),
+                  value: _tipoFacturacionSeleccionado == 'Único',
+                  activeColor: const Color(0xFF0061E0),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (bool? value) {
+                    if (value == true) {
+                      setState(() => _tipoFacturacionSeleccionado = 'Único');
+                    }
+                  },
+                ),
+              ),
+              Expanded(
+                child: CheckboxListTile(
+                  title: const Text(
+                    'Meses a facturar',
+                    style: TextStyle(fontSize: 13.5),
+                  ),
+                  value: _tipoFacturacionSeleccionado == 'Meses a facturar',
+                  activeColor: const Color(0xFF0061E0),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (bool? value) {
+                    if (value == true) {
+                      setState(
+                        () => _tipoFacturacionSeleccionado = 'Meses a facturar',
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSectionCard({
     required String title,
     required IconData icon,
@@ -1377,7 +1440,6 @@ class _RegistroContratoVendedorScreenState
           onTap: onTap,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          // 🔑 FORMATEADOR INTELIGENTE INTEGRADO:
           inputFormatters: keyboardType == TextInputType.datetime
               ? [FormateadorMascaraFecha()]
               : null,
@@ -1602,9 +1664,6 @@ class CalendarWithVisibility {
   static const Alignment centerRight = Alignment.centerRight;
 }
 
-// =========================================================================
-// 🚀 CLASE FORMATEADORA INTEGRADA (MÁSCARA DE FECHAS AUTOMÁTICA)
-// =========================================================================
 class FormateadorMascaraFecha extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

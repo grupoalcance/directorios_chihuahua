@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
-import '../services/auth_service.dart'; // 👈 IMPORTACIÓN SINCRO DE TU NUEVO SERVICIO
+import '../services/auth_service.dart';
 
 class AdminContratosDashboardScreen extends StatefulWidget {
   const AdminContratosDashboardScreen({super.key});
@@ -296,6 +296,7 @@ class _AdminContratosDashboardScreenState
     final ubicacion = data['ubicacion_consultorio'] ?? {};
     final regulacion = data['regulacion_sanitaria'] ?? {};
     final anexos = data['archivos_anexos_urls'] ?? {};
+    final inicioFacturacion = regulacion['inicio_facturacion'] ?? {};
 
     showModalBottomSheet(
       context: context,
@@ -368,13 +369,16 @@ class _AdminContratosDashboardScreenState
                         'Correo para Facturación: ${perfil['email_factura'] ?? "N/A"}',
                       ],
                     ),
+                    // 🔑 SECCIÓN ACTUALIZADA CON EL NUEVO FORMATO DE CHECKBOXES Y MÁSCARA FECHA
                     _buildSeccionAuditoria(
-                      titulo: 'Validación Sanitaria (Cofepris)',
+                      titulo: 'Validación Sanitaria (Cofepris) y Factura',
                       icon: Icons.health_and_safety_outlined,
                       datos: [
                         'Aviso de Funcionamiento Hospital: ${regulacion['aviso_hospital'] == true ? "CUMPLE (${regulacion['aviso_hospital_num']})" : "No Aplica / No tiene"}',
                         'Aviso de Publicidad Individual: ${regulacion['aviso_individual'] == true ? "CUMPLE (${regulacion['aviso_individual_num']})" : "No Aplica / No tiene"}',
                         'Solicitó Gestión de Trámite Técnico: ${regulacion['requiere_ayuda_tramite'] == true ? "SÍ" : "NO"}',
+                        'Inicio de Facturación (De): ${inicioFacturacion['de'] ?? "N/A"}',
+                        'Modalidad de Facturación: ${inicioFacturacion['modalidad'] ?? "Único"}',
                       ],
                     ),
                     _buildSeccionAuditoria(
@@ -412,11 +416,9 @@ class _AdminContratosDashboardScreenState
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        // 1. Congelamos referencias de navegación seguras anti-async gaps web
                         final navigator = Navigator.of(context);
                         final messenger = ScaffoldMessenger.of(context);
 
-                        // 2. Disparamos la clonación estructurada real en Firestore
                         final authService = AuthService();
                         bool exito = await authService
                             .migrarContratoAPerfilPublico(
@@ -425,8 +427,7 @@ class _AdminContratosDashboardScreenState
                             );
 
                         if (!mounted) return;
-                        navigator
-                            .pop(); // Cierra el modal lateral de forma segura
+                        navigator.pop();
 
                         if (exito) {
                           messenger.showSnackBar(
