@@ -16,6 +16,7 @@ import 'farmacia_profile_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../widgets/seccion_enlaces_cruzados.dart';
+import 'package:web_smooth_scroll/web_smooth_scroll.dart'; 
 
 const List<String> las15EspecialidadesLaguna = [
   'Cardiología',
@@ -39,6 +40,11 @@ class MedicosPageScreen extends StatefulWidget {
   const MedicosPageScreen({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return const MedicosPageScreen();
+  }
+
+  @override
   State<MedicosPageScreen> createState() => _MedicosPageScreenState();
 }
 
@@ -46,6 +52,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   final TextEditingController _especialidadController = TextEditingController();
   final TextEditingController _ciudadBuscadorController =
       TextEditingController();
+
+  // 🔑 1. CONTROLADOR DE SCROLL PRINCIPAL PARA EL SUAVIZADO WEB
+  final ScrollController _mainScrollController = ScrollController();
 
   final ScrollController _especialidadesScrollController = ScrollController();
   final ScrollController _medicosScrollController = ScrollController();
@@ -66,10 +75,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
   void _iniciarAutoScrolls() {
     _timerEspecialidades = Timer.periodic(const Duration(seconds: 3), (timer) {
-      // Validamos estrictamente que el controlador tenga clientes vinculados activos
       if (_especialidadesScrollController.hasClients) {
         try {
-          // 🔑 SOLUCIÓN: Usamos directamente la propiedad 'offset' que es nativa y segura en Web
           double currentScroll = _especialidadesScrollController.offset;
           double maxScroll =
               _especialidadesScrollController.position.maxScrollExtent;
@@ -89,7 +96,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             );
           }
         } catch (e) {
-          // En caso de desajuste dinámico de la ventana, evitamos romper el hilo de JS
           debugPrint('Scroll auto-recuperado en especialidades: $e');
         }
       }
@@ -126,6 +132,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   void dispose() {
     _especialidadController.dispose();
     _ciudadBuscadorController.dispose();
+    _mainScrollController.dispose(); // 🔑 Liberamos el controlador principal
     _especialidadesScrollController.dispose();
     _medicosScrollController.dispose();
     _timerEspecialidades?.cancel();
@@ -462,16 +469,22 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         },
       ),
       drawer: screenWidth < 1100 ? const PhoneMenuDrawer() : null,
-      body: CustomScrollView(
-        slivers: [
-          _buildHeroSection(screenWidth),
-          _buildEspecialidadesSection(screenWidth),
-          _buildMedicosSection(screenWidth),
-          _buildClinicasYFarmaciasSection(screenWidth),
-          _buildComoFuncionaSection(screenWidth),
-          _buildSeccionMedicosCruzados(),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)),
-        ],
+      body: WebSmoothScroll(
+        controller: _mainScrollController,
+        scrollSpeed: 130,
+        child: CustomScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          controller: _mainScrollController,
+          slivers: [
+            _buildHeroSection(screenWidth),
+            _buildEspecialidadesSection(screenWidth),
+            _buildMedicosSection(screenWidth),
+            _buildClinicasYFarmaciasSection(screenWidth),
+            _buildComoFuncionaSection(screenWidth),
+            _buildSeccionMedicosCruzados(),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
+        ),
       ),
     );
   }
@@ -1617,23 +1630,22 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           MaterialPageRoute(builder: (context) => const SuscribirseScreen()),
         ),
         onEnlacePressed: (ciudad, enlace) {
-          String especialidadNormalizada = 'Medicina General';
+          String specialtyNormalizada = 'Medicina General';
           if (enlace.contains('Cardiólogos'))
-            especialidadNormalizada = 'Cardiología';
-          if (enlace.contains('Pediatras'))
-            especialidadNormalizada = 'Pediatría';
+            specialtyNormalizada = 'Cardiología';
+          if (enlace.contains('Pediatras')) specialtyNormalizada = 'Pediatría';
           if (enlace.contains('Ginecólogos'))
-            especialidadNormalizada = 'Ginecología y Obstetricia';
+            specialtyNormalizada = 'Ginecología y Obstetricia';
           if (enlace.contains('Dentistas'))
-            especialidadNormalizada = 'Odontología (Dentista)';
+            specialtyNormalizada = 'Odontología (Dentista)';
           if (enlace.contains('Dermatólogos'))
-            especialidadNormalizada = 'Dermatología';
+            specialtyNormalizada = 'Dermatología';
 
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => ListaDoctoresScreen(
-                especialidad: especialidadNormalizada,
+                especialidad: specialtyNormalizada,
                 ciudad: ciudad,
               ),
             ),

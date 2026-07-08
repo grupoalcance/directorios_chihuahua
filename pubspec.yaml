@@ -49,6 +49,7 @@ dependencies:
   intl: ^0.20.2
   signature: ^5.5.0
   mask_text_input_formatter: ^2.9.0
+  web_smooth_scroll: ^2.0.0
 
 dev_dependencies:
   flutter_test:
