@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../services/auth_service.dart';
+import 'dart:convert';
 
 class AdminContratosDashboardScreen extends StatefulWidget {
   const AdminContratosDashboardScreen({super.key});
@@ -556,7 +557,7 @@ class _AdminContratosDashboardScreenState
                         const SizedBox(height: 15),
 
                         // =========================================================================
-                        // ✍️ SECCIÓN DE FIRMAS AUTÓGRAFAS INTEGRADAS AL REPORTE
+                        // ✍️ SECCIÓN DE FIRMAS AUTÓGRAFAS INTEGRADAS AL REPORTE (REPARADA)
                         // =========================================================================
                         const Center(
                           child: Text(
@@ -587,14 +588,50 @@ class _AdminContratosDashboardScreenState
                                     borderRadius: BorderRadius.circular(4),
                                     color: const Color(0xFFFAFBFD),
                                   ),
-                                  child: const Text(
-                                    '📝 Trazo Digital de Cliente',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.blueGrey,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  // 🔑 EVALUACIÓN REAL DEL TRAZO DE CLIENTE:
+                                  child:
+                                      data['firma_cliente_base64'] != null &&
+                                          data['firma_cliente_base64']
+                                              .isNotEmpty
+                                      ? Image.memory(
+                                          base64Decode(
+                                            data['firma_cliente_base64']
+                                                .toString()
+                                                .split(',')
+                                                .last,
+                                          ),
+                                          fit: BoxFit.contain,
+                                        )
+                                      : metadata['firmas_digitalizadas']?['cliente_firmó'] ==
+                                            true
+                                      ? const Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.verified_outlined,
+                                              color: Colors.green,
+                                              size: 20,
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'FIRMADO DIGITALMENTE',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.green,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : const Text(
+                                          '⚠️ Sin registro de trazo',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
@@ -629,14 +666,49 @@ class _AdminContratosDashboardScreenState
                                     borderRadius: BorderRadius.circular(4),
                                     color: const Color(0xFFFAFBFD),
                                   ),
-                                  child: const Text(
-                                    '🖊️ Aval Técnico Homologado',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.blueGrey,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  // 🔑 EVALUACIÓN REAL DEL TRAZO DEL ASESOR:
+                                  child:
+                                      data['firma_asesor_base64'] != null &&
+                                          data['firma_asesor_base64'].isNotEmpty
+                                      ? Image.memory(
+                                          base64Decode(
+                                            data['firma_asesor_base64']
+                                                .toString()
+                                                .split(',')
+                                                .last,
+                                          ),
+                                          fit: BoxFit.contain,
+                                        )
+                                      : metadata['firmas_digitalizadas']?['asesor_firmó'] ==
+                                            true
+                                      ? const Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.verified_user,
+                                              color: Colors.blue,
+                                              size: 20,
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'AVAL COMERCIAL OK',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.blue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : const Text(
+                                          '⚠️ Sin firma de asesor',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
