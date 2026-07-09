@@ -202,7 +202,6 @@ class _AdminContratosDashboardScreenState
                       const Color(0xFFF8FAFC),
                     ),
                     dataRowHeight: 64,
-                    // 🔑 TABLA LIMPIA: Columnas redundantes eliminadas por requerimiento UX
                     columns: const [
                       DataColumn(
                         label: Text(
@@ -274,7 +273,6 @@ class _AdminContratosDashboardScreenState
                               ),
                             ),
                           ),
-                          // 🔑 BOTÓN PROFESIONAL RE-DISEÑADO
                           DataCell(
                             ElevatedButton.icon(
                               onPressed: () =>
@@ -333,9 +331,7 @@ class _AdminContratosDashboardScreenState
       builder: (context) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(
-              0xFF64748B,
-            ), // Fondo oscuro que resalta la "hoja de papel"
+            color: Color(0xFF64748B),
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10),
@@ -374,6 +370,7 @@ class _AdminContratosDashboardScreenState
               Expanded(
                 child: Center(
                   child: Container(
+                    // 🔑 PARÁMETRO CORREGIDO CON BOXCONSTRAINTS
                     constraints: const BoxConstraints(maxWidth: 850),
                     padding: const EdgeInsets.all(40),
                     decoration: BoxDecoration(
@@ -557,7 +554,7 @@ class _AdminContratosDashboardScreenState
                         const SizedBox(height: 15),
 
                         // =========================================================================
-                        // ✍️ SECCIÓN DE FIRMAS AUTÓGRAFAS INTEGRADAS AL REPORTE (REPARADA)
+                        // ✍️ SECCIÓN DE FIRMAS AUTÓGRAFAS INTEGRADAS AL REPORTE
                         // =========================================================================
                         const Center(
                           child: Text(
@@ -588,10 +585,10 @@ class _AdminContratosDashboardScreenState
                                     borderRadius: BorderRadius.circular(4),
                                     color: const Color(0xFFFAFBFD),
                                   ),
-                                  // 🔑 EVALUACIÓN REAL DEL TRAZO DE CLIENTE:
                                   child:
                                       data['firma_cliente_base64'] != null &&
                                           data['firma_cliente_base64']
+                                              .toString()
                                               .isNotEmpty
                                       ? Image.memory(
                                           base64Decode(
@@ -602,30 +599,8 @@ class _AdminContratosDashboardScreenState
                                           ),
                                           fit: BoxFit.contain,
                                         )
-                                      : metadata['firmas_digitalizadas']?['cliente_firmó'] ==
-                                            true
-                                      ? const Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.verified_outlined,
-                                              color: Colors.green,
-                                              size: 20,
-                                            ),
-                                            SizedBox(height: 4),
-                                            Text(
-                                              'FIRMADO DIGITALMENTE',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.green,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        )
                                       : const Text(
-                                          '⚠️ Sin registro de trazo',
+                                          '⚠️ Trazo no capturado',
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Colors.red,
@@ -666,10 +641,11 @@ class _AdminContratosDashboardScreenState
                                     borderRadius: BorderRadius.circular(4),
                                     color: const Color(0xFFFAFBFD),
                                   ),
-                                  // 🔑 EVALUACIÓN REAL DEL TRAZO DEL ASESOR:
                                   child:
                                       data['firma_asesor_base64'] != null &&
-                                          data['firma_asesor_base64'].isNotEmpty
+                                          data['firma_asesor_base64']
+                                              .toString()
+                                              .isNotEmpty
                                       ? Image.memory(
                                           base64Decode(
                                             data['firma_asesor_base64']
@@ -679,30 +655,8 @@ class _AdminContratosDashboardScreenState
                                           ),
                                           fit: BoxFit.contain,
                                         )
-                                      : metadata['firmas_digitalizadas']?['asesor_firmó'] ==
-                                            true
-                                      ? const Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.verified_user,
-                                              color: Colors.blue,
-                                              size: 20,
-                                            ),
-                                            SizedBox(height: 4),
-                                            Text(
-                                              'AVAL COMERCIAL OK',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.blue,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        )
                                       : const Text(
-                                          '⚠️ Sin firma de asesor',
+                                          '⚠️ Trazo no capturado',
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Colors.red,
@@ -740,6 +694,7 @@ class _AdminContratosDashboardScreenState
 
               // Controles del pie del modal fuera del documento
               Container(
+                // 🔑 PARÁMETRO CORREGIDO CON BOXCONSTRAINTS
                 constraints: const BoxConstraints(maxWidth: 850),
                 child: Row(
                   children: [
@@ -889,6 +844,6 @@ class _AdminContratosDashboardScreenState
     required IconData icon,
     required List<String> datos,
   }) {
-    return const SizedBox.shrink(); // Mantenido para retrocompatibilidad estructural interna
+    return const SizedBox.shrink();
   }
 }

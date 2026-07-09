@@ -7,6 +7,7 @@ import 'package:signature/signature.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../services/auth_service.dart';
+import 'dart:convert';
 
 class RegistroContratoVendedorScreen extends StatefulWidget {
   const RegistroContratoVendedorScreen({super.key});
@@ -238,91 +239,109 @@ class _RegistroContratoVendedorScreenState
 
     setState(() => _isSaving = true);
 
-    List<String> listaServicios = [];
-    for (var controller in _serviciosControllers) {
-      if (controller.text.trim().isNotEmpty) {
-        listaServicios.add(controller.text.trim());
-      }
-    }
-
-    Map<String, dynamic> contratoPayload = {
-      'metadata': {
-        'fecha_captura': FieldValue.serverTimestamp(),
-        'asesor_comercial': _ctrl.asesorComercial.text.trim(),
-        'nombre_firmante': _ctrl.nombreFirmante.text.trim(),
-        'puesto_cargo': _ctrl.puestoCargo.text.trim(),
-        'telefono_firmante': _ctrl.telefonoFirmante.text.trim(),
-        'contrato_periodo': {
-          'del': _ctrl.contratoDel.text.trim(),
-          'al': _ctrl.contratoAl.text.trim(),
-        },
-        'pagado': _statusPago == 'Si',
-        'firmas_digitalizadas': {'cliente_firmó': true, 'asesor_firmó': true},
-        'notes_internas': _ctrl.notasAdicionales.text.trim(),
-      },
-      'perfil_medico': {
-        'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
-        'especialidad': _ctrl.specialty.text.trim(),
-        'costo_consulta': _ctrl.costoConsulta.text.trim(),
-        'activo': true,
-        'fecha_registro': _ctrl.fechaRegistro.text.trim(),
-        'inicio_directorio': _ctrl.inicioDirectorio.text.trim(),
-        'periodo_gratuito': {
-          'del': _ctrl.gratuitoDel.text.trim(),
-          'al': _ctrl.gratuitoAl.text.trim(),
-        },
-      },
-      'regulacion_sanitaria': {
-        'aviso_hospital': _avisoHospital == 'Si',
-        'aviso_hospital_num': _ctrl.avisoHospitalNum.text.trim(),
-        'aviso_individual': _avisoIndividual == 'Si',
-        'aviso_individual_num': _ctrl.avisoIndividualNum.text.trim(),
-        'requiere_ayuda_tramite': _ayudaTramiteAviso == 'Si',
-      },
-      'datos_facturacion': {
-        'email_factura': _ctrl.emailFactura.text.trim(),
-        'razon_social': _ctrl.razonSocial.text.trim(),
-        'rfc': _ctrl.rfc.text.trim(),
-        'direccion_fiscal': {
-          'calle': _ctrl.facturacionCalle.text.trim(),
-          'numero': _ctrl.facturacionNum.text.trim(),
-          'colonia': _ctrl.facturacionColonia.text.trim(),
-          'ciudad_municipio': _ctrl.facturacionCiudad.text.trim(),
-        },
-        'inicio_facturacion_de': _ctrl.inicioFacturacionDe.text.trim(),
-        'modalidad': _tipoFacturacionSeleccionado,
-      },
-      'ubicacion_consultorio': {
-        'calle': _ctrl.direccionCalle.text.trim(),
-        'numero': _ctrl.direccionNum.text.trim(),
-        'colonia': _ctrl.direccionColonia.text.trim(),
-        'ciudad': _ctrl.direccionCiudad.text.trim(),
-        'ubicacion_gps': _ctrl.ubicacionGps.text.trim(),
-        'telefonos_citas': _ctrl.telefonosCitas.text.trim(),
-        'estacionamiento_propio': _estacionamiento == 'Si',
-      },
-      'agenda_horarios': {
-        'dias_atencion': _diasSeleccionados,
-        'configuracion_horas': _horariosActividad,
-        // 🔑 Traduce las opciones seleccionadas a boleano puro para almacenar de forma segura
-        'atiende_emergencias': _atiendeEmergenciasRadio == 'Si',
-        'visita_hospital_privado': _realizaVisitaHospitalRadio == 'Si',
-      },
-      'servicios_destacados': listaServicios,
-      'redes_sociales': {
-        'facebook': _ctrl.fbLink.text.trim(),
-        'instagram': _ctrl.igLink.text.trim(),
-        'tiktok': _ctrl.tkLink.text.trim(),
-        'sitio_web': _ctrl.webLink.text.trim(),
-      },
-      'archivos_anexos_urls': {
-        'foto_medico': _ctrl.fotoMedicoUrl.text.trim(),
-        'foto_consultorio_fachada': _ctrl.fotoConsultorioUrl.text.trim(),
-        'logo_alta_resolucion': _ctrl.logoResolucionUrl.text.trim(),
-      },
-    };
-
     try {
+      // 🔑 EXTRAER TRAZOS REALES EN BYTES (PNG)
+      final bytesCliente = await _firmaClienteController.toPngBytes();
+      final bytesAsesor = await _firmaAsesorController.toPngBytes();
+
+      // 🔑 CODIRICAR EN TEXTO BASE64 PARA FIRESTORE
+      String stringFirmaCliente = bytesCliente != null
+          ? base64Encode(bytesCliente)
+          : "";
+      String stringFirmaAsesor = bytesAsesor != null
+          ? base64Encode(bytesAsesor)
+          : "";
+
+      List<String> listaServicios = [];
+      for (var controller in _serviciosControllers) {
+        if (controller.text.trim().isNotEmpty) {
+          listaServicios.add(controller.text.trim());
+        }
+      }
+
+      Map<String, dynamic> contratoPayload = {
+        'metadata': {
+          'fecha_captura': FieldValue.serverTimestamp(),
+          'asesor_comercial': _ctrl.asesorComercial.text.trim(),
+          'nombre_firmante': _ctrl.nombreFirmante.text.trim(),
+          'puesto_cargo': _ctrl.puestoCargo.text.trim(),
+          'telefono_firmante': _ctrl.telefonoFirmante.text.trim(),
+          'contrato_periodo': {
+            'del': _ctrl.contratoDel.text.trim(),
+            'al': _ctrl.contratoAl.text.trim(),
+          },
+          'pagado': _statusPago == 'Si',
+          'firmas_digitalizadas': {
+            'cliente_firmó': !_firmaClienteController.isEmpty,
+            'asesor_firmó': !_firmaAsesorController.isEmpty,
+          },
+          'notes_internas': _ctrl.notasAdicionales.text.trim(),
+        },
+        // 🔑 AGREGAMOS LOS TRAZOS AL PAYLOAD PRINCIPAL
+        'firma_cliente_base64': stringFirmaCliente,
+        'firma_asesor_base64': stringFirmaAsesor,
+
+        'perfil_medico': {
+          'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
+          'especialidad': _ctrl.specialty.text.trim(),
+          'costo_consulta': _ctrl.costoConsulta.text.trim(),
+          'activo': true,
+          'fecha_registro': _ctrl.fechaRegistro.text.trim(),
+          'inicio_directorio': _ctrl.inicioDirectorio.text.trim(),
+          'periodo_gratuito': {
+            'del': _ctrl.gratuitoDel.text.trim(),
+            'al': _ctrl.gratuitoAl.text.trim(),
+          },
+        },
+        'regulacion_sanitaria': {
+          'aviso_hospital': _avisoHospital == 'Si',
+          'aviso_hospital_num': _ctrl.avisoHospitalNum.text.trim(),
+          'aviso_individual': _avisoIndividual == 'Si',
+          'aviso_individual_num': _ctrl.avisoIndividualNum.text.trim(),
+          'requiere_ayuda_tramite': _ayudaTramiteAviso == 'Si',
+        },
+        'datos_facturacion': {
+          'email_factura': _ctrl.emailFactura.text.trim(),
+          'razon_social': _ctrl.razonSocial.text.trim(),
+          'rfc': _ctrl.rfc.text.trim(),
+          'direccion_fiscal': {
+            'calle': _ctrl.facturacionCalle.text.trim(),
+            'numero': _ctrl.facturacionNum.text.trim(),
+            'colonia': _ctrl.facturacionColonia.text.trim(),
+            'ciudad_municipio': _ctrl.facturacionCiudad.text.trim(),
+          },
+          'inicio_facturacion_de': _ctrl.inicioFacturacionDe.text.trim(),
+          'modalidad': _tipoFacturacionSeleccionado,
+        },
+        'ubicacion_consultorio': {
+          'calle': _ctrl.direccionCalle.text.trim(),
+          'numero': _ctrl.direccionNum.text.trim(),
+          'colonia': _ctrl.direccionColonia.text.trim(),
+          'ciudad': _ctrl.direccionCiudad.text.trim(),
+          'ubicacion_gps': _ctrl.ubicacionGps.text.trim(),
+          'telefonos_citas': _ctrl.telefonosCitas.text.trim(),
+          'estacionamiento_propio': _estacionamiento == 'Si',
+        },
+        'agenda_horarios': {
+          'dias_atencion': _diasSeleccionados,
+          'configuracion_horas': _horariosActividad,
+          'atiende_emergencias': _atiendeEmergenciasRadio == 'Si',
+          'visita_hospital_privado': _realizaVisitaHospitalRadio == 'Si',
+        },
+        'servicios_destacados': listaServicios,
+        'redes_sociales': {
+          'facebook': _ctrl.fbLink.text.trim(),
+          'instagram': _ctrl.igLink.text.trim(),
+          'tiktok': _ctrl.tkLink.text.trim(),
+          'sitio_web': _ctrl.webLink.text.trim(),
+        },
+        'archivos_anexos_urls': {
+          'foto_medico': _ctrl.fotoMedicoUrl.text.trim(),
+          'foto_consultorio_fachada': _ctrl.fotoConsultorioUrl.text.trim(),
+          'logo_alta_resolucion': _ctrl.logoResolucionUrl.text.trim(),
+        },
+      };
+
       await FirebaseFirestore.instance
           .collection('registro_contratos')
           .add(contratoPayload);
