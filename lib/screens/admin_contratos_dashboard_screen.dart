@@ -119,16 +119,17 @@ class _AdminContratosDashboardScreenState
             .toString()
             .trim()
             .toLowerCase();
-        String nombreAsesor = (userData?['nombre'] ?? '').toString().trim();
+        
+        final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
         Query queryContratos = FirebaseFirestore.instance.collection(
           'registro_contratos',
         );
 
-        if (rol == 'vendedor' && nombreAsesor.isNotEmpty) {
+        if (rol == 'vendedor' && currentUserId != null) {
           queryContratos = queryContratos.where(
-            'metadata.asesor_comercial',
-            isEqualTo: nombreAsesor,
+            'metadata.vendedor_id',
+            isEqualTo: currentUserId,
           );
         }
 

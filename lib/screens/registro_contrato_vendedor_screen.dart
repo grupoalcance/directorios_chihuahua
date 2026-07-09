@@ -262,6 +262,7 @@ class _RegistroContratoVendedorScreenState
       Map<String, dynamic> contratoPayload = {
         'metadata': {
           'fecha_captura': FieldValue.serverTimestamp(),
+          'vendedor_id': FirebaseAuth.instance.currentUser?.uid,
           'asesor_comercial': _ctrl.asesorComercial.text.trim(),
           'nombre_firmante': _ctrl.nombreFirmante.text.trim(),
           'puesto_cargo': _ctrl.puestoCargo.text.trim(),
