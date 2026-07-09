@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // 🔑 Importación añadida para leer el usuario en tiempo real
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../services/auth_service.dart';
@@ -14,6 +15,22 @@ class AdminContratosDashboardScreen extends StatefulWidget {
 
 class _AdminContratosDashboardScreenState
     extends State<AdminContratosDashboardScreen> {
+  // 🔑 Futuro encargado de leer el perfil del usuario firmado antes de armar el Stream
+  Future<Map<String, dynamic>?> _obtenerDatosUsuarioActual() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(user.uid)
+        .get();
+
+    if (doc.exists && doc.data() != null) {
+      return doc.data() as Map<String, dynamic>;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -85,18 +102,10 @@ class _AdminContratosDashboardScreenState
   }
 
   Widget _buildStreamContratos() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('registro_contratos')
-          .orderBy('metadata.fecha_captura', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Text('Error al conectar con el servidor: ${snapshot.error}'),
-          );
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _obtenerDatosUsuarioActual(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(40.0),
@@ -105,186 +114,246 @@ class _AdminContratosDashboardScreenState
           );
         }
 
-        final documentos = snapshot.data?.docs ?? [];
+        final userData = userSnapshot.data;
+        String rol = (userData?['rol'] ?? 'vendedor')
+            .toString()
+            .trim()
+            .toLowerCase();
+        String nombreAsesor = (userData?['nombre'] ?? '').toString().trim();
 
-        if (documentos.isEmpty) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: const Column(
-              children: [
-                Icon(
-                  Icons.assignment_late_outlined,
-                  size: 48,
-                  color: Color(0xFF94A3B8),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'No se han encontrado contratos registrados por los vendedores.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF475569),
-                  ),
-                ),
-              ],
-            ),
+        // 🔑 CONSTRUCCIÓN DE LA CONSULTA SEGMENTADA DINÁMICA POR ROL
+        Query queryContratos = FirebaseFirestore.instance.collection(
+          'registro_contratos',
+        );
+
+        // Si es vendedor, le aplicamos el filtro de seguridad estricto por su nombre de captura
+        if (rol == 'vendedor' && nombreAsesor.isNotEmpty) {
+          queryContratos = queryContratos.where(
+            'metadata.asesor_comercial',
+            isEqualTo: nombreAsesor,
           );
         }
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowColor: MaterialStateProperty.all(
-                  const Color(0xFFF8FAFC),
+        // Ordenamos por fecha de captura de forma global o filtrada
+        queryContratos = queryContratos.orderBy(
+          'metadata.fecha_captura',
+          descending: true,
+        );
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: queryContratos.snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error al conectar con el servidor: ${snapshot.error}',
                 ),
-                dataRowHeight: 64,
-                columns: const [
-                  DataColumn(
-                    label: Text(
-                      'Establecimiento / Médico',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Vendedor',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Estatus Pago',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Firmas',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Alta Web',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Auditoría',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-                rows: documentos.map((doc) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final perfil = data['perfil_medico'] ?? {};
-                  final metadata = data['metadata'] ?? {};
-                  final firmas = metadata['firmas_digitalizadas'] ?? {};
+              );
+            }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+              );
+            }
 
-                  String medico =
-                      perfil['nombre_establecimiento'] ?? 'Sin nombre';
-                  String vendedor = metadata['asesor_comercial'] ?? 'N/A';
-                  bool pagado = metadata['pagado'] ?? false;
-                  bool clienteFirmo = firmas['cliente_firmó'] ?? false;
-                  bool asesorFirmo = firmas['asesor_firmó'] ?? false;
-                  bool deAlta = perfil['activo'] ?? false;
+            final documentos = snapshot.data?.docs ?? [];
 
-                  return DataRow(
-                    cells: [
-                      DataCell(
-                        Text(
-                          medico,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+            if (documentos.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.assignment_late_outlined,
+                      size: 48,
+                      color: Color(0xFF94A3B8),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      rol == 'admin'
+                          ? 'No se han encontrado contratos registrados por los vendedores.'
+                          : 'Aún no has registrado ningún contrato en tu historial.',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    headingRowColor: MaterialStateProperty.all(
+                      const Color(0xFFF8FAFC),
+                    ),
+                    dataRowHeight: 64,
+                    columns: const [
+                      DataColumn(
+                        label: Text(
+                          'Establecimiento / Médico',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      DataCell(Text(vendedor)),
-                      DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: pagado
-                                ? const Color(0xFFDCFCE7)
-                                : const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            pagado ? 'PAGADO' : 'PENDIENTE',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: pagado
-                                  ? const Color(0xFF15803D)
-                                  : const Color(0xFFB91C1C),
-                            ),
-                          ),
+                      DataColumn(
+                        label: Text(
+                          'Vendedor',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      DataCell(
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.person_outline,
-                              size: 16,
-                              color: clienteFirmo ? Colors.green : Colors.red,
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.badge_outlined,
-                              size: 16,
-                              color: asesorFirmo ? Colors.green : Colors.red,
-                            ),
-                          ],
+                      DataColumn(
+                        label: Text(
+                          'Estatus Pago',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      DataCell(
-                        Icon(
-                          deAlta
-                              ? Icons.cloud_done_rounded
-                              : Icons.cloud_upload_outlined,
-                          color: deAlta ? Colors.green : Colors.amber.shade700,
-                          size: 20,
+                      DataColumn(
+                        label: Text(
+                          'Firmas',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
-                      DataCell(
-                        ElevatedButton(
-                          onPressed: () => _verDetalleContrato(doc.id, data),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F172A),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: const Text(
-                            'Auditar Contrato',
-                            style: TextStyle(fontSize: 12),
-                          ),
+                      DataColumn(
+                        label: Text(
+                          'Alta Web',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'Auditoría',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
-                  );
-                }).toList(),
+                    rows: documentos.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final perfil = data['perfil_medico'] ?? {};
+                      final metadata = data['metadata'] ?? {};
+                      final firmas = metadata['firmas_digitalizadas'] ?? {};
+
+                      String medico =
+                          perfil['nombre_establecimiento'] ?? 'Sin nombre';
+                      String vendedor = metadata['asesor_comercial'] ?? 'N/A';
+                      bool pagado = metadata['pagado'] ?? false;
+                      bool clienteFirmo = firmas['cliente_firmó'] ?? false;
+                      bool asesorFirmo = firmas['asesor_firmó'] ?? false;
+                      bool deAlta = perfil['activo'] ?? false;
+
+                      return DataRow(
+                        cells: [
+                          DataCell(
+                            Text(
+                              medico,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          DataCell(Text(vendedor)),
+                          DataCell(
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: pagado
+                                    ? const Color(0xFFDCFCE7)
+                                    : const Color(0xFFFEE2E2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                pagado ? 'PAGADO' : 'PENDIENTE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: pagado
+                                      ? const Color(0xFF15803D)
+                                      : const Color(0xFFB91C1C),
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person_outline,
+                                  size: 16,
+                                  color: clienteFirmo
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.badge_outlined,
+                                  size: 16,
+                                  color: asesorFirmo
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ],
+                            ),
+                          ),
+                          DataCell(
+                            Icon(
+                              deAlta
+                                  ? Icons.cloud_done_rounded
+                                  : Icons.cloud_upload_outlined,
+                              color: deAlta
+                                  ? Colors.green
+                                  : Colors.amber.shade700,
+                              size: 20,
+                            ),
+                          ),
+                          DataCell(
+                            ElevatedButton(
+                              onPressed: () =>
+                                  _verDetalleContrato(doc.id, data),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0F172A),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              child: const Text(
+                                'Auditar Contrato',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -369,7 +438,6 @@ class _AdminContratosDashboardScreenState
                         'Correo para Facturación: ${perfil['email_factura'] ?? "N/A"}',
                       ],
                     ),
-                    // 🔑 SECCIÓN ACTUALIZADA CON EL NUEVO FORMATO DE CHECKBOXES Y MÁSCARA FECHA
                     _buildSeccionAuditoria(
                       titulo: 'Validación Sanitaria (Cofepris) y Factura',
                       icon: Icons.health_and_safety_outlined,
