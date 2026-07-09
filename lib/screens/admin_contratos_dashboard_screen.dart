@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 🔑 Importación añadida para leer el usuario en tiempo real
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../services/auth_service.dart';
@@ -15,7 +15,6 @@ class AdminContratosDashboardScreen extends StatefulWidget {
 
 class _AdminContratosDashboardScreenState
     extends State<AdminContratosDashboardScreen> {
-  // 🔑 Futuro encargado de leer el perfil del usuario firmado antes de armar el Stream
   Future<Map<String, dynamic>?> _obtenerDatosUsuarioActual() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
@@ -121,12 +120,10 @@ class _AdminContratosDashboardScreenState
             .toLowerCase();
         String nombreAsesor = (userData?['nombre'] ?? '').toString().trim();
 
-        // 🔑 CONSTRUCCIÓN DE LA CONSULTA SEGMENTADA DINÁMICA POR ROL
         Query queryContratos = FirebaseFirestore.instance.collection(
           'registro_contratos',
         );
 
-        // Si es vendedor, le aplicamos el filtro de seguridad estricto por su nombre de captura
         if (rol == 'vendedor' && nombreAsesor.isNotEmpty) {
           queryContratos = queryContratos.where(
             'metadata.asesor_comercial',
@@ -134,7 +131,6 @@ class _AdminContratosDashboardScreenState
           );
         }
 
-        // Ordenamos por fecha de captura de forma global o filtrada
         queryContratos = queryContratos.orderBy(
           'metadata.fecha_captura',
           descending: true,
@@ -362,10 +358,13 @@ class _AdminContratosDashboardScreenState
   void _verDetalleContrato(String docId, Map<String, dynamic> data) {
     final perfil = data['perfil_medico'] ?? {};
     final metadata = data['metadata'] ?? {};
-    final ubicacion = data['ubicacion_consultorio'] ?? {};
     final regulacion = data['regulacion_sanitaria'] ?? {};
+    final facturacion =
+        data['datos_facturacion'] ??
+        {}; // 🔑 Mapeado al nuevo mapa estructurado
+    final direccionFiscal = facturacion['direccion_fiscal'] ?? {};
+    final agendaHorarios = data['agenda_horarios'] ?? {};
     final anexos = data['archivos_anexos_urls'] ?? {};
-    final inicioFacturacion = regulacion['inicio_facturacion'] ?? {};
 
     showModalBottomSheet(
       context: context,
@@ -429,24 +428,40 @@ class _AdminContratosDashboardScreenState
                       ],
                     ),
                     _buildSeccionAuditoria(
-                      titulo: 'Términos Comerciales y Vigencia',
+                      titulo: 'Términos Comerciales y Disponibilidad',
                       icon: Icons.monetization_on_outlined,
                       datos: [
                         'Estatus de Liquidación: ${metadata['pagado'] == true ? "PAGADO COMPLETO" : "PAGO PENDIENTE"}',
+                        'Costo de Consulta Regular: \$${perfil['costo_consulta'] ?? "0.00"}', // 🔑 Añadido a auditoría
                         'Fecha de Alta Solicitada: ${perfil['inicio_directorio'] ?? "N/A"}',
                         'Especialidad Médica: ${perfil['especialidad'] ?? "N/A"}',
-                        'Correo para Facturación: ${perfil['email_factura'] ?? "N/A"}',
+                        'Atiende Emergencias 24/7: ${agendaHorarios['atiende_emergencias'] == true ? "SÍ" : "NO"}', // 🔑 Mapeado de booleano
+                        'Visita Hospital Privado: ${agendaHorarios['visita_hospital_privado'] == true ? "SÍ" : "NO"}', // 🔑 Mapeado de booleano
                       ],
                     ),
                     _buildSeccionAuditoria(
-                      titulo: 'Validación Sanitaria (Cofepris) y Factura',
+                      titulo: 'Validación Sanitaria (Cofepris)',
                       icon: Icons.health_and_safety_outlined,
                       datos: [
                         'Aviso de Funcionamiento Hospital: ${regulacion['aviso_hospital'] == true ? "CUMPLE (${regulacion['aviso_hospital_num']})" : "No Aplica / No tiene"}',
                         'Aviso de Publicidad Individual: ${regulacion['aviso_individual'] == true ? "CUMPLE (${regulacion['aviso_individual_num']})" : "No Aplica / No tiene"}',
                         'Solicitó Gestión de Trámite Técnico: ${regulacion['requiere_ayuda_tramite'] == true ? "SÍ" : "NO"}',
-                        'Inicio de Facturación (De): ${inicioFacturacion['de'] ?? "N/A"}',
-                        'Modalidad de Facturación: ${inicioFacturacion['modalidad'] ?? "Único"}',
+                      ],
+                    ),
+                    // 🔑 SECCIÓN EXHAUSTIVA DE FACTURACIÓN ACTUALIZADA CON LA NUEVA DIRECCIÓN FISCAL
+                    _buildSeccionAuditoria(
+                      titulo: 'Expediente de Facturación SAT',
+                      icon: Icons.receipt_long_outlined,
+                      datos: [
+                        'Razón Social Fiscal: ${facturacion['razon_social'] ?? "N/A"}',
+                        'RFC Contribuyente: ${facturacion['rfc'] ?? "N/A"}',
+                        'Correo envío Facturas: ${facturacion['email_factura'] ?? "N/A"}',
+                        'Calle Fiscal: ${direccionFiscal['calle'] ?? "N/A"}',
+                        'No. Ext/Int Fiscal: ${direccionFiscal['numero'] ?? "N/A"}',
+                        'Colonia Fiscal: ${direccionFiscal['colonia'] ?? "N/A"}',
+                        'Ciudad o Municipio Fiscal: ${direccionFiscal['ciudad_municipio'] ?? "N/A"}',
+                        'Inicio de Facturación (De): ${facturacion['inicio_facturacion_de'] ?? "N/A"}',
+                        'Modalidad de Facturación: ${facturacion['modalidad'] ?? "Único"}',
                       ],
                     ),
                     _buildSeccionAuditoria(

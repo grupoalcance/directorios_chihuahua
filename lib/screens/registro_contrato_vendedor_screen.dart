@@ -150,7 +150,7 @@ class _RegistroContratoVendedorScreenState
   };
 
   final Map<String, Map<String, String>> _horariosActividad = {
-    'Consulta General': {'de': '09:00', 'a': '18:00'},
+    'Consulta General': {'de': '--:--', 'a': '--:--'},
   };
 
   final List<TextEditingController> _serviciosControllers = List.generate(
