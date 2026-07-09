@@ -135,9 +135,9 @@ class _RegistroContratoVendedorScreenState
   String _statusPago = 'No';
   String _tipoFacturacionSeleccionado = 'Único';
 
-  // Variables de disponibilidad hospitalaria especial (Sí / No)
-  bool _atiendeEmergencias = false;
-  bool _realizaVisitaHospitalPrivado = false;
+  // 🔑 INTERFAZ REDISEÑADA CON VALORES EXCLUSIVOS PARA RADIO BUTTONS "Si" / "No"
+  String _atiendeEmergenciasRadio = 'No';
+  String _realizaVisitaHospitalRadio = 'No';
 
   final Map<String, bool> _diasSeleccionados = {
     'Lunes': true,
@@ -304,8 +304,9 @@ class _RegistroContratoVendedorScreenState
       'agenda_horarios': {
         'dias_atencion': _diasSeleccionados,
         'configuracion_horas': _horariosActividad,
-        'atiende_emergencias': _atiendeEmergencias,
-        'visita_hospital_privado': _realizaVisitaHospitalPrivado,
+        // 🔑 Traduce las opciones seleccionadas a boleano puro para almacenar de forma segura
+        'atiende_emergencias': _atiendeEmergenciasRadio == 'Si',
+        'visita_hospital_privado': _realizaVisitaHospitalRadio == 'Si',
       },
       'servicios_destacados': listaServicios,
       'redes_sociales': {
@@ -337,7 +338,11 @@ class _RegistroContratoVendedorScreenState
         _formKey.currentState!.reset();
         _firmaClienteController.clear();
         _firmaAsesorController.clear();
-        setState(() => _isSaving = false);
+        setState(() {
+          _atiendeEmergenciasRadio = 'No';
+          _realizaVisitaHospitalRadio = 'No';
+          _isSaving = false;
+        });
 
         Navigator.pushReplacementNamed(context, '/admin_contratos');
       }
@@ -980,7 +985,6 @@ class _RegistroContratoVendedorScreenState
                         children: _diasSeleccionados.keys.map((dia) {
                           return FilterChip(
                             label: Text(dia),
-                            // Asegúrate de que el mapa almacene directamente un booleano para cada día
                             selected: _diasSeleccionados[dia] ?? false,
                             onSelected: (bool val) {
                               setState(() {
@@ -1005,7 +1009,7 @@ class _RegistroContratoVendedorScreenState
                       _buildGridHorarios(),
                       const Divider(height: 32),
 
-                      // 🔑 INTERFAZ REDISEÑADA PARA SÍ O NO NATIVO MEDIANTE CHECKBOXES
+                      // 🔑 INTERFAZ ACTUALIZADA: REEMPLAZO DE CHECKBOXLISTTILE POR BOTONES DE RADIO "SI" / "NO" NATIVOS
                       const Text(
                         'Disponibilidad Hospitalaria Especial:',
                         style: TextStyle(
@@ -1014,47 +1018,21 @@ class _RegistroContratoVendedorScreenState
                           color: Color(0xFF475569),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Column(
-                          children: [
-                            CheckboxListTile(
-                              title: const Text(
-                                '¿Atiende Emergencias Médicas fuera de horario?',
-                              ),
-                              subtitle: const Text(
-                                'Se marcará de forma destacada en el perfil público',
-                                style: TextStyle(fontSize: 11),
-                              ),
-                              value: _atiendeEmergencias,
-                              activeColor: const Color(0xFF0061E0),
-                              onChanged: (bool? val) => setState(
-                                () => _atiendeEmergencias = val ?? false,
-                              ),
-                            ),
-                            const Divider(height: 1, indent: 16, endIndent: 16),
-                            CheckboxListTile(
-                              title: const Text(
-                                '¿Realiza Visitas a Hospitales Privados?',
-                              ),
-                              subtitle: const Text(
-                                'Disponibilidad para traslados o interconsultas privadas',
-                                style: TextStyle(fontSize: 11),
-                              ),
-                              value: _realizaVisitaHospitalPrivado,
-                              activeColor: const Color(0xFF0061E0),
-                              onChanged: (bool? val) => setState(
-                                () => _realizaVisitaHospitalPrivado =
-                                    val ?? false,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(height: 16),
+                      _buildRadioRow(
+                        label:
+                            '¿Atiende Emergencias Médicas fuera de horario? (Se marcará destacado en la web pública)',
+                        value: _atiendeEmergenciasRadio,
+                        onChanged: (v) =>
+                            setState(() => _atiendeEmergenciasRadio = v!),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildRadioRow(
+                        label:
+                            '¿Realiza Visitas a Hospitales Privados? (Disponibilidad para traslados)',
+                        value: _realizaVisitaHospitalRadio,
+                        onChanged: (v) =>
+                            setState(() => _realizaVisitaHospitalRadio = v!),
                       ),
                     ],
                   ),
@@ -1228,7 +1206,7 @@ class _RegistroContratoVendedorScreenState
 
                   // ✍️ SECCIÓN 8: CIERRE DE CONTRATO Y VALIDACIÓN DE PAGO
                   _buildSectionCard(
-                    title: '8. Cierre de Contrato y Validación de Pago',
+                    title: '8. Cierre de Contrato y Validation de Pago',
                     icon: Icons.border_color_outlined,
                     children: [
                       LayoutBuilder(
@@ -1696,6 +1674,7 @@ class _RegistroContratoVendedorScreenState
             color: Color(0xFF475569),
           ),
         ),
+        const SizedBox(height: 4),
         Row(
           children: [
             Radio<String>(
