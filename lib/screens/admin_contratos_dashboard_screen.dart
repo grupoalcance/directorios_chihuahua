@@ -166,19 +166,17 @@ class _AdminContratosDashboardScreenState
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.assignment_late_outlined,
                       size: 48,
                       color: Color(0xFF94A3B8),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Text(
-                      rol == 'admin'
-                          ? 'No se han encontrado contratos registrados por los vendedores.'
-                          : 'Aún no has registrado ningún contrato en tu historial.',
-                      style: const TextStyle(
+                      'No se han encontrado contratos registrados por los vendedores.',
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF475569),
                       ),
@@ -203,6 +201,7 @@ class _AdminContratosDashboardScreenState
                       const Color(0xFFF8FAFC),
                     ),
                     dataRowHeight: 64,
+                    // 🔑 TABLA LIMPIA: Columnas redundantes eliminadas por requerimiento UX
                     columns: const [
                       DataColumn(
                         label: Text(
@@ -224,19 +223,7 @@ class _AdminContratosDashboardScreenState
                       ),
                       DataColumn(
                         label: Text(
-                          'Firmas',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Alta Web',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      DataColumn(
-                        label: Text(
-                          'Auditoría',
+                          'Expediente Digital',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -245,15 +232,11 @@ class _AdminContratosDashboardScreenState
                       final data = doc.data() as Map<String, dynamic>;
                       final perfil = data['perfil_medico'] ?? {};
                       final metadata = data['metadata'] ?? {};
-                      final firmas = metadata['firmas_digitalizadas'] ?? {};
 
                       String medico =
                           perfil['nombre_establecimiento'] ?? 'Sin nombre';
                       String vendedor = metadata['asesor_comercial'] ?? 'N/A';
                       bool pagado = metadata['pagado'] ?? false;
-                      bool clienteFirmo = firmas['cliente_firmó'] ?? false;
-                      bool asesorFirmo = firmas['asesor_firmó'] ?? false;
-                      bool deAlta = perfil['activo'] ?? false;
 
                       return DataRow(
                         cells: [
@@ -290,55 +273,32 @@ class _AdminContratosDashboardScreenState
                               ),
                             ),
                           ),
+                          // 🔑 BOTÓN PROFESIONAL RE-DISEÑADO
                           DataCell(
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.person_outline,
-                                  size: 16,
-                                  color: clienteFirmo
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.badge_outlined,
-                                  size: 16,
-                                  color: asesorFirmo
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
-                              ],
-                            ),
-                          ),
-                          DataCell(
-                            Icon(
-                              deAlta
-                                  ? Icons.cloud_done_rounded
-                                  : Icons.cloud_upload_outlined,
-                              color: deAlta
-                                  ? Colors.green
-                                  : Colors.amber.shade700,
-                              size: 20,
-                            ),
-                          ),
-                          DataCell(
-                            ElevatedButton(
+                            ElevatedButton.icon(
                               onPressed: () =>
                                   _verDetalleContrato(doc.id, data),
+                              icon: const Icon(
+                                Icons.analytics_outlined,
+                                size: 14,
+                              ),
+                              label: const Text(
+                                'Revisar Expediente',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF0F172A),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
+                                  horizontal: 14,
+                                  vertical: 8,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                              ),
-                              child: const Text(
-                                'Auditar Contrato',
-                                style: TextStyle(fontSize: 12),
                               ),
                             ),
                           ),
@@ -359,12 +319,11 @@ class _AdminContratosDashboardScreenState
     final perfil = data['perfil_medico'] ?? {};
     final metadata = data['metadata'] ?? {};
     final regulacion = data['regulacion_sanitaria'] ?? {};
-    final facturacion =
-        data['datos_facturacion'] ??
-        {}; // 🔑 Mapeado al nuevo mapa estructurado
+    final facturacion = data['datos_facturacion'] ?? {};
     final direccionFiscal = facturacion['direccion_fiscal'] ?? {};
     final agendaHorarios = data['agenda_horarios'] ?? {};
     final anexos = data['archivos_anexos_urls'] ?? {};
+    final ubicacion = data['ubicacion_consultorio'] ?? {};
 
     showModalBottomSheet(
       context: context,
@@ -373,186 +332,423 @@ class _AdminContratosDashboardScreenState
       builder: (context) {
         return Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: Color(
+              0xFF64748B,
+            ), // Fondo oscuro que resalta la "hoja de papel"
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
-          padding: const EdgeInsets.all(32),
+          margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10),
+          padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Barra de control del visor
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          perfil['nombre_establecimiento'] ??
-                              'Expediente Legal',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Código único de Registro: $docId',
-                          style: const TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const Divider(height: 32),
-              Expanded(
-                child: ListView(
-                  children: [
-                    _buildSeccionAuditoria(
-                      titulo: 'Firmante y Poder Legal',
-                      icon: Icons.draw_rounded,
-                      datos: [
-                        'Nombre del Firmante: ${metadata['nombre_firmante'] ?? "N/A"}',
-                        'Cargo del Puesto: ${metadata['puesto_cargo'] ?? "N/A"}',
-                        'Teléfono de Verificación: ${metadata['telefono_firmante'] ?? "N/A"}',
-                        'Firma de Cliente: ${metadata['firmas_digitalizadas']?['cliente_firmó'] == true ? "Firmado Digitalmente" : "Falta Firma"}',
-                        'Firma de Asesor: ${metadata['firmas_digitalizadas']?['asesor_firmó'] == true ? "Firmado Digitalmente" : "Falta Firma"}',
-                      ],
-                    ),
-                    _buildSeccionAuditoria(
-                      titulo: 'Términos Comerciales y Disponibilidad',
-                      icon: Icons.monetization_on_outlined,
-                      datos: [
-                        'Estatus de Liquidación: ${metadata['pagado'] == true ? "PAGADO COMPLETO" : "PAGO PENDIENTE"}',
-                        'Costo de Consulta Regular: \$${perfil['costo_consulta'] ?? "0.00"}', // 🔑 Añadido a auditoría
-                        'Fecha de Alta Solicitada: ${perfil['inicio_directorio'] ?? "N/A"}',
-                        'Especialidad Médica: ${perfil['especialidad'] ?? "N/A"}',
-                        'Atiende Emergencias 24/7: ${agendaHorarios['atiende_emergencias'] == true ? "SÍ" : "NO"}', // 🔑 Mapeado de booleano
-                        'Visita Hospital Privado: ${agendaHorarios['visita_hospital_privado'] == true ? "SÍ" : "NO"}', // 🔑 Mapeado de booleano
-                      ],
-                    ),
-                    _buildSeccionAuditoria(
-                      titulo: 'Validación Sanitaria (Cofepris)',
-                      icon: Icons.health_and_safety_outlined,
-                      datos: [
-                        'Aviso de Funcionamiento Hospital: ${regulacion['aviso_hospital'] == true ? "CUMPLE (${regulacion['aviso_hospital_num']})" : "No Aplica / No tiene"}',
-                        'Aviso de Publicidad Individual: ${regulacion['aviso_individual'] == true ? "CUMPLE (${regulacion['aviso_individual_num']})" : "No Aplica / No tiene"}',
-                        'Solicitó Gestión de Trámite Técnico: ${regulacion['requiere_ayuda_tramite'] == true ? "SÍ" : "NO"}',
-                      ],
-                    ),
-                    // 🔑 SECCIÓN EXHAUSTIVA DE FACTURACIÓN ACTUALIZADA CON LA NUEVA DIRECCIÓN FISCAL
-                    _buildSeccionAuditoria(
-                      titulo: 'Expediente de Facturación SAT',
-                      icon: Icons.receipt_long_outlined,
-                      datos: [
-                        'Razón Social Fiscal: ${facturacion['razon_social'] ?? "N/A"}',
-                        'RFC Contribuyente: ${facturacion['rfc'] ?? "N/A"}',
-                        'Correo envío Facturas: ${facturacion['email_factura'] ?? "N/A"}',
-                        'Calle Fiscal: ${direccionFiscal['calle'] ?? "N/A"}',
-                        'No. Ext/Int Fiscal: ${direccionFiscal['numero'] ?? "N/A"}',
-                        'Colonia Fiscal: ${direccionFiscal['colonia'] ?? "N/A"}',
-                        'Ciudad o Municipio Fiscal: ${direccionFiscal['ciudad_municipio'] ?? "N/A"}',
-                        'Inicio de Facturación (De): ${facturacion['inicio_facturacion_de'] ?? "N/A"}',
-                        'Modalidad de Facturación: ${facturacion['modalidad'] ?? "Único"}',
-                      ],
-                    ),
-                    _buildSeccionAuditoria(
-                      titulo: 'Expediente Gráfico (URLs de Evidencia Cloud)',
-                      icon: Icons.folder_shared_outlined,
-                      datos: [
-                        'Fotografía del Doctor: ${anexos['foto_medico'] ?? "No se cargó archivo"}',
-                        'Fachada del Consultorio: ${anexos['foto_consultorio_fachada'] ?? "No se cargó archivo"}',
-                        'Logotipo de Identidad: ${anexos['logo_alta_resolucion'] ?? "No se cargó archivo"}',
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        fixedSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Cerrar Auditoría',
-                        style: TextStyle(color: Color(0xFF475569)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        final navigator = Navigator.of(context);
-                        final messenger = ScaffoldMessenger.of(context);
-
-                        final authService = AuthService();
-                        bool exito = await authService
-                            .migrarContratoAPerfilPublico(
-                              contratoId: docId,
-                              contratoData: data,
-                            );
-
-                        if (!mounted) return;
-                        navigator.pop();
-
-                        if (exito) {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                '¡Contrato auditado, aprobado y dado de alta en la web pública!',
-                              ),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        } else {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Error al procesar la clonación del expediente hacia perfiles públicos.',
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.verified_user_outlined,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'Aprobar Contrato y Dar de Alta',
+                  const Row(
+                    children: [
+                      Icon(Icons.picture_as_pdf, color: Colors.white, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Visor de Expediente Digital (Vista Previa)',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0061E0),
-                        fixedSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                    ],
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // =========================================================================
+              // 📄 VISTA DE HOJA MEMBRETADA DIGITAL (ESTILO REPORTE / PDF)
+              // =========================================================================
+              Expanded(
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 850),
+                    padding: const EdgeInsets.all(40),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: ListView(
+                      children: [
+                        // Encabezado del reporte
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'MÉDICOS LAGUNA',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF0061E0),
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                Text(
+                                  'Directorio Médico Web de la Comarca Laguna',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'REF: ${docId.toUpperCase().substring(0, 8)}',
+                                style: const TextStyle(
+                                  fontFamily: 'Courier',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Divider(thickness: 2, color: Color(0xFF0F172A)),
+                        const SizedBox(height: 15),
+
+                        Center(
+                          child: Text(
+                            'EXPEDIENTE DE CONTRATACIÓN Y AUDITORÍA COMERCIAL',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.grey.shade800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+
+                        // Bloque 1: Información General
+                        _buildFilaPdf(
+                          titulo: 'Establecimiento / Médico',
+                          valor: perfil['nombre_establecimiento'],
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Especialidad Registrada',
+                          valor: perfil['especialidad'],
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Costo de Consulta Regular',
+                          valor: '\$${perfil['costo_consulta'] ?? "0.00"} M.N.',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Asesor Comercial / Vendedor',
+                          valor: metadata['asesor_comercial'],
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Periodo Gratuito',
+                          valor:
+                              'Del ${perfil['periodo_gratuito']?['del'] ?? "N/A"} al ${perfil['periodo_gratuito']?['al'] ?? "N/A"}',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Estatus de Cobro',
+                          valor: metadata['pagado'] == true
+                              ? 'LIQUIDADO / PAGADO'
+                              : 'PENDIENTE DE PAGO',
+                          esAlerta: metadata['pagado'] != true,
+                        ),
+
+                        const SizedBox(height: 20),
+                        _buildSubtituloPdf('REGULACIÓN SANITARIA (COFEPRIS)'),
+                        _buildFilaPdf(
+                          titulo: 'Aviso Hospitalario',
+                          valor: regulacion['aviso_hospital'] == true
+                              ? 'CUMPLE (No: ${regulacion['aviso_hospital_num']})'
+                              : 'No Registrado / No aplica',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Aviso de Publicidad Individual',
+                          valor: regulacion['aviso_individual'] == true
+                              ? 'CUMPLE (No: ${regulacion['aviso_individual_num']})'
+                              : 'No Registrado / No aplica',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Requiere Apoyo Técnico en Trámite',
+                          valor: regulacion['requiere_ayuda_tramite'] == true
+                              ? 'SÍ'
+                              : 'NO',
+                        ),
+
+                        const SizedBox(height: 20),
+                        _buildSubtituloPdf('DATOS FISCALES DE FACTURACIÓN'),
+                        _buildFilaPdf(
+                          titulo: 'Razón Social',
+                          valor: facturacion['razon_social'],
+                        ),
+                        _buildFilaPdf(titulo: 'RFC', valor: facturacion['rfc']),
+                        _buildFilaPdf(
+                          titulo: 'Correo Electrónico SAT',
+                          valor: facturacion['email_factura'],
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Domicilio Fiscal Completo',
+                          valor:
+                              '${direccionFiscal['calle'] ?? "N/A"} No. ${direccionFiscal['numero'] ?? "N/A"}, Col. ${direccionFiscal['colonia'] ?? "N/A"}, ${direccionFiscal['ciudad_municipio'] ?? "N/A"}',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Modalidad contratada',
+                          valor:
+                              '${facturacion['modalidad'] ?? "Único"} (Fecha de cargo: ${facturacion['inicio_facturacion_de'] ?? "N/A"})',
+                        ),
+
+                        const SizedBox(height: 20),
+                        _buildSubtituloPdf('LOGÍSTICA Y AGENDA DE CONSULTORIO'),
+                        _buildFilaPdf(
+                          titulo: 'Domicilio de Atención',
+                          valor:
+                              '${ubicacion['calle'] ?? "N/A"} No. ${ubicacion['numero'] ?? "N/A"}, Col. ${ubicacion['colonia'] ?? "N/A"}, ${ubicacion['ciudad'] ?? "N/A"}',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Teléfonos Reservaciones',
+                          valor: ubicacion['telefonos_citas'],
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Atiende Emergencias Médicas 24/7',
+                          valor: agendaHorarios['atiende_emergencias'] == true
+                              ? 'SÍ (Activo en Web Pública)'
+                              : 'NO',
+                        ),
+                        _buildFilaPdf(
+                          titulo: 'Realiza Interconsultas Privadas',
+                          valor:
+                              agendaHorarios['visita_hospital_privado'] == true
+                              ? 'SÍ'
+                              : 'NO',
+                        ),
+
+                        const SizedBox(height: 35),
+                        const Divider(thickness: 1, color: Color(0xFFE2E8F0)),
+                        const SizedBox(height: 15),
+
+                        // =========================================================================
+                        // ✍️ SECCIÓN DE FIRMAS AUTÓGRAFAS INTEGRADAS AL REPORTE
+                        // =========================================================================
+                        const Center(
+                          child: Text(
+                            'FIRMAS ELECTRÓNICAS DE CONFORMIDAD Y CIERRE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF64748B),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            // Eje Firma Cliente
+                            Column(
+                              children: [
+                                Container(
+                                  width: 220,
+                                  height: 90,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    color: const Color(0xFFFAFBFD),
+                                  ),
+                                  child: const Text(
+                                    '📝 Trazo Digital de Cliente',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.blueGrey,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  metadata['nombre_firmante'] ??
+                                      'Representante Legal',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  metadata['puesto_cargo'] ??
+                                      'Cliente / Médico',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Eje Firma Asesor
+                            Column(
+                              children: [
+                                Container(
+                                  width: 220,
+                                  height: 90,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    color: const Color(0xFFFAFBFD),
+                                  ),
+                                  child: const Text(
+                                    '🖊️ Aval Técnico Homologado',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.blueGrey,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  metadata['asesor_comercial'] ??
+                                      'Asesor Comercial',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const Text(
+                                  'Agencia Alcance Comercial',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Controles del pie del modal fuera del documento
+              Container(
+                constraints: const BoxConstraints(maxWidth: 850),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.white60),
+                          fixedSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cerrar Expediente',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+
+                          final authService = AuthService();
+                          bool exito = await authService
+                              .migrarContratoAPerfilPublico(
+                                contratoId: docId,
+                                contratoData: data,
+                              );
+
+                          if (!mounted) return;
+                          navigator.pop();
+
+                          if (exito) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  '¡Expediente aprobado y dado de alta en la web pública con éxito!',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Error al procesar la clonación del expediente hacia perfiles públicos.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.verified_user_outlined,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Aprobar y Sincronizar en Directorio',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0061E0),
+                          fixedSize: const Size.fromHeight(48),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -561,60 +757,66 @@ class _AdminContratosDashboardScreenState
     );
   }
 
-  Widget _buildSeccionAuditoria({
+  // Helper visual para maquetar filas con estructura formal de reporte
+  Widget _buildFilaPdf({
     required String titulo,
-    required IconData icon,
-    required List<String> datos,
+    required dynamic valor,
+    bool esAlerta = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Column(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: const Color(0xFF64748B)),
-              const SizedBox(width: 8),
-              Text(
-                titulo,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Color(0xFF1E293B),
-                ),
+          SizedBox(
+            width: 210,
+            child: Text(
+              '$titulo:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.grey.shade700,
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: datos
-                  .map(
-                    (dato) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3.0),
-                      child: Text(
-                        dato,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF475569),
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
+          ),
+          Expanded(
+            child: Text(
+              (valor ?? 'N/A').toString(),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: esAlerta ? FontWeight.bold : FontWeight.w500,
+                color: esAlerta
+                    ? const Color(0xFFB91C1C)
+                    : const Color(0xFF1E293B),
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  // Helper para pintar subtítulos divisores en el reporte
+  Widget _buildSubtituloPdf(String texto) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
+      child: Text(
+        texto,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: Color(0xFF0061E0),
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeccionAuditoria({
+    required String titulo,
+    required IconData icon,
+    required List<String> datos,
+  }) {
+    return const SizedBox.shrink(); // Mantenido para retrocompatibilidad estructural interna
   }
 }
