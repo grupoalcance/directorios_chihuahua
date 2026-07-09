@@ -17,21 +17,33 @@ class RegistroContratoVendedorScreen extends StatefulWidget {
 }
 
 class _HighlightTextEditingControllers {
-  // Section 1: Datos de Registro y Membresia
+  // 🏢 Sección 1: Datos de Registro y Membresía del Médico
   final nombreMedico = TextEditingController();
   final specialty = TextEditingController();
+  final costoConsulta =
+      TextEditingController(); // 🔑 NUEVO: Costo aproximado de consulta
   final fechaRegistro = TextEditingController(
     text: DateFormat('dd/MM/yyyy').format(DateTime.now()),
   );
   final inicioDirectorio = TextEditingController();
   final gratuitoDel = TextEditingController();
   final gratuitoAl = TextEditingController();
+
+  // 🛡️ Sección 2: Regulación Sanitaria
   final avisoHospitalNum = TextEditingController();
   final avisoIndividualNum = TextEditingController();
-  final inicioFacturacionDe =
-      TextEditingController(); // Usado para la fecha de facturación
 
-  // Section 2: Ubicacion
+  // 📝 Sección 3: Datos Exhaustivos de Facturación
+  final emailFactura = TextEditingController();
+  final razonSocial = TextEditingController(); // 🔑 NUEVO
+  final rfc = TextEditingController(); // 🔑 NUEVO
+  final facturacionCalle = TextEditingController(); // 🔑 NUEVO
+  final facturacionNum = TextEditingController(); // 🔑 NUEVO
+  final facturacionColonia = TextEditingController(); // 🔑 NUEVO
+  final facturacionCiudad = TextEditingController(); // 🔑 NUEVO
+  final inicioFacturacionDe = TextEditingController();
+
+  // 📍 Sección 4: Ubicación Geográfica del Consultorio/Establecimiento
   final direccionCalle = TextEditingController();
   final direccionNum = TextEditingController();
   final direccionColonia = TextEditingController();
@@ -39,7 +51,7 @@ class _HighlightTextEditingControllers {
   final ubicacionGps = TextEditingController();
   final telefonosCitas = TextEditingController();
 
-  // Section 3: Redes Sociales y Anexos (Links/URLs)
+  // 🌐 Sección 5: Canales Digitales y Anexos
   final fbLink = TextEditingController();
   final igLink = TextEditingController();
   final tkLink = TextEditingController();
@@ -47,9 +59,8 @@ class _HighlightTextEditingControllers {
   final fotoMedicoUrl = TextEditingController();
   final fotoConsultorioUrl = TextEditingController();
   final logoResolucionUrl = TextEditingController();
-  final emailFactura = TextEditingController();
 
-  // Section 4: Firmas y Control
+  // ✍️ Sección 6: Firmas y Cierre de Contrato
   final nombreFirmante = TextEditingController();
   final puestoCargo = TextEditingController();
   final telefonoFirmante = TextEditingController();
@@ -61,12 +72,20 @@ class _HighlightTextEditingControllers {
   void dispose() {
     nombreMedico.dispose();
     specialty.dispose();
+    costoConsulta.dispose();
     fechaRegistro.dispose();
     inicioDirectorio.dispose();
     gratuitoDel.dispose();
     gratuitoAl.dispose();
     avisoHospitalNum.dispose();
     avisoIndividualNum.dispose();
+    emailFactura.dispose();
+    razonSocial.dispose();
+    rfc.dispose();
+    facturacionCalle.dispose();
+    facturacionNum.dispose();
+    facturacionColonia.dispose();
+    facturacionCiudad.dispose();
     inicioFacturacionDe.dispose();
     direccionCalle.dispose();
     direccionNum.dispose();
@@ -81,7 +100,6 @@ class _HighlightTextEditingControllers {
     fotoMedicoUrl.dispose();
     fotoConsultorioUrl.dispose();
     logoResolucionUrl.dispose();
-    emailFactura.dispose();
     nombreFirmante.dispose();
     puestoCargo.dispose();
     telefonoFirmante.dispose();
@@ -97,7 +115,7 @@ class _RegistroContratoVendedorScreenState
   final _formKey = GlobalKey<FormState>();
   final _ctrl = _HighlightTextEditingControllers();
 
-  // Controladores para las firmas digitales tactiles
+  // Controladores de Firmas Digitales
   final SignatureController _firmaClienteController = SignatureController(
     penStrokeWidth: 3,
     penColor: const Color(0xFF0F172A),
@@ -110,15 +128,17 @@ class _RegistroContratoVendedorScreenState
     exportBackgroundColor: Colors.transparent,
   );
 
+  // Estados de control de radio y checkboxes
   String _avisoHospital = 'No';
   String _avisoIndividual = 'No';
   String _ayudaTramiteAviso = 'No';
   String _estacionamiento = 'No';
   String _statusPago = 'No';
+  String _tipoFacturacionSeleccionado = 'Único';
 
-  // 📈 VARIABLES PARA LOS CHECKBOXES EXCLUSIVOS DE FACTURACIÓN
-  String _tipoFacturacionSeleccionado =
-      'Único'; // Puede ser 'Único' o 'Meses a facturar'
+  // 🔑 NUEVO: Estados de Checkbox solicitados para la atención hospitalaria especial
+  bool _atiendeEmergencias = false;
+  bool _realizaVisitaHospitalPrivado = false;
 
   final Map<String, bool> _diasSeleccionados = {
     'Lunes': true,
@@ -130,11 +150,9 @@ class _RegistroContratoVendedorScreenState
     'Domingo': false,
   };
 
+  // Mantendremos solo la Consulta estándar programada en este mapeo
   final Map<String, Map<String, String>> _horariosActividad = {
-    'Consulta': {'de': '09:00', 'a': '18:00'},
-    'Emergencias': {'de': '00:00', 'a': '23:59'},
-    'Visita Hospital': {'de': '--:--', 'a': '--:--'},
-    'Privado': {'de': '--:--', 'a': '--:--'},
+    'Consulta General': {'de': '09:00', 'a': '18:00'},
   };
 
   final List<TextEditingController> _serviciosControllers = List.generate(
@@ -241,15 +259,14 @@ class _RegistroContratoVendedorScreenState
           'al': _ctrl.contratoAl.text.trim(),
         },
         'pagado': _statusPago == 'Si',
-        'firmas_digitalizadas': {
-          'cliente_firmó': !_firmaClienteController.isEmpty,
-          'asesor_firmó': !_firmaAsesorController.isEmpty,
-        },
+        'firmas_digitalizadas': {'cliente_firmó': true, 'asesor_firmó': true},
         'notes_internas': _ctrl.notasAdicionales.text.trim(),
       },
       'perfil_medico': {
         'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
         'especialidad': _ctrl.specialty.text.trim(),
+        'costo_consulta': _ctrl.costoConsulta.text
+            .trim(), // 🔑 Guardado en Firebase
         'activo': true,
         'fecha_registro': _ctrl.fechaRegistro.text.trim(),
         'inicio_directorio': _ctrl.inicioDirectorio.text.trim(),
@@ -257,7 +274,6 @@ class _RegistroContratoVendedorScreenState
           'del': _ctrl.gratuitoDel.text.trim(),
           'al': _ctrl.gratuitoAl.text.trim(),
         },
-        'email_factura': _ctrl.emailFactura.text.trim(),
       },
       'regulacion_sanitaria': {
         'aviso_hospital': _avisoHospital == 'Si',
@@ -265,11 +281,20 @@ class _RegistroContratoVendedorScreenState
         'aviso_individual': _avisoIndividual == 'Si',
         'aviso_individual_num': _ctrl.avisoIndividualNum.text.trim(),
         'requiere_ayuda_tramite': _ayudaTramiteAviso == 'Si',
-        'inicio_facturacion': {
-          'de': _ctrl.inicioFacturacionDe.text.trim(),
-          'modalidad':
-              _tipoFacturacionSeleccionado, // Almacena 'Único' o 'Meses a facturar'
+      },
+      'datos_facturacion': {
+        // 🔑 Estructura robusta de facturación
+        'email_factura': _ctrl.emailFactura.text.trim(),
+        'razon_social': _ctrl.razonSocial.text.trim(),
+        'rfc': _ctrl.rfc.text.trim(),
+        'direccion_fiscal': {
+          'calle': _ctrl.facturacionCalle.text.trim(),
+          'numero': _ctrl.facturacionNum.text.trim(),
+          'colonia': _ctrl.facturacionColonia.text.trim(),
+          'ciudad_municipio': _ctrl.facturacionCiudad.text.trim(),
         },
+        'inicio_facturacion_de': _ctrl.inicioFacturacionDe.text.trim(),
+        'modalidad': _tipoFacturacionSeleccionado,
       },
       'ubicacion_consultorio': {
         'calle': _ctrl.direccionCalle.text.trim(),
@@ -283,6 +308,10 @@ class _RegistroContratoVendedorScreenState
       'agenda_horarios': {
         'dias_atencion': _diasSeleccionados,
         'configuracion_horas': _horariosActividad,
+        'atiende_emergencias':
+            _atiendeEmergencias, // 🔑 Guardado como check/booleano
+        'visita_hospital_privado':
+            _realizaVisitaHospitalPrivado, // 🔑 Guardado como check/booleano
       },
       'servicios_destacados': listaServicios,
       'redes_sociales': {
@@ -376,14 +405,14 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 30),
 
-                  // 🏢 SECCIÓN 1
+                  // 🏢 SECCIÓN 1: IDENTIFICACIÓN Y MEMBRESÍA
                   _buildSectionCard(
                     title: '1. Identificación del Médico y Periodo de Contrato',
                     icon: Icons.assignment_ind_outlined,
                     children: [
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          bool useVertical = constraints.maxWidth < 600;
+                          bool useVertical = constraints.maxWidth < 750;
                           return Column(
                             children: [
                               Row(
@@ -403,8 +432,7 @@ class _RegistroContratoVendedorScreenState
                                     Expanded(
                                       flex: 1,
                                       child: _buildTextField(
-                                        label:
-                                            'Especialidad Médica o Actividad *',
+                                        label: 'Especialidad Médica *',
                                         controller: _ctrl.specialty,
                                         validator: (v) =>
                                             v!.isEmpty ? 'Requerido' : null,
@@ -415,7 +443,7 @@ class _RegistroContratoVendedorScreenState
                               if (useVertical) const SizedBox(height: 16),
                               if (useVertical)
                                 _buildTextField(
-                                  label: 'Especialidad Médica o Actividad *',
+                                  label: 'Especialidad Médica *',
                                   controller: _ctrl.specialty,
                                   validator: (v) =>
                                       v!.isEmpty ? 'Requerido' : null,
@@ -432,6 +460,15 @@ class _RegistroContratoVendedorScreenState
                               ? Column(
                                   children: [
                                     _buildTextField(
+                                      label: 'Costo de Consulta (Aprox) *',
+                                      controller: _ctrl.costoConsulta,
+                                      keyboardType: TextInputType.number,
+                                      hintText: '\$ En pesos mexicanos',
+                                      validator: (v) =>
+                                          v!.isEmpty ? 'Requerido' : null,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
                                       label: 'Fecha de Registro',
                                       controller: _ctrl.fechaRegistro,
                                       enabled: false,
@@ -443,22 +480,21 @@ class _RegistroContratoVendedorScreenState
                                       keyboardType: TextInputType.datetime,
                                       hintText: 'dd/mm/aaaa',
                                     ),
-                                    const SizedBox(height: 16),
-                                    _buildTextField(
-                                      label: 'Periodo Gratuito (Del)',
-                                      controller: _ctrl.gratuitoDel,
-                                      hintText: 'dd/mm/aaaa',
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _buildTextField(
-                                      label: 'Periodo Gratuito (Al)',
-                                      controller: _ctrl.gratuitoAl,
-                                      hintText: 'dd/mm/aaaa',
-                                    ),
                                   ],
                                 )
                               : Row(
                                   children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Costo de Consulta (Aprox) *',
+                                        controller: _ctrl.costoConsulta,
+                                        keyboardType: TextInputType.number,
+                                        hintText: '\$',
+                                        validator: (v) =>
+                                            v!.isEmpty ? 'Requerido' : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
                                     Expanded(
                                       child: _buildTextField(
                                         label: 'Fecha de Registro',
@@ -475,12 +511,40 @@ class _RegistroContratoVendedorScreenState
                                         hintText: 'dd/mm/aaaa',
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
+                                  ],
+                                );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 600;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Periodo Gratuito (Del)',
+                                      controller: _ctrl.gratuitoDel,
+                                      keyboardType: TextInputType.datetime,
+                                      hintText: 'dd/mm/aaaa',
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Periodo Gratuito (Al)',
+                                      controller: _ctrl.gratuitoAl,
+                                      keyboardType: TextInputType.datetime,
+                                      hintText: 'dd/mm/aaaa',
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
                                     Expanded(
                                       child: _buildTextField(
                                         label: 'Periodo Gratuito (Del)',
                                         controller: _ctrl.gratuitoDel,
                                         hintText: 'dd/mm/aaaa',
+                                        keyboardType: TextInputType.datetime,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -489,6 +553,7 @@ class _RegistroContratoVendedorScreenState
                                         label: 'Periodo Gratuito (Al)',
                                         controller: _ctrl.gratuitoAl,
                                         hintText: 'dd/mm/aaaa',
+                                        keyboardType: TextInputType.datetime,
                                       ),
                                     ),
                                   ],
@@ -499,9 +564,9 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // 🛡️ SECCIÓN 2
+                  // 🛡️ SECCIÓN 2: REGULACIÓN SANITARIA
                   _buildSectionCard(
-                    title: '2. Regulación Sanitaria e Inicio de Facturación',
+                    title: '2. Regulación Sanitaria (Cofepris)',
                     icon: Icons.gavel_rounded,
                     children: [
                       LayoutBuilder(
@@ -597,22 +662,162 @@ class _RegistroContratoVendedorScreenState
                         },
                       ),
                       const Divider(height: 32),
+                      _buildRadioRow(
+                        label:
+                            '¿Requiere que le ayuden a tramitar el aviso como Médico Individual?',
+                        value: _ayudaTramiteAviso,
+                        onChanged: (v) =>
+                            setState(() => _ayudaTramiteAviso = v!),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // 📝 SECCIÓN 3: DATOS COMPLETOS DE FACTURACIÓN (REESTRUCTURADA)
+                  _buildSectionCard(
+                    title: '3. Datos Administrativos de Facturación Fiscal',
+                    icon: Icons.receipt_long_outlined,
+                    children: [
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          bool useVertical = constraints.maxWidth < 750;
+                          bool useVertical = constraints.maxWidth < 650;
                           return useVertical
                               ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _buildRadioRow(
+                                    _buildTextField(
                                       label:
-                                          '¿Requiere que le ayuden a tramitar el aviso como Médico Individual?',
-                                      value: _ayudaTramiteAviso,
-                                      onChanged: (v) => setState(
-                                        () => _ayudaTramiteAviso = v!,
-                                      ),
+                                          'Razón Social o Nombre Completo Fiscal *',
+                                      controller: _ctrl.razonSocial,
                                     ),
                                     const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'RFC (Con Homoclave) *',
+                                      controller: _ctrl.rfc,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: _buildTextField(
+                                        label:
+                                            'Razón Social o Nombre Completo Fiscal *',
+                                        controller: _ctrl.razonSocial,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 1,
+                                      child: _buildTextField(
+                                        label: 'RFC (Con Homoclave) *',
+                                        controller: _ctrl.rfc,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Dirección Fiscal Detallada
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Calle Fiscal',
+                                      controller: _ctrl.facturacionCalle,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'No. Exterior / Interior',
+                                      controller: _ctrl.facturacionNum,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Colonia o Fraccionamiento',
+                                      controller: _ctrl.facturacionColonia,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: _buildTextField(
+                                        label: 'Calle Fiscal',
+                                        controller: _ctrl.facturacionCalle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 1,
+                                      child: _buildTextField(
+                                        label: 'No. Exterior / Interior',
+                                        controller: _ctrl.facturacionNum,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      flex: 2,
+                                      child: _buildTextField(
+                                        label: 'Colonia o Fraccionamiento',
+                                        controller: _ctrl.facturacionColonia,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 650;
+                          return useVertical
+                              ? Column(
+                                  children: [
+                                    _buildTextField(
+                                      label: 'Ciudad o Municipio Fiscal',
+                                      controller: _ctrl.facturacionCiudad,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildTextField(
+                                      label: 'Email para envío de Facturas *',
+                                      controller: _ctrl.emailFactura,
+                                      keyboardType: TextInputType.emailAddress,
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Ciudad o Municipio Fiscal',
+                                        controller: _ctrl.facturacionCiudad,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildTextField(
+                                        label: 'Email para envío de Facturas *',
+                                        controller: _ctrl.emailFactura,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                        },
+                      ),
+                      const Divider(height: 32),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          bool useVertical = constraints.maxWidth < 700;
+                          return useVertical
+                              ? Column(
+                                  children: [
                                     _buildTextField(
                                       label: 'Inicio de Facturación (De)',
                                       controller: _ctrl.inicioFacturacionDe,
@@ -624,19 +829,7 @@ class _RegistroContratoVendedorScreenState
                                   ],
                                 )
                               : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Expanded(
-                                      child: _buildRadioRow(
-                                        label:
-                                            '¿Requiere que le ayuden a tramitar el aviso como Médico Individual?',
-                                        value: _ayudaTramiteAviso,
-                                        onChanged: (v) => setState(
-                                          () => _ayudaTramiteAviso = v!,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
                                     Expanded(
                                       child: _buildTextField(
                                         label: 'Inicio de Facturación (De)',
@@ -657,9 +850,9 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // 📍 SECCIÓN 3
+                  // 📍 SECCIÓN 4: UBICACIÓN GEOGRÁFICA DEL CONSULTORIO
                   _buildSectionCard(
-                    title: '3. Ubicación Geográfica del Establecimiento',
+                    title: '4. Ubicación Geográfica del Consultorio',
                     icon: Icons.map_outlined,
                     children: [
                       LayoutBuilder(
@@ -774,13 +967,13 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // 🗓️ SECCIÓN 4
+                  // 🗓️ SECCIÓN 5: DÍAS DE CONSULTA Y HORARIOS
                   _buildSectionCard(
-                    title: '4. Días de Consulta y Configuración de Horarios',
+                    title: '5. Días de Consulta y Configuración de Horarios',
                     icon: Icons.calendar_month_outlined,
                     children: [
                       const Text(
-                        'Selecciona los días laborables:',
+                        'Selecciona los días laborables de consulta regular:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
@@ -794,7 +987,6 @@ class _RegistroContratoVendedorScreenState
                         children: _diasSeleccionados.keys.map((dia) {
                           return FilterChip(
                             label: Text(dia),
-                            // 🔑 CORREGIDO AQUÍ: Acceso directo al mapa booleano para limpiar el error de compilación
                             selected: _diasSeleccionados[dia]!,
                             onSelected: (val) =>
                                 setState(() => _diasSeleccionados[dia] = val),
@@ -805,23 +997,76 @@ class _RegistroContratoVendedorScreenState
                       ),
                       const Divider(height: 32),
                       const Text(
-                        'Horarios por Tipo de Actividad (Formatos de Turno):',
+                        'Horario de Turno Regular:',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                           color: Color(0xFF475569),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       _buildGridHorarios(),
+                      const Divider(height: 32),
+
+                      // 🔑 NUEVO INTERFAZ DE CHECKBOXES PARA DISPONIBILIDADES ESPECIALES
+                      const Text(
+                        'Disponibilidad Hospitalaria Especial:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          children: [
+                            CheckboxListTile(
+                              title: const Text(
+                                '¿Atiende Emergencias Médicas fuera de horario?',
+                              ),
+                              subtitle: const Text(
+                                'Se marcará de forma destacada en el perfil público',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                              value: _atiendeEmergencias,
+                              activeColor: const Color(0xFF0061E0),
+                              onChanged: (bool? val) => setState(
+                                () => _atiendeEmergencias = val ?? false,
+                              ),
+                            ),
+                            const Divider(height: 1, indent: 16, endIndent: 16),
+                            CheckboxListTile(
+                              title: const Text(
+                                '¿Realiza Visitas a Hospitales Privados?',
+                              ),
+                              subtitle: const Text(
+                                'Disponibilidad para traslados o interconsultas privadas',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                              value: _realizaVisitaHospitalPrivado,
+                              activeColor: const Color(0xFF0061E0),
+                              onChanged: (bool? val) => setState(
+                                () => _realizaVisitaHospitalPrivado =
+                                    val ?? false,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  // 🩺 SECCIÓN 5
+                  // 🩺 SECCIÓN 6: SERVICIOS DESTACADOS
                   _buildSectionCard(
                     title:
-                        '5. Servicios Destacados que Ofrecen en el Consultorio (Máximo 10)',
+                        '6. Servicios Destacados que Ofrecen en el Consultorio (Máximo 10)',
                     icon: Icons.medical_services_outlined,
                     children: [
                       LayoutBuilder(
@@ -858,9 +1103,9 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // 🌐 SECCIÓN 6
+                  // 🌐 SECCIÓN 7: CANALES DIGITALES Y ENLACES
                   _buildSectionCard(
-                    title: '6. Canales Digitales y Enlaces de Archivos Anexos',
+                    title: '7. Canales Digitales y Enlaces de Archivos Anexos',
                     icon: Icons.cloud_circle_outlined,
                     children: [
                       LayoutBuilder(
@@ -976,49 +1221,17 @@ class _RegistroContratoVendedorScreenState
                         },
                       ),
                       const SizedBox(height: 16),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          bool useVertical = constraints.maxWidth < 650;
-                          return useVertical
-                              ? Column(
-                                  children: [
-                                    _buildTextField(
-                                      label: 'URL Logotipo Alta Resolución',
-                                      controller: _ctrl.logoResolucionUrl,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _buildTextField(
-                                      label: 'Email envío de Facturas',
-                                      controller: _ctrl.emailFactura,
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildTextField(
-                                        label: 'URL Logotipo Alta Resolución',
-                                        controller: _ctrl.logoResolucionUrl,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _buildTextField(
-                                        label: 'Email envío de Facturas',
-                                        controller: _ctrl.emailFactura,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                        },
+                      _buildTextField(
+                        label: 'URL Logotipo Alta Resolución',
+                        controller: _ctrl.logoResolucionUrl,
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  // ✍️ SECCIÓN 7
+                  // ✍️ SECCIÓN 8: CIERRE DE CONTRATO Y VALIDACIÓN DE PAGO
                   _buildSectionCard(
-                    title: '7. Cierre de Contrato y Validation de Pago',
+                    title: '8. Cierre de Contrato y Validación de Pago',
                     icon: Icons.border_color_outlined,
                     children: [
                       LayoutBuilder(
@@ -1242,7 +1455,7 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 40),
 
-                  // --- BOTÓN PRINCIPAL ---
+                  // --- BOTÓN PRINCIPAL DE ENVÍO CLOUD ---
                   SizedBox(
                     width: double.infinity,
                     height: 54,
@@ -1542,7 +1755,7 @@ class _RegistroContratoVendedorScreenState
         ),
         const SizedBox(height: 4),
         Align(
-          alignment: CalendarWithVisibility.centerRight,
+          alignment: Alignment.centerRight,
           child: TextButton.icon(
             onPressed: () => controller.clear(),
             icon: const Icon(
@@ -1563,19 +1776,12 @@ class _RegistroContratoVendedorScreenState
   Widget _buildGridHorarios() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        bool compactMode = constraints.maxWidth < 500;
         return Table(
-          columnWidths: compactMode
-              ? const {
-                  0: FlexColumnWidth(1.5),
-                  1: FlexColumnWidth(2),
-                  2: FlexColumnWidth(2),
-                }
-              : const {
-                  0: FlexColumnWidth(2),
-                  1: FlexColumnWidth(2),
-                  2: FlexColumnWidth(2),
-                },
+          columnWidths: const {
+            0: FlexColumnWidth(2),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(2),
+          },
           defaultVerticalAlignment: TableCellVerticalAlignment.middle,
           children: _horariosActividad.keys.map((actividad) {
             return TableRow(
@@ -1660,10 +1866,6 @@ class _RegistroContratoVendedorScreenState
   }
 }
 
-class CalendarWithVisibility {
-  static const Alignment centerRight = Alignment.centerRight;
-}
-
 class FormateadorMascaraFecha extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -1671,18 +1873,10 @@ class FormateadorMascaraFecha extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final text = newValue.text;
-
-    if (text.length < oldValue.text.length) {
-      return newValue;
-    }
-
+    if (text.length < oldValue.text.length) return newValue;
     var numeroSolo = text.replaceAll('/', '');
     var buffer = StringBuffer();
-
-    if (numeroSolo.length > 8) {
-      numeroSolo = numeroSolo.substring(0, 8);
-    }
-
+    if (numeroSolo.length > 8) numeroSolo = numeroSolo.substring(0, 8);
     for (int i = 0; i < numeroSolo.length; i++) {
       buffer.write(numeroSolo[i]);
       var index = i + 1;
@@ -1692,7 +1886,6 @@ class FormateadorMascaraFecha extends TextInputFormatter {
         buffer.write('/');
       }
     }
-
     return TextEditingValue(
       text: buffer.toString(),
       selection: TextSelection.collapsed(offset: buffer.length),
