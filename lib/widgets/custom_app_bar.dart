@@ -15,9 +15,9 @@ import '../screens/lista_farmacias_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/paciente_dashboard_screen.dart';
-import '../screens/admin_contratos_dashboard_screen.dart'; 
-import '../screens/admin_dashboard_screen.dart'; 
-import '../screens/registro_contrato_vendedor_screen.dart'; 
+import '../screens/admin_contratos_dashboard_screen.dart';
+import '../screens/admin_dashboard_screen.dart';
+import '../screens/registro_contrato_vendedor_screen.dart';
 import '../services/auth_service.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -92,7 +92,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     }
   }
 
-  // 🔑 OBTENER EL ROL DEL USUARIO ACTUAL DE FORMA SEGURA
+  // OBTENER EL ROL DEL USUARIO ACTUAL DE FORMA SEGURA
   Future<String> _obtenerRolUsuario() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 'paciente';
@@ -103,6 +103,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           .get();
       if (doc.exists && doc.data() != null) {
         final data = doc.data() as Map<String, dynamic>;
+        // 🔑 .trim() y .toLowerCase() aseguran que "Admin", "ADMIN" o "admin " funcionen igual
         return (data['rol'] ?? 'paciente').toString().trim().toLowerCase();
       }
     } catch (e) {
@@ -119,7 +120,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
     if (rol == 'vendedor') {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const AdminContratosDashboardScreen()),
+        MaterialPageRoute(
+          builder: (context) => const AdminContratosDashboardScreen(),
+        ),
       );
     } else if (rol == 'admin') {
       Navigator.push(
@@ -129,7 +132,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
     } else {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const PacienteDashboardScreen()),
+        MaterialPageRoute(
+          builder: (context) => const PacienteDashboardScreen(),
+        ),
       );
     }
   }
@@ -156,7 +161,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: () => Navigator.pushNamedAndRemoveUntil(
-                  context, '/', (route) => false,
+                  context,
+                  '/',
+                  (route) => false,
                 ),
                 child: Image.asset(
                   'assets/images/logo.png',
@@ -187,7 +194,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
                             onTap: () => Navigator.pushNamedAndRemoveUntil(
-                              context, '/', (route) => false,
+                              context,
+                              '/',
+                              (route) => false,
                             ),
                             child: Image.asset(
                               'assets/images/logo.png',
@@ -218,7 +227,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             child: const Center(
                               child: Text(
                                 'Espacio Disponible para Publicidad',
-                                style: TextStyle(color: Colors.grey, fontSize: 11),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 11,
+                                ),
                               ),
                             ),
                           );
@@ -239,29 +251,42 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             child: PageView.builder(
                               controller: _bannerPageController,
                               itemCount: bannerDocs.length,
-                              onPageChanged: (index) => _bannerPaginaActual = index,
+                              onPageChanged: (index) =>
+                                  _bannerPaginaActual = index,
                               itemBuilder: (context, index) {
-                                var bannerData = bannerDocs[index].data() as Map<String, dynamic>;
+                                var bannerData =
+                                    bannerDocs[index].data()
+                                        as Map<String, dynamic>;
                                 String fotoUrl = bannerData['foto_url'] ?? '';
-                                String destinoUrl = bannerData['destino_url'] ?? '';
+                                String destinoUrl =
+                                    bannerData['destino_url'] ?? '';
 
                                 return MouseRegion(
                                   cursor: destinoUrl.isNotEmpty
                                       ? SystemMouseCursors.click
                                       : SystemMouseCursors.basic,
                                   child: GestureDetector(
-                                    onTap: () => _abrirEnlaceAnuncio(destinoUrl),
-                                    child: fotoUrl.startsWith('data:image') || !fotoUrl.startsWith('http')
+                                    onTap: () =>
+                                        _abrirEnlaceAnuncio(destinoUrl),
+                                    child:
+                                        fotoUrl.startsWith('data:image') ||
+                                            !fotoUrl.startsWith('http')
                                         ? Image.memory(
-                                            base64Decode(fotoUrl.split(',').last),
+                                            base64Decode(
+                                              fotoUrl.split(',').last,
+                                            ),
                                             fit: BoxFit.cover,
                                           )
                                         : Image.network(
                                             fotoUrl,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (c, e, s) => const Center(
-                                              child: Icon(Icons.broken_image, color: Colors.grey),
-                                            ),
+                                            errorBuilder: (c, e, s) =>
+                                                const Center(
+                                                  child: Icon(
+                                                    Icons.broken_image,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
                                           ),
                                   ),
                                 );
@@ -278,7 +303,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 26),
+                          const Icon(
+                            Icons.wb_sunny_rounded,
+                            color: Colors.amber,
+                            size: 26,
+                          ),
                           const SizedBox(width: 8),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -296,8 +325,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 stream: _timeStream,
                                 builder: (context, snapshot) {
                                   final now = snapshot.data ?? DateTime.now();
-                                  final String timeStr = DateFormat('hh:mm:ss a').format(now);
-                                  final String dateStr = DateFormat('dd/MM/yyyy').format(now);
+                                  final String timeStr = DateFormat(
+                                    'hh:mm:ss a',
+                                  ).format(now);
+                                  final String dateStr = DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(now);
                                   return Text(
                                     '$dateStr · $timeStr',
                                     style: const TextStyle(
@@ -329,7 +362,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     TextButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const QuienesSomosScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const QuienesSomosScreen(),
+                        ),
                       ),
                       child: Text('¿Quiénes somos?', style: menuStyle),
                     ),
@@ -338,7 +373,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       context: context,
                       label: 'Ciudad',
                       style: menuStyle,
-                      items: ['Torreón', 'Gómez Palacio', 'Lerdo', 'San Pedro', 'Fco. I. Madero', 'Matamoros'],
+                      items: [
+                        'Torreón',
+                        'Gómez Palacio',
+                        'Lerdo',
+                        'San Pedro',
+                        'Fco. I. Madero',
+                        'Matamoros',
+                      ],
                     ),
                     const SizedBox(width: 5),
                     PopupMenuButton<String>(
@@ -351,7 +393,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         child: Row(
                           children: [
                             Text('Especialidad', style: menuStyle),
-                            Icon(Icons.keyboard_arrow_down, color: menuStyle.color, size: 20),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              color: menuStyle.color,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
@@ -359,53 +405,75 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         if (especialidad == 'ver_todas') {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const TodasEspecialidadesScreen()),
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TodasEspecialidadesScreen(),
+                            ),
                           );
                         } else {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ListaDoctoresScreen(especialidad: especialidad, ciudad: ''),
+                              builder: (context) => ListaDoctoresScreen(
+                                especialidad: especialidad,
+                                ciudad: '',
+                              ),
                             ),
                           );
                         }
                       },
-                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                        _buildMenuItem('Cardiología'),
-                        _buildMenuItem('Dermatología'),
-                        _buildMenuItem('Ginecología y Obstetricia'),
-                        _buildMenuItem('Medicina General'),
-                        _buildMenuItem('Neumología'),
-                        _buildMenuItem('Neurología'),
-                        _buildMenuItem('Nutrición'),
-                        _buildMenuItem('Odontología (Dentista)'),
-                        _buildMenuItem('Oftalmología'),
-                        _buildMenuItem('Pediatría'),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'ver_todas',
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Ver todas las especialidades', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                              Icon(Icons.arrow_forward, color: Colors.blue, size: 16),
-                            ],
-                          ),
-                        ),
-                      ],
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<String>>[
+                            _buildMenuItem('Cardiología'),
+                            _buildMenuItem('Dermatología'),
+                            _buildMenuItem('Ginecología y Obstetricia'),
+                            _buildMenuItem('Medicina General'),
+                            _buildMenuItem('Neumología'),
+                            _buildMenuItem('Neurología'),
+                            _buildMenuItem('Nutrición'),
+                            _buildMenuItem('Odontología (Dentista)'),
+                            _buildMenuItem('Oftalmología'),
+                            _buildMenuItem('Pediatría'),
+                            const PopupMenuDivider(),
+                            const PopupMenuItem(
+                              value: 'ver_todas',
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Ver todas las especialidades',
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: Colors.blue,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                     ),
                     const SizedBox(width: 5),
                     TextButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ListaHospitalesScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ListaHospitalesScreen(),
+                        ),
                       ),
                       child: Text('Hospitales', style: menuStyle),
                     ),
                     TextButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ListaFarmaciasScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ListaFarmaciasScreen(),
+                        ),
                       ),
                       child: Text('Farmacias', style: menuStyle),
                     ),
@@ -413,7 +481,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ListaDoctoresScreen(especialidad: 'Enfermería General', ciudad: ''),
+                          builder: (context) => const ListaDoctoresScreen(
+                            especialidad: 'Enfermería General',
+                            ciudad: '',
+                          ),
                         ),
                       ),
                       child: Text('Enfermería', style: menuStyle),
@@ -422,18 +493,27 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ListaDoctoresScreen(especialidad: 'Urgencias Médicas 24/7', ciudad: ''),
+                          builder: (context) => const ListaDoctoresScreen(
+                            especialidad: 'Urgencias Médicas 24/7',
+                            ciudad: '',
+                          ),
                         ),
                       ),
                       child: const Text(
                         'Urgencias 24/hrs',
-                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     TextButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ContactoScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ContactoScreen(),
+                        ),
                       ),
                       child: Text('Contacto', style: menuStyle),
                     ),
@@ -441,7 +521,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     const SizedBox(width: 15),
 
                     // =========================================================================
-                    // 🔐 CONTROL DE ACCESO DINÁMICO REPARADO (CERO ROJOS)
+                    // 🔐 CONTROL DE ACCESO DINÁMICO CORREGIDO
                     // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
@@ -453,12 +533,20 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 .doc(snapshot.data!.uid)
                                 .get(),
                             builder: (context, userSnapshot) {
-                              // Validamos si es asesor (vendedor o admin) de forma dinámica y segura
                               bool esAsesor = false;
+                              String rolDetectado = 'paciente';
+
                               if (userDocExists(userSnapshot)) {
-                                final uData = userSnapshot.data!.data() as Map<String, dynamic>;
-                                String rol = (uData['rol'] ?? 'paciente').toString().trim().toLowerCase();
-                                esAsesor = (rol == 'vendedor' || rol == 'admin');
+                                final uData =
+                                    userSnapshot.data!.data()
+                                        as Map<String, dynamic>;
+                                rolDetectado = (uData['rol'] ?? 'paciente')
+                                    .toString()
+                                    .trim()
+                                    .toLowerCase();
+                                esAsesor =
+                                    (rolDetectado == 'vendedor' ||
+                                    rolDetectado == 'admin');
                               }
 
                               return PopupMenuButton<String>(
@@ -471,34 +559,56 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   } else if (valor == 'ir_captura') {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const RegistroContratoVendedorScreen()),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const RegistroContratoVendedorScreen(),
+                                      ),
                                     );
                                   } else if (valor == 'cerrar_sesion') {
                                     await AuthService().cerrarSesion();
                                     if (context.mounted) {
                                       Navigator.pushNamedAndRemoveUntil(
-                                        context, '/', (route) => false,
+                                        context,
+                                        '/',
+                                        (route) => false,
                                       );
                                     }
                                   }
                                 },
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF1F5F9),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                    border: Border.all(
+                                      color: const Color(0xFFE2E8F0),
+                                    ),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.account_circle_rounded, color: Colors.blue, size: 18),
+                                      const Icon(
+                                        Icons.account_circle_rounded,
+                                        color: Colors.blue,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: 6),
                                       const Text(
                                         'Mi Cuenta',
-                                        style: TextStyle(color: Color(0xFF334155), fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: TextStyle(
+                                          color: Color(0xFF334155),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                       const SizedBox(width: 2),
-                                      const Icon(Icons.arrow_drop_down, color: Colors.grey, size: 16),
+                                      const Icon(
+                                        Icons.arrow_drop_down,
+                                        color: Colors.grey,
+                                        size: 16,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -507,11 +617,22 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     value: 'ir_panel',
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.dashboard_rounded, color: Colors.blue, size: 18),
+                                        const Icon(
+                                          Icons.dashboard_rounded,
+                                          color: Colors.blue,
+                                          size: 18,
+                                        ),
                                         const SizedBox(width: 10),
+                                        // 🔑 TEXTOS CORREGIDOS SEGÚN TU ROL REAL
                                         Text(
-                                          esAsesor ? 'Ver Lista de Contratos' : 'Mi Panel de Control',
-                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                          rolDetectado == 'admin'
+                                              ? 'Panel Administrador'
+                                              : rolDetectado == 'vendedor'
+                                              ? 'Ver Lista de Contratos'
+                                              : 'Mi Panel de Control',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -521,11 +642,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       value: 'ir_captura',
                                       child: Row(
                                         children: [
-                                          Icon(Icons.assignment_turned_in_outlined, color: Colors.green, size: 18),
+                                          Icon(
+                                            Icons.assignment_turned_in_outlined,
+                                            color: Colors.green,
+                                            size: 18,
+                                          ),
                                           SizedBox(width: 10),
                                           Text(
                                             'Capturar Nuevo Contrato',
-                                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.green,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -535,11 +663,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     value: 'cerrar_sesion',
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.logout_rounded, color: Colors.red, size: 18),
+                                        const Icon(
+                                          Icons.logout_rounded,
+                                          color: Colors.red,
+                                          size: 18,
+                                        ),
                                         const SizedBox(width: 10),
                                         Text(
                                           'Cerrar Sesión',
-                                          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -558,16 +693,23 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ElevatedButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SuscribirseScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const SuscribirseScreen(),
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                       child: const Text(
                         'Suscribirse',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -581,7 +723,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
   }
 
   bool userDocExists(AsyncSnapshot<DocumentSnapshot> snap) {
-    return snap.hasData && snap.data != null && snap.data!.exists && snap.data!.data() != null;
+    return snap.hasData &&
+        snap.data != null &&
+        snap.data!.exists &&
+        snap.data!.data() != null;
   }
 
   Widget _buildDropdownMenu({
@@ -610,12 +755,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ListaDoctoresScreen(especialidad: '', ciudad: valorElegido),
+              builder: (context) =>
+                  ListaDoctoresScreen(especialidad: '', ciudad: valorElegido),
             ),
           );
         }
       },
-      itemBuilder: (context) => items.map((item) => _buildMenuItem(item)).toList(),
+      itemBuilder: (context) =>
+          items.map((item) => _buildMenuItem(item)).toList(),
     );
   }
 
