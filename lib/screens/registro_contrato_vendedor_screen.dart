@@ -20,8 +20,7 @@ class _HighlightTextEditingControllers {
   // 🏢 Sección 1: Datos de Registro y Membresía del Médico
   final nombreMedico = TextEditingController();
   final specialty = TextEditingController();
-  final costoConsulta =
-      TextEditingController(); // 🔑 NUEVO: Costo aproximado de consulta
+  final costoConsulta = TextEditingController();
   final fechaRegistro = TextEditingController(
     text: DateFormat('dd/MM/yyyy').format(DateTime.now()),
   );
@@ -35,12 +34,12 @@ class _HighlightTextEditingControllers {
 
   // 📝 Sección 3: Datos Exhaustivos de Facturación
   final emailFactura = TextEditingController();
-  final razonSocial = TextEditingController(); // 🔑 NUEVO
-  final rfc = TextEditingController(); // 🔑 NUEVO
-  final facturacionCalle = TextEditingController(); // 🔑 NUEVO
-  final facturacionNum = TextEditingController(); // 🔑 NUEVO
-  final facturacionColonia = TextEditingController(); // 🔑 NUEVO
-  final facturacionCiudad = TextEditingController(); // 🔑 NUEVO
+  final razonSocial = TextEditingController();
+  final rfc = TextEditingController();
+  final facturacionCalle = TextEditingController();
+  final facturacionNum = TextEditingController();
+  final facturacionColonia = TextEditingController();
+  final facturacionCiudad = TextEditingController();
   final inicioFacturacionDe = TextEditingController();
 
   // 📍 Sección 4: Ubicación Geográfica del Consultorio/Establecimiento
@@ -136,7 +135,7 @@ class _RegistroContratoVendedorScreenState
   String _statusPago = 'No';
   String _tipoFacturacionSeleccionado = 'Único';
 
-  // 🔑 NUEVO: Estados de Checkbox solicitados para la atención hospitalaria especial
+  // Variables de disponibilidad hospitalaria especial (Sí / No)
   bool _atiendeEmergencias = false;
   bool _realizaVisitaHospitalPrivado = false;
 
@@ -150,7 +149,6 @@ class _RegistroContratoVendedorScreenState
     'Domingo': false,
   };
 
-  // Mantendremos solo la Consulta estándar programada en este mapeo
   final Map<String, Map<String, String>> _horariosActividad = {
     'Consulta General': {'de': '09:00', 'a': '18:00'},
   };
@@ -265,8 +263,7 @@ class _RegistroContratoVendedorScreenState
       'perfil_medico': {
         'nombre_establecimiento': _ctrl.nombreMedico.text.trim(),
         'especialidad': _ctrl.specialty.text.trim(),
-        'costo_consulta': _ctrl.costoConsulta.text
-            .trim(), // 🔑 Guardado en Firebase
+        'costo_consulta': _ctrl.costoConsulta.text.trim(),
         'activo': true,
         'fecha_registro': _ctrl.fechaRegistro.text.trim(),
         'inicio_directorio': _ctrl.inicioDirectorio.text.trim(),
@@ -283,7 +280,6 @@ class _RegistroContratoVendedorScreenState
         'requiere_ayuda_tramite': _ayudaTramiteAviso == 'Si',
       },
       'datos_facturacion': {
-        // 🔑 Estructura robusta de facturación
         'email_factura': _ctrl.emailFactura.text.trim(),
         'razon_social': _ctrl.razonSocial.text.trim(),
         'rfc': _ctrl.rfc.text.trim(),
@@ -308,10 +304,8 @@ class _RegistroContratoVendedorScreenState
       'agenda_horarios': {
         'dias_atencion': _diasSeleccionados,
         'configuracion_horas': _horariosActividad,
-        'atiende_emergencias':
-            _atiendeEmergencias, // 🔑 Guardado como check/booleano
-        'visita_hospital_privado':
-            _realizaVisitaHospitalPrivado, // 🔑 Guardado como check/booleano
+        'atiende_emergencias': _atiendeEmergencias,
+        'visita_hospital_privado': _realizaVisitaHospitalPrivado,
       },
       'servicios_destacados': listaServicios,
       'redes_sociales': {
@@ -673,7 +667,7 @@ class _RegistroContratoVendedorScreenState
                   ),
                   const SizedBox(height: 24),
 
-                  // 📝 SECCIÓN 3: DATOS COMPLETOS DE FACTURACIÓN (REESTRUCTURADA)
+                  // 📝 SECCIÓN 3: DATOS COMPLETOS DE FACTURACIÓN
                   _buildSectionCard(
                     title: '3. Datos Administrativos de Facturación Fiscal',
                     icon: Icons.receipt_long_outlined,
@@ -719,7 +713,6 @@ class _RegistroContratoVendedorScreenState
                         },
                       ),
                       const SizedBox(height: 16),
-                      // Dirección Fiscal Detallada
                       LayoutBuilder(
                         builder: (context, constraints) {
                           bool useVertical = constraints.maxWidth < 650;
@@ -987,9 +980,13 @@ class _RegistroContratoVendedorScreenState
                         children: _diasSeleccionados.keys.map((dia) {
                           return FilterChip(
                             label: Text(dia),
-                            selected: _diasSeleccionados[dia]!,
-                            onSelected: (val) =>
-                                setState(() => _diasSeleccionados[dia] = val),
+                            // Asegúrate de que el mapa almacene directamente un booleano para cada día
+                            selected: _diasSeleccionados[dia] ?? false,
+                            onSelected: (bool val) {
+                              setState(() {
+                                _diasSeleccionados[dia] = val;
+                              });
+                            },
                             selectedColor: Colors.blue.shade100,
                             checkmarkColor: Colors.blue.shade900,
                           );
@@ -1008,7 +1005,7 @@ class _RegistroContratoVendedorScreenState
                       _buildGridHorarios(),
                       const Divider(height: 32),
 
-                      // 🔑 NUEVO INTERFAZ DE CHECKBOXES PARA DISPONIBILIDADES ESPECIALES
+                      // 🔑 INTERFAZ REDISEÑADA PARA SÍ O NO NATIVO MEDIANTE CHECKBOXES
                       const Text(
                         'Disponibilidad Hospitalaria Especial:',
                         style: TextStyle(
