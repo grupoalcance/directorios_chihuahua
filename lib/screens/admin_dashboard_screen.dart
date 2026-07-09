@@ -5,8 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:async';
 import 'doctor_dashboard_screen.dart';
 import 'medicos_page_screen.dart';
-import 'establishment_dashboard_screen.dart'; 
-
+import 'establishment_dashboard_screen.dart';
+import 'admin_contratos_dashboard_screen.dart'; 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -482,6 +482,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   spacing: 20,
                   runSpacing: 20,
                   children: [
+                    // 🔑 TARJETA DE AUDITORÍA DE CONTRATOS INTEGRADA AL PRINCIPIO
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AdminContratosDashboardScreen(),
+                        ),
+                      ),
+                      child: Container(
+                        width: 180,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF0F172A,
+                          ), // Color oscuro premium corporativo
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(
+                              Icons.assignment_turned_in_outlined,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Contratos',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Auditar Ventas',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     _buildKpiCard(
                       'Solicitudes Pendientes',
                       solicitudesPendientes.length.toString(),
@@ -946,7 +1000,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  // --- TABLA DE HOSPITALES Y FARMACIAS TOTALMENTE REDIRIGIDA AL DASHBOARD DE EDICIÓN ---
   Widget _buildColeccionEstaticaTable(String nombreColeccion) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -1025,7 +1078,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               ),
                               const SizedBox(width: 10),
 
-                              // 👈 CORREGIDO: Redirección directa a EstablishmentDashboardScreen para edición
                               InkWell(
                                 onTap: () {
                                   Navigator.push(
@@ -1033,10 +1085,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           EstablishmentDashboardScreen(
-                                            estId:
-                                                uid, // Envia el ID del documento
-                                            tipo:
-                                                nombreColeccion, // Envia 'hospitales' o 'farmacias'
+                                            estId: uid,
+                                            tipo: nombreColeccion,
                                           ),
                                     ),
                                   );
