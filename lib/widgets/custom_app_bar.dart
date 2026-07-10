@@ -112,11 +112,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
     return 'paciente';
   }
 
-  // 🔑 MÉTODO OPERATIVO DE ENRUTAMIENTO DINÁMICO POR ROL DE USUARIO
+  // MÉTODO OPERATIVO DE ENRUTAMIENTO DINÁMICO CORREGIDO POR ROL
   Future<void> _redirigirPanelSegunRol(BuildContext context) async {
     final rol = await _obtenerRolUsuario();
     if (!context.mounted) return;
 
+    // Imprime en consola para que puedas auditar qué rol está leyendo Firebase realmente
+    debugPrint("DEBUG ROL DETECTADO EN APPBAR: '$rol'");
+
+    // Validamos variaciones comunes o vacíos para que nunca falle
     if (rol == 'vendedor') {
       Navigator.push(
         context,
@@ -124,12 +128,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
           builder: (context) => const AdminContratosDashboardScreen(),
         ),
       );
-    } else if (rol == 'admin') {
+    } else if (rol == 'admin' || rol == 'administrador') {
+      // Si el rol es admin o administrador, te mantiene de forma estricta en el panel de control maestro
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
       );
     } else {
+      // Solo si es un paciente o usuario común, lo manda a la edición de perfil básico
       Navigator.push(
         context,
         MaterialPageRoute(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 👈 IMPORTANTE: Para escuchar el estado de la sesión móvil
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/lista_doctores_screen.dart';
 import '../screens/todas_especialidades_screen.dart';
 import '../screens/quienes_somos_screen.dart';
@@ -7,12 +8,34 @@ import '../screens/contacto_screen.dart';
 import '../screens/suscribirse_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
 import '../screens/lista_farmacias_screen.dart';
-import '../screens/login_screen.dart'; // 👈 IMPORTANTE: Para mandar al paciente a loguearse
-import '../screens/paciente_dashboard_screen.dart'; // 👈 IMPORTANTE: Redirección al panel del paciente móvil
-import '../services/auth_service.dart'; // 👈 IMPORTANTE: Para ejecutar el cierre de sesión
+import '../screens/login_screen.dart';
+import '../screens/paciente_dashboard_screen.dart';
+import '../screens/admin_dashboard_screen.dart'; 
+import '../screens/admin_contratos_dashboard_screen.dart';
+import '../screens/registro_contrato_vendedor_screen.dart'; 
+import '../services/auth_service.dart';
 
 class PhoneMenuDrawer extends StatelessWidget {
   const PhoneMenuDrawer({Key? key}) : super(key: key);
+
+  // AUXILIAR SEGURO PARA LEER EL ROL EN MÓVIL
+  Future<String> _obtenerRolUsuario() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 'paciente';
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(user.uid)
+          .get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data() as Map<String, dynamic>;
+        return (data['rol'] ?? 'paciente').toString().trim().toLowerCase();
+      }
+    } catch (e) {
+      debugPrint("Error al obtener rol en drawer: $e");
+    }
+    return 'paciente';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +65,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             leading: const Icon(Icons.info_outline, color: Colors.blue),
             title: const Text('¿Quiénes somos?'),
             onTap: () {
-              Navigator.pop(context); // Cierra el drawer móvil
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -85,7 +108,6 @@ class PhoneMenuDrawer extends StatelessWidget {
               _buildSubItemEspecialidad(context, 'Oftalmología'),
               _buildSubItemEspecialidad(context, 'Pediatría'),
 
-              // Redirección directa al Grid Global de Especialidades
               ListTile(
                 title: const Padding(
                   padding: EdgeInsets.only(left: 16.0),
@@ -104,7 +126,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                   ),
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Cierra el menú lateral móvil
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -190,7 +212,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             leading: const Icon(Icons.email_outlined, color: Colors.blue),
             title: const Text('Contacto'),
             onTap: () {
-              Navigator.pop(context); // Cierra el menú móvil
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ContactoScreen()),
@@ -201,83 +223,130 @@ class PhoneMenuDrawer extends StatelessWidget {
           const Divider(),
 
           // =========================================================================
-          // 🔐 CONTROL DE ACCESO DINÁMICO PARA EL MENÚ DE CELULARES (ACTUALIZADO)
+          //  CONTROL DE ACCESO DINÁMICO HOMOLOGADO PARA DISPOSITIVOS MÓVILES
           // =========================================================================
           StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
-              // CASO A: PACIENTE TIENE SESIÓN INICIADA -> Opciones de Mi Panel y Salir
               if (snapshot.hasData && snapshot.data != null) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      leading: const Icon(
-                        Icons.dashboard_rounded,
-                        color: Colors.blue,
-                      ),
-                      title: const Text(
-                        'Mi Panel / Perfil',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.pop(context); // Cierra el drawer móvil
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const PacienteDashboardScreen(),
+                return FutureBuilder<String>(
+                  future: _obtenerRolUsuario(),
+                  builder: (context, rolSnapshot) {
+                    String rol = rolSnapshot.data ?? 'paciente';
+                    bool esAsesor = (rol == 'vendedor' || rol == 'admin');
+
+                    String textoPanel = 'Mi Panel / Perfil';
+                    Widget pantallaDestino = const PacienteDashboardScreen();
+
+                    if (rol == 'admin') {
+                      textoPanel = 'Panel Administrador';
+                      pantallaDestino = const AdminDashboardScreen();
+                    } else if (rol == 'vendedor') {
+                      textoPanel = 'Ver Lista de Contratos';
+                      pantallaDestino = const AdminContratosDashboardScreen();
+                    }
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.dashboard_rounded,
+                            color: Colors.blue,
                           ),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(
-                        Icons.logout_rounded,
-                        color: Colors.red,
-                      ),
-                      title: const Text(
-                        'Cerrar Sesión (Paciente)',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
+                          title: Text(
+                            textoPanel,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => pantallaDestino,
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                      onTap: () async {
-                        Navigator.pop(context); // Cierra el drawer
-                        await AuthService().cerrarSesion();
-                        if (context.mounted) {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/',
-                            (route) => false,
-                          );
-                        }
-                      },
-                    ),
-                  ],
+                        if (esAsesor) ...[
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: const Icon(
+                              Icons.assignment_turned_in_outlined,
+                              color: Colors.green,
+                            ),
+                            title: const Text(
+                              'Capturar Nuevo Contrato',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const RegistroContratoVendedorScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.logout_rounded,
+                            color: Colors.red,
+                          ),
+                          title: Text(
+                            rol == 'admin'
+                                ? 'Cerrar Sesión (Admin)'
+                                : rol == 'vendedor'
+                                ? 'Cerrar Sesión (Asesor)'
+                                : 'Cerrar Sesión (Paciente)',
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await AuthService().cerrarSesion();
+                            if (context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/',
+                                (route) => false,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 );
               }
 
-              // CASO B: VISITANTE ANÓNIMO -> Opción para entrar como Paciente
+              // VISITANTE ANÓNIMO
               return ListTile(
                 leading: const Icon(
                   Icons.lock_open_rounded,
                   color: Color(0xFF475569),
                 ),
                 title: const Text(
-                  'Iniciar Sesión (Pacientes)',
+                  'Iniciar Sesión',
                   style: TextStyle(
                     color: Color(0xFF475569),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Cierra el drawer
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -289,7 +358,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             },
           ),
 
-          // 9. Botón Destacado Fijo: Suscribirse (Membresías de Doctores)
+          // 9. Botón Destacado Fijo: Suscribirse
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
@@ -323,7 +392,6 @@ class PhoneMenuDrawer extends StatelessWidget {
     );
   }
 
-  // 🛠️ Sub-item específico para Ciudades con redirección directa
   Widget _buildSubItemCiudad(BuildContext context, String nombreCiudad) {
     return ListTile(
       title: Padding(
@@ -334,7 +402,7 @@ class PhoneMenuDrawer extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // Cierra el Drawer
+        Navigator.pop(context);
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -346,7 +414,6 @@ class PhoneMenuDrawer extends StatelessWidget {
     );
   }
 
-  // 🛠️ Sub-item específico para Especialidades con redirección directa
   Widget _buildSubItemEspecialidad(
     BuildContext context,
     String nombreEspecialidad,
@@ -354,7 +421,6 @@ class PhoneMenuDrawer extends StatelessWidget {
     return TypographyItem(context, nombreEspecialidad);
   }
 
-  // Helper semántico para mantener ordenado el árbol
   Widget TypographyItem(BuildContext context, String nombreEspecialidad) {
     return ListTile(
       title: Padding(
@@ -365,7 +431,7 @@ class PhoneMenuDrawer extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // Cierra el Drawer
+        Navigator.pop(context);
         Navigator.push(
           context,
           MaterialPageRoute(
