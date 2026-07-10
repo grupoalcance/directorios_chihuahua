@@ -6,7 +6,10 @@ import '../widgets/custom_app_bar.dart';
 import 'admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final bool vieneDesdeOpinio; // 🔑 VARIABLE DINÁMICA AÑADIDA
+
+  // 🔑 CONSTRUCTOR ADAPTADO CON VALOR POR DEFECTO EN FALSE
+  const LoginScreen({super.key, this.vieneDesdeOpinio = false});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -188,18 +191,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Portal de Acceso',
-                    style: TextStyle(
+                  // 🔑 TÍTULO DINÁMICO SEGÚN FLUJO DE PACIENTE
+                  Text(
+                    widget.vieneDesdeOpinio
+                        ? 'Inicia Sesión para Opinar'
+                        : 'Portal de Acceso',
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F36),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Ingresa tus credenciales autorizadas de acceso para pacientes o administradores del directorio médico regional.',
-                    style: TextStyle(
+                  // 🔑 PÁRRAFO CONTEXTUALIZADO PARA RESEÑAS
+                  Text(
+                    widget.vieneDesdeOpinio
+                        ? 'Para garantizar la autenticidad y seguridad del directorio, inicia sesión con tu cuenta de paciente antes de calificar tu experiencia.'
+                        : 'Ingresa tus credenciales autorizadas de acceso para pacientes o administradores del directorio médico regional.',
+                    style: const TextStyle(
                       color: Colors.blueGrey,
                       fontSize: 14,
                       height: 1.4,
@@ -342,7 +351,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 String rolUsuario = datosUsuario['rol'] ?? '';
 
                                 if (mounted) {
-                                  // 🏢 1. ACCESO PARA ADMINISTRADORES
                                   if (rolUsuario == 'admin' ||
                                       emailLimpio.toLowerCase() ==
                                           'sistemas@agenciaalcance.com') {
@@ -351,25 +359,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                       '/admin_dashboard',
                                       (route) => false,
                                     );
-                                  }
-                                  // 📝 2. NUEVO ACCESO PARA VENDEDORES AUTORIZADOS
-                                  else if (rolUsuario == 'vendedor') {
+                                  } else if (rolUsuario == 'vendedor') {
                                     Navigator.pushNamedAndRemoveUntil(
                                       context,
                                       '/captura-contratos',
                                       (route) => false,
                                     );
-                                  }
-                                  // 🩺 3. ACCESO DE PACIENTES VERIFICADOS
-                                  else if (rolUsuario == 'paciente') {
+                                  } else if (rolUsuario == 'paciente') {
                                     Navigator.pushNamedAndRemoveUntil(
                                       context,
                                       '/',
                                       (route) => false,
                                     );
-                                  }
-                                  // 🚨 RESTRICCIÓN: Bloquear accesos inválidos
-                                  else {
+                                  } else {
                                     await AuthService().cerrarSesion();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(

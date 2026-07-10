@@ -526,8 +526,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
                     const SizedBox(width: 15),
 
-                    // =========================================================================
-                    // 🔐 CONTROL DE ACCESO DINÁMICO CORREGIDO
+                   // =========================================================================
+                    // 🔐 CONTROL DE ACCESO DINÁMICO CORREGIDO AL 100% (ENRUTAMIENTO DIRECTO)
                     // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
@@ -552,7 +552,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     .toLowerCase();
                                 esAsesor =
                                     (rolDetectado == 'vendedor' ||
-                                    rolDetectado == 'admin');
+                                    rolDetectado == 'admin' ||
+                                    rolDetectado == 'administrador');
                               }
 
                               return PopupMenuButton<String>(
@@ -561,7 +562,23 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 elevation: 4,
                                 onSelected: (String valor) async {
                                   if (valor == 'ir_panel') {
-                                    _redirigirPanelSegunRol(context);
+                                    // 🔑 SOLUCIÓN: Enrutamiento directo instantáneo sin llamadas extras a Firebase
+                                    if (rolDetectado == 'admin' || rolDetectado == 'administrador') {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+                                      );
+                                    } else if (rolDetectado == 'vendedor') {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const AdminContratosDashboardScreen()),
+                                      );
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const PacienteDashboardScreen()),
+                                      );
+                                    }
                                   } else if (valor == 'ir_captura') {
                                     Navigator.push(
                                       context,
@@ -629,9 +646,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                           size: 18,
                                         ),
                                         const SizedBox(width: 10),
-                                        // 🔑 TEXTOS CORREGIDOS SEGÚN TU ROL REAL
                                         Text(
-                                          rolDetectado == 'admin'
+                                          (rolDetectado == 'admin' || rolDetectado == 'administrador')
                                               ? 'Panel Administrador'
                                               : rolDetectado == 'vendedor'
                                               ? 'Ver Lista de Contratos'

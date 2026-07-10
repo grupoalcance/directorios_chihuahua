@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart'; // 🔑 IMPORTACIÓN AÑADIDA: Necesaria para activar los dragDevices
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,6 +30,15 @@ class MyApp extends StatelessWidget {
       title: 'Médicos Laguna',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      
+      // 🔑 CONFIGURACIÓN GLOBAL DE SCROLL AÑADIDA: Homologa mouse, touch y trackpads
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.trackpad,
+        },
+      ),
 
       // --- MAGIA DE ENLACES CRUZADOS Y RUTAS WEB ---
       initialRoute: '/',

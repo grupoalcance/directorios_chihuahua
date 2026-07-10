@@ -16,7 +16,7 @@ import 'farmacia_profile_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../widgets/seccion_enlaces_cruzados.dart';
-import 'package:web_smooth_scroll/web_smooth_scroll.dart'; 
+import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
 const List<String> las15EspecialidadesLaguna = [
   'Cardiología',
@@ -39,11 +39,7 @@ const List<String> las15EspecialidadesLaguna = [
 class MedicosPageScreen extends StatefulWidget {
   const MedicosPageScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return const MedicosPageScreen();
-  }
-
+  // 🔑 CORREGIDO: El build original llamaba infinitamente a la clase provocando desbordamiento
   @override
   State<MedicosPageScreen> createState() => _MedicosPageScreenState();
 }
@@ -53,7 +49,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   final TextEditingController _ciudadBuscadorController =
       TextEditingController();
 
-  // 🔑 1. CONTROLADOR DE SCROLL PRINCIPAL PARA EL SUAVIZADO WEB
+  // Controlador de scroll principal para el suavizado web
   final ScrollController _mainScrollController = ScrollController();
 
   final ScrollController _especialidadesScrollController = ScrollController();
@@ -132,7 +128,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   void dispose() {
     _especialidadController.dispose();
     _ciudadBuscadorController.dispose();
-    _mainScrollController.dispose(); // 🔑 Liberamos el controlador principal
+    _mainScrollController.dispose();
     _especialidadesScrollController.dispose();
     _medicosScrollController.dispose();
     _timerEspecialidades?.cancel();
@@ -469,21 +465,28 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         },
       ),
       drawer: screenWidth < 1100 ? const PhoneMenuDrawer() : null,
-      body: WebSmoothScroll(
+      // 🔑 SOLUCIÓN: Agregamos Scrollbar nativo compatible con la barrita lateral derecha
+      body: Scrollbar(
         controller: _mainScrollController,
-        scrollSpeed: 130,
-        child: CustomScrollView(
-          physics: const NeverScrollableScrollPhysics(),
+        thumbVisibility: true, // Hace visible la barra siempre
+        trackVisibility: true, // Muestra la guía de fondo de la barra
+        child: WebSmoothScroll(
           controller: _mainScrollController,
-          slivers: [
-            _buildHeroSection(screenWidth),
-            _buildEspecialidadesSection(screenWidth),
-            _buildMedicosSection(screenWidth),
-            _buildClinicasYFarmaciasSection(screenWidth),
-            _buildComoFuncionaSection(screenWidth),
-            _buildSeccionMedicosCruzados(),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
+          scrollSpeed: 130,
+          child: CustomScrollView(
+            // 🔑 CAMBIADO: Se eliminó NeverScrollableScrollPhysics para permitir la interacción del mouse y barra lateral
+            physics: const AlwaysScrollableScrollPhysics(),
+            controller: _mainScrollController,
+            slivers: [
+              _buildHeroSection(screenWidth),
+              _buildEspecialidadesSection(screenWidth),
+              _buildMedicosSection(screenWidth),
+              _buildClinicasYFarmaciasSection(screenWidth),
+              _buildComoFuncionaSection(screenWidth),
+              _buildSeccionMedicosCruzados(),
+              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            ],
+          ),
         ),
       ),
     );
@@ -855,14 +858,16 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           .toString()
                           .trim();
                       if (esp.toLowerCase() == 'dentista' ||
-                          esp.toLowerCase() == 'odontología')
+                          esp.toLowerCase() == 'odontología') {
                         esp = 'Odontología (Dentista)';
+                      }
                       if (esp.toLowerCase() == 'ginecología')
                         esp = 'Ginecología y Obstetricia';
                       if (esp.toLowerCase() == 'traumatología')
                         esp = 'Traumatología y Ortopedia';
-                      if (esp.isNotEmpty)
+                      if (esp.isNotEmpty) {
                         conteoReal[esp] = (conteoReal[esp] ?? 0) + 1;
+                      }
                     }
                   }
                   return SizedBox(
@@ -1130,7 +1135,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 10),
           Row(
             children: [
               IconButton(
@@ -1248,18 +1253,19 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           .limit(3)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const SizedBox(
             height: 140,
             child: Center(child: CircularProgressIndicator()),
           );
+        }
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty)
+        if (docs.isEmpty) {
           return const Text(
             'Próximamente establecimientos de confianza en la región.',
             style: TextStyle(color: Colors.grey, fontSize: 13),
           );
-
+        }
         return Wrap(
           spacing: 15,
           runSpacing: 15,

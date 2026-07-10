@@ -184,7 +184,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
+                      builder: (context) =>
+                          const LoginScreen(vieneDesdeOpinio: true),
                     ),
                   );
                 },
