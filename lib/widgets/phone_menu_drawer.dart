@@ -3,16 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/lista_doctores_screen.dart';
 import '../screens/todas_especialidades_screen.dart';
-import '../screens/quienes_somos_screen.dart';
-import '../screens/contacto_screen.dart';
-import '../screens/suscribirse_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
 import '../screens/lista_farmacias_screen.dart';
-import '../screens/login_screen.dart';
-import '../screens/paciente_dashboard_screen.dart';
-import '../screens/admin_dashboard_screen.dart'; 
-import '../screens/admin_contratos_dashboard_screen.dart';
-import '../screens/registro_contrato_vendedor_screen.dart'; 
 import '../services/auth_service.dart';
 
 class PhoneMenuDrawer extends StatelessWidget {
@@ -66,12 +58,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             title: const Text('¿Quiénes somos?'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QuienesSomosScreen(),
-                ),
-              );
+              Navigator.pushNamed(context, '/quienes-somos');
             },
           ),
 
@@ -213,10 +200,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             title: const Text('Contacto'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ContactoScreen()),
-              );
+              Navigator.pushNamed(context, '/contacto');
             },
           ),
 
@@ -233,17 +217,20 @@ class PhoneMenuDrawer extends StatelessWidget {
                   future: _obtenerRolUsuario(),
                   builder: (context, rolSnapshot) {
                     String rol = rolSnapshot.data ?? 'paciente';
-                    bool esAsesor = (rol == 'vendedor' || rol == 'admin');
+                    bool esAsesor =
+                        (rol == 'vendedor' ||
+                        rol == 'admin' ||
+                        rol == 'administrador');
 
                     String textoPanel = 'Mi Panel / Perfil';
-                    Widget pantallaDestino = const PacienteDashboardScreen();
+                    String rutaDestino = '/paciente_dashboard';
 
-                    if (rol == 'admin') {
+                    if (rol == 'admin' || rol == 'administrador') {
                       textoPanel = 'Panel Administrador';
-                      pantallaDestino = const AdminDashboardScreen();
+                      rutaDestino = '/admin_dashboard';
                     } else if (rol == 'vendedor') {
                       textoPanel = 'Ver Lista de Contratos';
-                      pantallaDestino = const AdminContratosDashboardScreen();
+                      rutaDestino = '/admin_contratos';
                     }
 
                     return Column(
@@ -263,12 +250,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                           ),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => pantallaDestino,
-                              ),
-                            );
+                            Navigator.pushNamed(context, rutaDestino);
                           },
                         ),
                         if (esAsesor) ...[
@@ -287,12 +269,9 @@ class PhoneMenuDrawer extends StatelessWidget {
                             ),
                             onTap: () {
                               Navigator.pop(context);
-                              Navigator.push(
+                              Navigator.pushNamed(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const RegistroContratoVendedorScreen(),
-                                ),
+                                '/captura-contratos',
                               );
                             },
                           ),
@@ -304,7 +283,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                             color: Colors.red,
                           ),
                           title: Text(
-                            rol == 'admin'
+                            (rol == 'admin' || rol == 'administrador')
                                 ? 'Cerrar Sesión (Admin)'
                                 : rol == 'vendedor'
                                 ? 'Cerrar Sesión (Asesor)'
@@ -347,29 +326,19 @@ class PhoneMenuDrawer extends StatelessWidget {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/ingresar');
                 },
               );
             },
           ),
 
-          // 9. Botón Destacado Fijo: Suscribirse
+          // 9. Botón Destacado Fijo: Suscribirse (Ruta Nombrada)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SuscribirseScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, '/suscribirse');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,

@@ -7,17 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../screens/todas_especialidades_screen.dart';
-import '../screens/quienes_somos_screen.dart';
-import '../screens/contacto_screen.dart';
-import '../screens/suscribirse_screen.dart';
 import '../screens/lista_doctores_screen.dart';
 import '../screens/lista_farmacias_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
-import '../screens/login_screen.dart';
-import '../screens/paciente_dashboard_screen.dart';
-import '../screens/admin_contratos_dashboard_screen.dart';
-import '../screens/admin_dashboard_screen.dart';
-import '../screens/registro_contrato_vendedor_screen.dart';
 import '../services/auth_service.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -103,46 +95,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
           .get();
       if (doc.exists && doc.data() != null) {
         final data = doc.data() as Map<String, dynamic>;
-        // 🔑 .trim() y .toLowerCase() aseguran que "Admin", "ADMIN" o "admin " funcionen igual
         return (data['rol'] ?? 'paciente').toString().trim().toLowerCase();
       }
     } catch (e) {
       debugPrint("Error al obtener rol: $e");
     }
     return 'paciente';
-  }
-
-  // MÉTODO OPERATIVO DE ENRUTAMIENTO DINÁMICO CORREGIDO POR ROL
-  Future<void> _redirigirPanelSegunRol(BuildContext context) async {
-    final rol = await _obtenerRolUsuario();
-    if (!context.mounted) return;
-
-    // Imprime en consola para que puedas auditar qué rol está leyendo Firebase realmente
-    debugPrint("DEBUG ROL DETECTADO EN APPBAR: '$rol'");
-
-    // Validamos variaciones comunes o vacíos para que nunca falle
-    if (rol == 'vendedor') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AdminContratosDashboardScreen(),
-        ),
-      );
-    } else if (rol == 'admin' || rol == 'administrador') {
-      // Si el rol es admin o administrador, te mantiene de forma estricta en el panel de control maestro
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-      );
-    } else {
-      // Solo si es un paciente o usuario común, lo manda a la edición de perfil básico
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const PacienteDashboardScreen(),
-        ),
-      );
-    }
   }
 
   @override
@@ -366,12 +324,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const QuienesSomosScreen(),
-                        ),
-                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/quienes-somos'),
                       child: Text('¿Quiénes somos?', style: menuStyle),
                     ),
                     const SizedBox(width: 5),
@@ -515,19 +469,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ContactoScreen(),
-                        ),
-                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/contacto'),
                       child: Text('Contacto', style: menuStyle),
                     ),
 
                     const SizedBox(width: 15),
 
-                   // =========================================================================
-                    // 🔐 CONTROL DE ACCESO DINÁMICO CORREGIDO AL 100% (ENRUTAMIENTO DIRECTO)
+                    // =========================================================================
+                    // 🔐 CONTROL DE ACCESO DINÁMICO REPARADO Y CON RUTAS NOMBRADAS
                     // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
@@ -562,30 +512,27 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 elevation: 4,
                                 onSelected: (String valor) async {
                                   if (valor == 'ir_panel') {
-                                    // 🔑 SOLUCIÓN: Enrutamiento directo instantáneo sin llamadas extras a Firebase
-                                    if (rolDetectado == 'admin' || rolDetectado == 'administrador') {
-                                      Navigator.push(
+                                    if (rolDetectado == 'admin' ||
+                                        rolDetectado == 'administrador') {
+                                      Navigator.pushNamed(
                                         context,
-                                        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+                                        '/admin_dashboard',
                                       );
                                     } else if (rolDetectado == 'vendedor') {
-                                      Navigator.push(
+                                      Navigator.pushNamed(
                                         context,
-                                        MaterialPageRoute(builder: (context) => const AdminContratosDashboardScreen()),
+                                        '/admin_contratos',
                                       );
                                     } else {
-                                      Navigator.push(
+                                      Navigator.pushNamed(
                                         context,
-                                        MaterialPageRoute(builder: (context) => const PacienteDashboardScreen()),
+                                        '/paciente_dashboard',
                                       );
                                     }
                                   } else if (valor == 'ir_captura') {
-                                    Navigator.push(
+                                    Navigator.pushNamed(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const RegistroContratoVendedorScreen(),
-                                      ),
+                                      '/captura-contratos',
                                     );
                                   } else if (valor == 'cerrar_sesion') {
                                     await AuthService().cerrarSesion();
@@ -647,7 +594,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                         ),
                                         const SizedBox(width: 10),
                                         Text(
-                                          (rolDetectado == 'admin' || rolDetectado == 'administrador')
+                                          (rolDetectado == 'admin' ||
+                                                  rolDetectado ==
+                                                      'administrador')
                                               ? 'Panel Administrador'
                                               : rolDetectado == 'vendedor'
                                               ? 'Ver Lista de Contratos'
@@ -712,13 +661,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
                     const SizedBox(width: 10),
 
+                    // 🔑 BOTÓN DE SUSCRIBIRSE CON RUTA NOMBRADA PARA ACTUALIZAR LA URL A '/suscribirse'
                     ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SuscribirseScreen(),
-                        ),
-                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/suscribirse'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         elevation: 0,
