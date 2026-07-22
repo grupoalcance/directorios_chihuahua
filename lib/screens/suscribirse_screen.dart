@@ -20,7 +20,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
   String _tipoContacto = 'Deseo que me contacten por llamada/WhatsApp';
 
   // 📞 TU NÚMERO DE WHATSAPP DONDE RECIBIRÁS LAS SOLICITUDES DE LOS MÉDICOS (Con LADA 52)
-  final String _numeroComercial = '528717207195';
+  final String _numeroComercial = '528714758857';
 
   @override
   void dispose() {

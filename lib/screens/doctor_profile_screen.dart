@@ -144,7 +144,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   void _mostrarDialogoResena(String doctorId) {
     final user = FirebaseAuth.instance.currentUser;
 
-    // 👇 REEMPLAZADO: Si no hay sesión, se muestra un AlertDialog premium en vez del SnackBar/Franja naranja 👇
     if (user == null) {
       showDialog(
         context: context,
