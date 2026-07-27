@@ -26,7 +26,7 @@ jobs:
           channel: "stable"
 
       - name: 4. Compilar la aplicación para Web
-        run: flutter build web
+        run: flutter build web --release
 
       - name: 5. Subir los archivos por FTP a Hostinger
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -34,5 +34,5 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: build/web/ # 👈 Sube solo la versión final empaquetada
-          server-dir: ./ # 👈 Lo deja directo en la raíz de Hostinger
+          local-dir: build/web/
+          server-dir: ./
