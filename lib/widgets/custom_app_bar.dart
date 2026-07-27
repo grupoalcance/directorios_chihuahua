@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_laguna/config/app_config.dart';
+import 'package:directorios_durango/config/app_config.dart';
 
 import '../screens/todas_especialidades_screen.dart';
 import '../screens/lista_doctores_screen.dart';

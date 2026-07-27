@@ -1,25 +1,26 @@
-// lib/config/app_config.dart
 import 'package:flutter/material.dart';
 
 class AppConfig {
   // 1. Nombres Globales
-  static const String appName = 'Médicos Laguna';
+  static const String appName = 'Médicos Durango';
 
-  // 2. Colores Corporativos
-  static const Color primaryColor = Colors.blue;
-  static const Color secondaryColor = Color(0xFF0061E0);
+  // 2. Colores Corporativos (Ej. Verde azulado)
+  static const Color primaryColor = Color(0xFF00796B);
+  static const Color secondaryColor = Color(0xFF004D40);
 
   // 3. Rutas
-  static const String logoPath = 'assets/images/logo.png';
-  static const String crmUrl = 'https://medicoslaguna.com/asesores/';
+  static const String logoPath =
+      'assets/images/logo_durango.png'; // Asegúrate de meter tu logo en esta ruta
+  static const String crmUrl =
+      'https://tudominiodurango.com/asesores/'; // URL de tu CRM para Durango
 
-  // 4. Menú de Ciudades
+  // 4. Menú de Ciudades (Municipios de Durango)
   static const List<String> ciudadesActivas = [
-    'Torreón',
+    'Victoria de Durango',
     'Gómez Palacio',
     'Lerdo',
-    'San Pedro',
-    'Fco. I. Madero',
-    'Matamoros',
+    'Santiago Papasquiaro',
+    'Guadalupe Victoria',
+    'El Salto',
   ];
 }

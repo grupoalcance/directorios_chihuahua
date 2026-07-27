@@ -41,46 +41,46 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCS-ynTEJ9Stp4w14TBqGl8tj1qel7dMO4',
-    appId: '1:943018463993:web:dd0c125c5087a005530828',
-    messagingSenderId: '943018463993',
-    projectId: 'directorios-laguna',
-    authDomain: 'directorios-laguna.firebaseapp.com',
-    storageBucket: 'directorios-laguna.firebasestorage.app',
+    apiKey: 'AIzaSyDqulmjBZtigbfn8-kWYzawaMFQC-3v-ag',
+    appId: '1:548020924115:web:edfa0213fa4e5c1e026e26',
+    messagingSenderId: '548020924115',
+    projectId: 'directorios-durango',
+    authDomain: 'directorios-durango.firebaseapp.com',
+    storageBucket: 'directorios-durango.firebasestorage.app',
+    measurementId: 'G-NMS9BS7RRZ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDsZswvyHei8V4iMR6oIyT9I9yau3S37X0',
-    appId: '1:943018463993:android:622059b326a77390530828',
-    messagingSenderId: '943018463993',
-    projectId: 'directorios-laguna',
-    storageBucket: 'directorios-laguna.firebasestorage.app',
+    apiKey: 'AIzaSyDaWCY8ZbUpv-acSj-9TyBT8pVMeG9omfE',
+    appId: '1:548020924115:android:8caad2ac2adc6e4b026e26',
+    messagingSenderId: '548020924115',
+    projectId: 'directorios-durango',
+    storageBucket: 'directorios-durango.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyC1KjNd-qOUHdKUrTFQUjSwW684-JaYynA',
-    appId: '1:943018463993:ios:d2363ce7ea45795c530828',
-    messagingSenderId: '943018463993',
-    projectId: 'directorios-laguna',
-    storageBucket: 'directorios-laguna.firebasestorage.app',
+    apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
+    appId: '1:548020924115:ios:99a3e4d92c3212ae026e26',
+    messagingSenderId: '548020924115',
+    projectId: 'directorios-durango',
+    storageBucket: 'directorios-durango.firebasestorage.app',
     iosBundleId: 'com.example.directoriosLaguna',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyC1KjNd-qOUHdKUrTFQUjSwW684-JaYynA',
-    appId: '1:943018463993:ios:d2363ce7ea45795c530828',
-    messagingSenderId: '943018463993',
-    projectId: 'directorios-laguna',
-    storageBucket: 'directorios-laguna.firebasestorage.app',
+    apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
+    appId: '1:548020924115:ios:99a3e4d92c3212ae026e26',
+    messagingSenderId: '548020924115',
+    projectId: 'directorios-durango',
+    storageBucket: 'directorios-durango.firebasestorage.app',
     iosBundleId: 'com.example.directoriosLaguna',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCS-ynTEJ9Stp4w14TBqGl8tj1qel7dMO4',
-    appId: '1:943018463993:web:da8937f643d66b0c530828',
-    messagingSenderId: '943018463993',
-    projectId: 'directorios-laguna',
-    authDomain: 'directorios-laguna.firebaseapp.com',
-    storageBucket: 'directorios-laguna.firebasestorage.app',
+    apiKey: 'AIzaSyDqulmjBZtigbfn8-kWYzawaMFQC-3v-ag',
+    appId: '1:548020924115:web:4bf4716d09bf3cc8026e26',
+    messagingSenderId: '548020924115',
+    projectId: 'directorios-durango',
+    authDomain: 'directorios-durango.firebaseapp.com',
+    storageBucket: 'directorios-durango.firebasestorage.app',
+    measurementId: 'G-34P61RBN95',
   );
 }

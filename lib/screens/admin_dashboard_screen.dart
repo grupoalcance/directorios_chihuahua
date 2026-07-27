@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
 // 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_laguna/config/app_config.dart';
+import 'package:directorios_durango/config/app_config.dart';
 
 import 'doctor_dashboard_screen.dart';
 import 'medicos_page_screen.dart';
