@@ -5,11 +5,14 @@ import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+import 'package:directorios_laguna/config/app_config.dart';
+
 import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
 import 'package:directorios_laguna/screens/admin_dashboard_screen.dart';
 import 'package:directorios_laguna/screens/login_screen.dart';
-import 'package:directorios_laguna/screens/suscribirse_screen.dart'; 
+import 'package:directorios_laguna/screens/suscribirse_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,9 +29,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Médicos Laguna',
+      title: AppConfig.appName, // 🔑 AHORA TOMA EL NOMBRE DEL ARCHIVO MAESTRO
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppConfig.primaryColor,
+        ), // 🔑 TOMA EL COLOR MAESTRO
+        useMaterial3: true,
+      ),
 
       scrollBehavior: const MaterialScrollBehavior().copyWith(
         dragDevices: {

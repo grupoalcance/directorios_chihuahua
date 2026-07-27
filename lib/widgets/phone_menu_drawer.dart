@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:url_launcher/url_launcher.dart'; // 🔗 IMPORTACIÓN AÑADIDA
+import 'package:url_launcher/url_launcher.dart';
+
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+import 'package:directorios_laguna/config/app_config.dart';
+
 import '../screens/lista_doctores_screen.dart';
 import '../screens/todas_especialidades_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
@@ -38,13 +42,15 @@ class PhoneMenuDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           // Encabezado del menú lateral
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: AppConfig.primaryColor,
+            ), // 🔑 COLOR DINÁMICO
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Text(
-                'Médicos Laguna',
-                style: TextStyle(
+                AppConfig.appName, // 🔑 NOMBRE DE LA APP DINÁMICO
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -55,7 +61,7 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           // 1. ¿Quiénes somos?
           ListTile(
-            leading: const Icon(Icons.info_outline, color: Colors.blue),
+            leading: Icon(Icons.info_outline, color: AppConfig.primaryColor),
             title: const Text('¿Quiénes somos?'),
             onTap: () {
               Navigator.pop(context);
@@ -65,23 +71,19 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           // 2. Desplegable Ciudad
           ExpansionTile(
-            leading: const Icon(Icons.location_city, color: Colors.blue),
+            leading: Icon(Icons.location_city, color: AppConfig.primaryColor),
             title: const Text('Ciudad'),
-            children: [
-              _buildSubItemCiudad(context, 'Torreón'),
-              _buildSubItemCiudad(context, 'Gómez Palacio'),
-              _buildSubItemCiudad(context, 'Lerdo'),
-              _buildSubItemCiudad(context, 'San Pedro'),
-              _buildSubItemCiudad(context, 'Fco. I. Madero'),
-              _buildSubItemCiudad(context, 'Matamoros'),
-            ],
+            // 🔑 LISTA DINÁMICA DE CIUDADES
+            children: AppConfig.ciudadesActivas.map((ciudad) {
+              return _buildSubItemCiudad(context, ciudad);
+            }).toList(),
           ),
 
           // 3. Desplegable Especialidad (Top 10 Alfabético)
           ExpansionTile(
-            leading: const Icon(
+            leading: Icon(
               Icons.medical_services_outlined,
-              color: Colors.blue,
+              color: AppConfig.primaryColor,
             ),
             title: const Text('Especialidad'),
             children: [
@@ -97,19 +99,23 @@ class PhoneMenuDrawer extends StatelessWidget {
               _buildSubItemEspecialidad(context, 'Pediatría'),
 
               ListTile(
-                title: const Padding(
-                  padding: EdgeInsets.only(left: 16.0),
+                title: Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
                   child: Row(
                     children: [
                       Text(
                         'Ver todas las especialidades ',
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
                       ),
-                      Icon(Icons.arrow_forward, color: Colors.blue, size: 16),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: AppConfig.primaryColor,
+                        size: 16,
+                      ),
                     ],
                   ),
                 ),
@@ -128,7 +134,7 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           // 4. Hospitales
           ListTile(
-            leading: const Icon(Icons.local_hospital, color: Colors.blue),
+            leading: Icon(Icons.local_hospital, color: AppConfig.primaryColor),
             title: const Text('Hospitales'),
             onTap: () {
               Navigator.pop(context);
@@ -143,7 +149,7 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           // 5. Farmacias
           ListTile(
-            leading: const Icon(Icons.local_pharmacy, color: Colors.blue),
+            leading: Icon(Icons.local_pharmacy, color: AppConfig.primaryColor),
             title: const Text('Farmacias'),
             onTap: () {
               Navigator.pop(context);
@@ -158,7 +164,7 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           // 6. Enfermería
           ListTile(
-            leading: const Icon(Icons.people_outline, color: Colors.blue),
+            leading: Icon(Icons.people_outline, color: AppConfig.primaryColor),
             title: const Text('Enfermería'),
             onTap: () {
               Navigator.pop(context);
@@ -197,7 +203,7 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           // 8. Contacto
           ListTile(
-            leading: const Icon(Icons.email_outlined, color: Colors.blue),
+            leading: Icon(Icons.email_outlined, color: AppConfig.primaryColor),
             title: const Text('Contacto'),
             onTap: () {
               Navigator.pop(context);
@@ -230,18 +236,17 @@ class PhoneMenuDrawer extends StatelessWidget {
                       textoPanel = 'Panel Administrador';
                       rutaDestino = '/admin_dashboard';
                     } else if (rol == 'vendedor') {
-                      textoPanel =
-                          'Abrir Panel de Ventas'; // 🔑 Texto actualizado
-                      rutaDestino = 'php'; // 🔑 Bandera para redirigir
+                      textoPanel = 'Abrir Panel de Ventas';
+                      rutaDestino = 'php';
                     }
 
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ListTile(
-                          leading: const Icon(
+                          leading: Icon(
                             Icons.dashboard_rounded,
-                            color: Colors.blue,
+                            color: AppConfig.primaryColor,
                           ),
                           title: Text(
                             textoPanel,
@@ -253,10 +258,8 @@ class PhoneMenuDrawer extends StatelessWidget {
                           onTap: () {
                             Navigator.pop(context);
                             if (rutaDestino == 'php') {
-                              // 🔑 Abre el CRM de Asesores en PHP
-                              final Uri url = Uri.parse(
-                                'https://medicoslaguna.com/asesores/',
-                              );
+                              // 🔑 ENLACE DINÁMICO DEL CRM
+                              final Uri url = Uri.parse(AppConfig.crmUrl);
                               launchUrl(
                                 url,
                                 mode: LaunchMode.externalApplication,
@@ -274,7 +277,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                               color: Colors.green,
                             ),
                             title: const Text(
-                              'Sistema de Asesores', // 🔑 Texto actualizado
+                              'Sistema de Asesores',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,
@@ -282,10 +285,8 @@ class PhoneMenuDrawer extends StatelessWidget {
                             ),
                             onTap: () {
                               Navigator.pop(context);
-                              // 🔑 Abre el CRM de Asesores en PHP
-                              final Uri url = Uri.parse(
-                                'https://medicoslaguna.com/asesores/',
-                              );
+                              // 🔑 ENLACE DINÁMICO DEL CRM
+                              final Uri url = Uri.parse(AppConfig.crmUrl);
                               launchUrl(
                                 url,
                                 mode: LaunchMode.externalApplication,
@@ -358,7 +359,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                 Navigator.pushNamed(context, '/suscribirse');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),

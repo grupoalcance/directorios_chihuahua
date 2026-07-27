@@ -6,6 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+import 'package:directorios_laguna/config/app_config.dart';
+
 import '../screens/todas_especialidades_screen.dart';
 import '../screens/lista_doctores_screen.dart';
 import '../screens/lista_farmacias_screen.dart';
@@ -129,8 +133,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   '/',
                   (route) => false,
                 ),
+                // 🔑 LOGO DINÁMICO (MÓVIL)
                 child: Image.asset(
-                  'assets/images/logo.png',
+                  AppConfig.logoPath,
                   height: 40,
                   fit: BoxFit.contain,
                 ),
@@ -162,8 +167,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                               '/',
                               (route) => false,
                             ),
+                            // 🔑 LOGO DINÁMICO (ESCRITORIO)
                             child: Image.asset(
-                              'assets/images/logo.png',
+                              AppConfig.logoPath,
                               height: 65,
                               fit: BoxFit.contain,
                             ),
@@ -277,9 +283,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Torreón 34°C',
-                                style: TextStyle(
+                              // 🔑 CIUDAD PRINCIPAL DINÁMICA
+                              Text(
+                                '${AppConfig.ciudadesActivas[0]} 34°C',
+                                style: const TextStyle(
                                   color: Color(0xFF334155),
                                   fontWeight: FontWeight.w800,
                                   fontSize: 13.5,
@@ -333,14 +340,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       context: context,
                       label: 'Ciudad',
                       style: menuStyle,
-                      items: [
-                        'Torreón',
-                        'Gómez Palacio',
-                        'Lerdo',
-                        'San Pedro',
-                        'Fco. I. Madero',
-                        'Matamoros',
-                      ],
+                      items: AppConfig
+                          .ciudadesActivas, // 🔑 LISTA DINÁMICA DE CIUDADES
                     ),
                     const SizedBox(width: 5),
                     PopupMenuButton<String>(
@@ -395,7 +396,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             _buildMenuItem('Oftalmología'),
                             _buildMenuItem('Pediatría'),
                             const PopupMenuDivider(),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'ver_todas',
                               child: Row(
                                 mainAxisAlignment:
@@ -404,13 +405,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   Text(
                                     'Ver todas las especialidades',
                                     style: TextStyle(
-                                      color: Colors.blue,
+                                      color: AppConfig
+                                          .primaryColor, // 🔑 COLOR DINÁMICO
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Icon(
                                     Icons.arrow_forward,
-                                    color: Colors.blue,
+                                    color: AppConfig
+                                        .primaryColor, // 🔑 COLOR DINÁMICO
                                     size: 16,
                                   ),
                                 ],
@@ -477,7 +480,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     const SizedBox(width: 15),
 
                     // =========================================================================
-                    // 🔐 CONTROL DE ACCESO DINÁMICO (REDIRIGIENDO A PHP)
+                    // 🔐 CONTROL DE ACCESO DINÁMICO
                     // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
@@ -519,9 +522,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                         '/admin_dashboard',
                                       );
                                     } else if (rolDetectado == 'vendedor') {
-                                      // 🔑 Abre el CRM de Asesores en PHP
+                                      // 🔑 ENLACE DINÁMICO DEL CRM
                                       final Uri url = Uri.parse(
-                                        'https://medicoslaguna.com/asesores/',
+                                        AppConfig.crmUrl,
                                       );
                                       launchUrl(
                                         url,
@@ -534,10 +537,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       );
                                     }
                                   } else if (valor == 'ir_captura') {
-                                    // 🔑 Abre el CRM de Asesores en PHP
-                                    final Uri url = Uri.parse(
-                                      'https://medicoslaguna.com/asesores/',
-                                    );
+                                    // 🔑 ENLACE DINÁMICO DEL CRM
+                                    final Uri url = Uri.parse(AppConfig.crmUrl);
                                     launchUrl(
                                       url,
                                       mode: LaunchMode.externalApplication,
@@ -567,9 +568,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.account_circle_rounded,
-                                        color: Colors.blue,
+                                        color: AppConfig
+                                            .primaryColor, // 🔑 COLOR DINÁMICO
                                         size: 18,
                                       ),
                                       const SizedBox(width: 6),
@@ -595,9 +597,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     value: 'ir_panel',
                                     child: Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.dashboard_rounded,
-                                          color: Colors.blue,
+                                          color: AppConfig
+                                              .primaryColor, // 🔑 COLOR DINÁMICO
                                           size: 18,
                                         ),
                                         const SizedBox(width: 10),
@@ -607,7 +610,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                                       'administrador')
                                               ? 'Panel Administrador'
                                               : rolDetectado == 'vendedor'
-                                              ? 'Abrir Panel de Ventas' // 🔑 Texto Actualizado
+                                              ? 'Abrir Panel de Ventas'
                                               : 'Mi Panel de Control',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
@@ -628,7 +631,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                           ),
                                           SizedBox(width: 10),
                                           Text(
-                                            'Sistema de Asesores', // 🔑 Texto Actualizado
+                                            'Sistema de Asesores',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: Colors.green,
@@ -669,12 +672,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
                     const SizedBox(width: 10),
 
-                    // 🔑 BOTÓN DE SUSCRIBIRSE CON RUTA NOMBRADA PARA ACTUALIZAR LA URL A '/suscribirse'
+                    // 🔑 BOTÓN DE SUSCRIBIRSE DINÁMICO
                     ElevatedButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, '/suscribirse'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor:
+                            AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),

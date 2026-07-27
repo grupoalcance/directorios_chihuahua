@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart'; // 🔗 IMPORTACIÓN AÑADIDA PARA ABRIR PHP
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+import 'package:directorios_laguna/config/app_config.dart';
+
 import 'doctor_dashboard_screen.dart';
 import 'medicos_page_screen.dart';
 import 'establishment_dashboard_screen.dart';
@@ -184,7 +188,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               ),
               title: Row(
                 children: [
-                  const Icon(Icons.add_business_rounded, color: Colors.blue),
+                  Icon(
+                    Icons.add_business_rounded,
+                    color: AppConfig.primaryColor,
+                  ), // 🔑 COLOR DINÁMICO
                   const SizedBox(width: 10),
                   const Text(
                     'Nuevo Registro Manual',
@@ -280,7 +287,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _ciudadController,
                           decoration: _inputDecoration(
-                            'Ej. Torreón, Gómez Palacio, Lerdo',
+                            'Ej. Torreón, Gómez Palacio, Lerdo', // Esto es solo un ejemplo visual (Placeholder)
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
@@ -328,7 +335,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ElevatedButton(
                   onPressed: _guardandoPerfil ? null : _guardarAltaManual,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0061E0),
+                    backgroundColor:
+                        AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                   ),
                   child: _guardandoPerfil
                       ? const SizedBox(
@@ -372,7 +380,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ),
             const SizedBox(width: 15),
             Text(
-              'Médicos Laguna · Control total del directorio',
+              '${AppConfig.appName} · Control total del directorio', // 🔑 NOMBRE DE APP DINÁMICO
               style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
             ),
           ],
@@ -385,10 +393,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 builder: (context) => const MedicosPageScreen(),
               ),
             ),
-            icon: const Icon(Icons.public, color: Colors.blue),
-            label: const Text(
+            icon: Icon(
+              Icons.public,
+              color: AppConfig.primaryColor,
+            ), // 🔑 COLOR DINÁMICO
+            label: Text(
               'Ver sitio público',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppConfig.primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 15),
@@ -483,12 +497,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   spacing: 20,
                   runSpacing: 20,
                   children: [
-                    // 🔑 TARJETA DE AUDITORÍA DE CONTRATOS - REDIRIGE A PHP
+                    // 🔑 TARJETA DE AUDITORÍA DE CONTRATOS - REDIRIGE A PHP DINÁMICAMENTE
                     GestureDetector(
                       onTap: () async {
                         final Uri url = Uri.parse(
-                          'https://medicoslaguna.com/asesores/',
-                        );
+                          AppConfig.crmUrl,
+                        ); // 🔑 URL DINÁMICA
                         if (!await launchUrl(
                           url,
                           mode: LaunchMode.externalApplication,
@@ -570,12 +584,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     _buildKpiCard(
                       'Directorio Global',
                       totalRegistradosGlobal.toString(),
-                      const Icon(
+                      Icon(
                         Icons.analytics_rounded,
-                        color: Colors.blue,
+                        color: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                         size: 30,
                       ),
-                      Colors.blue,
+                      AppConfig.primaryColor,
                     ),
                     _buildKpiCard(
                       'Clics WA',
@@ -604,9 +618,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                   child: TabBar(
                     controller: _tabController,
-                    labelColor: Colors.blue,
+                    labelColor: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                     unselectedLabelColor: Colors.grey,
-                    indicatorColor: Colors.blue,
+                    indicatorColor: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                     onTap: (index) => setState(() => _currentTabIndex = index),
                     tabs: [
                       Tab(
@@ -696,7 +710,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0061E0),
+                                backgroundColor:
+                                    AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                   vertical: 16,
@@ -875,7 +890,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             },
                             hoverColor: (esEnfermero || esPestanaPendientes)
                                 ? Colors.transparent
-                                : Colors.blue.shade50,
+                                : AppConfig.primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                             child: Text(
                               tituloVisual,
@@ -883,7 +898,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 fontWeight: FontWeight.bold,
                                 color: (esEnfermero || esPestanaPendientes)
                                     ? const Color(0xFF334155)
-                                    : const Color(0xFF0061E0),
+                                    : AppConfig
+                                          .primaryColor, // 🔑 COLOR DINÁMICO
                                 decoration: (esEnfermero || esPestanaPendientes)
                                     ? TextDecoration.none
                                     : TextDecoration.underline,
@@ -1071,7 +1087,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CircleAvatar(
-                                backgroundColor: Colors.blue,
+                                backgroundColor:
+                                    AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
                                 radius: 14,
                                 child: Icon(
                                   nombreColeccion == 'hospitales'
@@ -1096,12 +1113,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                     ),
                                   );
                                 },
-                                hoverColor: Colors.blue.shade50,
+                                hoverColor: AppConfig.primaryColor.withOpacity(
+                                  0.1,
+                                ),
                                 child: Text(
                                   data['nombre'] ?? '',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0061E0),
+                                    color: AppConfig
+                                        .primaryColor, // 🔑 COLOR DINÁMICO
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
@@ -1291,7 +1311,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF0061E0), width: 1.5),
+        borderSide: BorderSide(
+          color: AppConfig.primaryColor,
+          width: 1.5,
+        ), // 🔑 COLOR DINÁMICO
       ),
     );
   }
