@@ -477,7 +477,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     const SizedBox(width: 15),
 
                     // =========================================================================
-                    // 🔐 CONTROL DE ACCESO DINÁMICO REPARADO Y CON RUTAS NOMBRADAS
+                    // 🔐 CONTROL DE ACCESO DINÁMICO (REDIRIGIENDO A PHP)
                     // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
@@ -519,9 +519,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                         '/admin_dashboard',
                                       );
                                     } else if (rolDetectado == 'vendedor') {
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/admin_contratos',
+                                      // 🔑 Abre el CRM de Asesores en PHP
+                                      final Uri url = Uri.parse(
+                                        'https://medicoslaguna.com/asesores/',
+                                      );
+                                      launchUrl(
+                                        url,
+                                        mode: LaunchMode.externalApplication,
                                       );
                                     } else {
                                       Navigator.pushNamed(
@@ -530,9 +534,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       );
                                     }
                                   } else if (valor == 'ir_captura') {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '/captura-contratos',
+                                    // 🔑 Abre el CRM de Asesores en PHP
+                                    final Uri url = Uri.parse(
+                                      'https://medicoslaguna.com/asesores/',
+                                    );
+                                    launchUrl(
+                                      url,
+                                      mode: LaunchMode.externalApplication,
                                     );
                                   } else if (valor == 'cerrar_sesion') {
                                     await AuthService().cerrarSesion();
@@ -599,7 +607,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                                       'administrador')
                                               ? 'Panel Administrador'
                                               : rolDetectado == 'vendedor'
-                                              ? 'Ver Lista de Contratos'
+                                              ? 'Abrir Panel de Ventas' // 🔑 Texto Actualizado
                                               : 'Mi Panel de Control',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
@@ -620,7 +628,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                           ),
                                           SizedBox(width: 10),
                                           Text(
-                                            'Capturar Nuevo Contrato',
+                                            'Sistema de Asesores', // 🔑 Texto Actualizado
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: Colors.green,

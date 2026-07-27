@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart'; // 🔗 IMPORTACIÓN AÑADIDA PARA ABRIR PHP
 import 'dart:async';
 import 'doctor_dashboard_screen.dart';
 import 'medicos_page_screen.dart';
 import 'establishment_dashboard_screen.dart';
-import 'admin_contratos_dashboard_screen.dart'; 
+
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -482,15 +483,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   spacing: 20,
                   runSpacing: 20,
                   children: [
-                    // 🔑 TARJETA DE AUDITORÍA DE CONTRATOS INTEGRADA AL PRINCIPIO
+                    // 🔑 TARJETA DE AUDITORÍA DE CONTRATOS - REDIRIGE A PHP
                     GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const AdminContratosDashboardScreen(),
-                        ),
-                      ),
+                      onTap: () async {
+                        final Uri url = Uri.parse(
+                          'https://medicoslaguna.com/asesores/',
+                        );
+                        if (!await launchUrl(
+                          url,
+                          mode: LaunchMode.externalApplication,
+                        )) {
+                          debugPrint('No se pudo abrir el panel de asesores');
+                        }
+                      },
                       child: Container(
                         width: 180,
                         padding: const EdgeInsets.all(20),

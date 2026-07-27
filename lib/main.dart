@@ -9,9 +9,7 @@ import 'package:directorios_laguna/screens/medicos_page_screen.dart';
 import 'package:directorios_laguna/screens/doctor_profile_screen.dart';
 import 'package:directorios_laguna/screens/admin_dashboard_screen.dart';
 import 'package:directorios_laguna/screens/login_screen.dart';
-import 'package:directorios_laguna/screens/registro_contrato_vendedor_screen.dart';
-import 'package:directorios_laguna/screens/admin_contratos_dashboard_screen.dart';
-import 'package:directorios_laguna/screens/suscribirse_screen.dart'; // 🔑 IMPORTACIÓN AÑADIDA
+import 'package:directorios_laguna/screens/suscribirse_screen.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,27 +71,7 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        // 📝 4. REGISTRO DE CONTRATOS
-        if (routeName != null &&
-            (routeName == '/captura-contratos' ||
-                routeName.contains('captura-contratos'))) {
-          return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const RegistroContratoVendedorScreen(),
-          );
-        }
-
-        // 📂 5. AUDITORÍA DE CONTRATOS
-        if (routeName != null &&
-            (routeName == '/admin_contratos' ||
-                routeName.contains('admin_contratos'))) {
-          return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const AdminContratosDashboardScreen(),
-          );
-        }
-
-        // 🩺 6. PERFILES DE MÉDICOS (Ej: /perfil?id=123)
+        // 🩺 4. PERFILES DE MÉDICOS (Ej: /perfil?id=123)
         if (routeName != null && routeName.startsWith('/perfil')) {
           final uri = Uri.parse(routeName);
           final doctorId = uri.queryParameters['id'];
@@ -106,7 +84,7 @@ class MyApp extends StatelessWidget {
           }
         }
 
-        // 🏠 7. RUTA POR DEFECTO (Home / Inicio)
+        // 🏠 5. RUTA POR DEFECTO (Home / Inicio)
         return MaterialPageRoute(
           settings: settings,
           builder: (context) => const MedicosPageScreen(),

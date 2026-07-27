@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart'; // 🔗 IMPORTACIÓN AÑADIDA
 import '../screens/lista_doctores_screen.dart';
 import '../screens/todas_especialidades_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
@@ -229,8 +230,9 @@ class PhoneMenuDrawer extends StatelessWidget {
                       textoPanel = 'Panel Administrador';
                       rutaDestino = '/admin_dashboard';
                     } else if (rol == 'vendedor') {
-                      textoPanel = 'Ver Lista de Contratos';
-                      rutaDestino = '/admin_contratos';
+                      textoPanel =
+                          'Abrir Panel de Ventas'; // 🔑 Texto actualizado
+                      rutaDestino = 'php'; // 🔑 Bandera para redirigir
                     }
 
                     return Column(
@@ -250,7 +252,18 @@ class PhoneMenuDrawer extends StatelessWidget {
                           ),
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.pushNamed(context, rutaDestino);
+                            if (rutaDestino == 'php') {
+                              // 🔑 Abre el CRM de Asesores en PHP
+                              final Uri url = Uri.parse(
+                                'https://medicoslaguna.com/asesores/',
+                              );
+                              launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } else {
+                              Navigator.pushNamed(context, rutaDestino);
+                            }
                           },
                         ),
                         if (esAsesor) ...[
@@ -261,7 +274,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                               color: Colors.green,
                             ),
                             title: const Text(
-                              'Capturar Nuevo Contrato',
+                              'Sistema de Asesores', // 🔑 Texto actualizado
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,
@@ -269,9 +282,13 @@ class PhoneMenuDrawer extends StatelessWidget {
                             ),
                             onTap: () {
                               Navigator.pop(context);
-                              Navigator.pushNamed(
-                                context,
-                                '/captura-contratos',
+                              // 🔑 Abre el CRM de Asesores en PHP
+                              final Uri url = Uri.parse(
+                                'https://medicoslaguna.com/asesores/',
+                              );
+                              launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
                               );
                             },
                           ),
