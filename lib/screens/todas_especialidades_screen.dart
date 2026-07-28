@@ -238,7 +238,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                     },
                     decoration: InputDecoration(
                       hintText:
-                          'Filtrar por municipio (Ej. Torreón, Gómez Palacio, Lerdo...)',
+                          'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
                       hintStyle: TextStyle(
                         color: Colors.grey.shade400,
                         fontSize: 14,

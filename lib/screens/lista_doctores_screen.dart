@@ -118,7 +118,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                     // 👇 MÁGICO: Si buscó por ciudad, el hint le pide buscar especialidad. Si buscó por especialidad, le pide municipio.
                     hintText: esBusquedaPorCiudad
                         ? 'Filtrar por especialidad (Ej. Dentista, Cardiólogo, Pediatra...)'
-                        : 'Filtrar por municipio (Ej. Torreón, Gómez Palacio, Lerdo...)',
+                        : 'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
                     hintStyle: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 14,
@@ -209,10 +209,10 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                             .trim();
                         bool matchCiudadBase =
                             ciudadDoc == ciudadBusqueda ||
-                            (ciudadBusqueda.contains('torreón') &&
-                                ciudadDoc.contains('torreon')) ||
-                            (ciudadBusqueda.contains('torreon') &&
-                                ciudadDoc.contains('torreón')) ||
+                            (ciudadBusqueda.contains('Durango') &&
+                                ciudadDoc.contains('durango')) ||
+                            (ciudadBusqueda.contains('durango') &&
+                                ciudadDoc.contains('Durango')) ||
                             (ciudadBusqueda.contains('gómez') &&
                                 ciudadDoc.contains('gomez')) ||
                             (ciudadBusqueda.contains('gomez') &&

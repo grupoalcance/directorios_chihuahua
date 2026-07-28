@@ -400,7 +400,7 @@ class _EstablishmentDashboardScreenState
                                         TextFormField(
                                           controller: _ciudadController,
                                           decoration: _inputStyle(
-                                            'Ej. Torreón',
+                                            'Ej. Durango',
                                             Icons.map_outlined,
                                           ),
                                           validator: (v) =>

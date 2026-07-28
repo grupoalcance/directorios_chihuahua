@@ -701,12 +701,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
   Widget _buildInputCiudadAutocompletar() {
     final List<String> lasCiudades = [
-      'Torreón',
+      'Victoria de Durango',
       'Gómez Palacio',
       'Lerdo',
-      'San Pedro',
-      'Fco. I. Madero',
-      'Matamoros',
+      'Santiago Papasquiaro',
+      'Guadalupe Victoria',
+      'El Salto',
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,7 +752,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           color: Color(0xFF334155),
                         ),
                         decoration: const InputDecoration(
-                          hintText: 'Torreón, Gómez Palacio...',
+                          hintText: '',
                           hintStyle: TextStyle(
                             color: Color(0xFF94A3B8),
                             fontSize: 13,
@@ -1603,14 +1603,21 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     return SliverToBoxAdapter(
       child: SeccionEnlacesCruzados(
         tituloSeccion: "Médicos por categoría y ciudad",
-        columnasCiudades: const ['Torreón', 'Gómez Palacio', 'Lerdo'],
+        columnasCiudades: const [
+          'Victoria de Durango',
+          'Gómez Palacio',
+          'Lerdo',
+          'Santiago Papasquiaro',
+          'Guadalupe Victoria',
+          'El Salto',
+        ],
         enlacesPorCiudad: const {
-          'Torreón': [
-            'Cardiólogos en Torreón',
-            'Pediatras en Torreón',
-            'Ginecólogos en Torreón',
-            'Dentistas en Torreón',
-            'Dermatólogos en Torreón',
+          'Victoria de Durango': [
+            'Cardiólogos en Victoria de Durango',
+            'Pediatras en Victoria de Durango',
+            'Ginecólogos en Victoria de Durango',
+            'Dentistas en Victoria de Durango',
+            'Dermatólogos en Victoria de Durango',
           ],
           'Gómez Palacio': [
             'Cardiólogos en Gómez Palacio',

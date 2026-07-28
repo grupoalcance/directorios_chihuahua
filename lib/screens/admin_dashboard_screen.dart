@@ -287,7 +287,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _ciudadController,
                           decoration: _inputDecoration(
-                            'Ej. Torreón, Gómez Palacio, Lerdo', // Esto es solo un ejemplo visual (Placeholder)
+                            'Ej. Durango, Gómez Palacio, Lerdo', // Esto es solo un ejemplo visual (Placeholder)
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,

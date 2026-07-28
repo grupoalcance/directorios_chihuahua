@@ -90,8 +90,8 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
   Future<void> _abrirGoogleMaps(String direccion) async {
     if (direccion.isEmpty) return;
 
-    // Codificamos la dirección para que sea una búsqueda válida en Maps (le añadimos "Torreón" por defecto para ayudar al mapa)
-    final String query = Uri.encodeComponent('$direccion, Torreón, Coahuila');
+    // Codificamos la dirección para que sea una búsqueda válida en Maps (le añadimos "Durango" por defecto para ayudar al mapa)
+    final String query = Uri.encodeComponent('$direccion, Durango, Coahuila');
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$query',
     );

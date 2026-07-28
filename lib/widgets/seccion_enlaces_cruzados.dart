@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 class SeccionEnlacesCruzados extends StatelessWidget {
   final String tituloSeccion;
-  final List<String> columnasCiudades; // ['Torreón', 'Gómez Palacio', 'Lerdo']
+  final List<String> columnasCiudades; // ['Durango', 'Gómez Palacio', 'Lerdo']
   final Map<String, List<String>>
-  enlacesPorCiudad; // { 'Torreón': ['Urgencias...', 'Clínicas...'] }
+  enlacesPorCiudad; // { 'Durango': ['Urgencias...', 'Clínicas...'] }
   final String ctaTitulo; // '¿Eres médico?'
   final String ctaSubtitulo; // 'Suscríbete al directorio...'
   final String ctaBotonTexto; // 'Suscríbete'

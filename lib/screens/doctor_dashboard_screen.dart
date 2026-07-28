@@ -59,7 +59,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   final TextEditingController _servicioCtrl = TextEditingController();
 
   final List<String> _listaCiudades = [
-    'Torreón, Coah.',
+    'Durango, Coah.',
     'Gómez Palacio, Dgo.',
     'Lerdo, Dgo.',
     'Matamoros, Coah.',
@@ -231,7 +231,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
       consultorios.add({
         'nombre': 'Consultorio ${consultorios.length + 1}',
         'calle_numero': '',
-        'ciudad': 'Torreón, Coah.',
+        'ciudad': 'Durango, Coah.',
         'direccion': '',
         'telefono': '',
         'whatsapp': '',
@@ -353,7 +353,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
 
                 if (map['calle_numero'] == null || map['ciudad'] == null) {
                   String dirAntigua = map['direccion'] ?? '';
-                  String ciudadAsignada = 'Torreón, Coah.'; // Por defecto
+                  String ciudadAsignada = 'Durango, Coah.'; // Por defecto
                   String calleAsignada = dirAntigua;
 
                   for (String ciudad in _listaCiudades) {
@@ -1430,7 +1430,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                 child: DropdownButtonFormField<String>(
                   value: _listaCiudades.contains(clinic['ciudad'])
                       ? clinic['ciudad']
-                      : 'Torreón, Coah.',
+                      : 'Durango, Coah.',
                   decoration: InputDecoration(
                     labelText: 'Ciudad',
                     border: OutlineInputBorder(

@@ -103,7 +103,7 @@ class _ListaHospitalesScreenState extends State<ListaHospitalesScreen> {
                         ),
                         decoration: const InputDecoration(
                           hintText:
-                              'Filtrar por municipio (Ej. Torreón, Gómez Palacio, Lerdo...)',
+                              'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
                           hintStyle: TextStyle(
                             color: Color(0xFF94A3B8),
                             fontSize: 14.5,
@@ -472,14 +472,14 @@ class _ListaHospitalesScreenState extends State<ListaHospitalesScreen> {
             // =========================================================================
             SeccionEnlacesCruzados(
               tituloSeccion: "Hospitales y Clínicas por categoría y ciudad",
-              columnasCiudades: const ['Torreón', 'Gómez Palacio', 'Lerdo'],
+              columnasCiudades: const ['Durango', 'Gómez Palacio', 'Lerdo'],
               enlacesPorCiudad: const {
-                'Torreón': [
-                  'Hospitales con Urgencias en Torreón',
-                  'Clínicas de Especialidades en Torreón',
-                  'Maternidad en Torreón',
-                  'Centros Médicos Quirúrgicos en Torreón',
-                  'Sanatorios Privados en Torreón',
+                'Durango': [
+                  'Hospitales con Urgencias en Durango',
+                  'Clínicas de Especialidades en Durango',
+                  'Maternidad en Durango',
+                  'Centros Médicos Quirúrgicos en Durango',
+                  'Sanatorios Privados en Durango',
                 ],
                 'Gómez Palacio': [
                   'Hospitales con Urgencias en Gómez Palacio',

@@ -41,7 +41,7 @@ class QuienesSomosScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Conectamos a la Comarca Lagunera con la atención médica de la más alta calidad de manera rápida, directa y transparente.',
+                        'Conectamos a Durango con la atención médica de la más alta calidad de manera rápida, directa y transparente.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
@@ -154,7 +154,7 @@ class QuienesSomosScreen extends StatelessWidget {
                   Icons.track_changes_rounded,
                   Colors.blue,
                   'Nuestra Misión',
-                  'Proveer a los habitantes de Torreón, Gómez Palacio, Lerdo y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar lagunero.',
+                  'Proveer a los habitantes de Durango y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar duranguense.',
                 ),
               ),
               const SizedBox(width: 20),
@@ -163,7 +163,7 @@ class QuienesSomosScreen extends StatelessWidget {
                   Icons.remove_red_eye_rounded,
                   Colors.teal,
                   'Nuestra Visión',
-                  'Consolidarnos como el directorio médico y de salud referente de la Comarca Lagunera, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
+                  'Consolidarnos como el directorio médico y de salud referente de Durango, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
                 ),
               ),
             ],
@@ -174,14 +174,14 @@ class QuienesSomosScreen extends StatelessWidget {
                 Icons.track_changes_rounded,
                 Colors.blue,
                 'Nuestra Misión',
-                'Proveer a los habitantes de Torreón, Gómez Palacio, Lerdo y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar lagunero.',
+                'Proveer a los habitantes de Durango y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar duranguense.',
               ),
               const SizedBox(height: 20),
               _cardPilar(
                 Icons.remove_red_eye_rounded,
                 Colors.teal,
                 'Nuestra Visión',
-                'Consolidarnos como el directorio médico y de salud referente de la Comarca Lagunera, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
+                'Consolidarnos como el directorio médico y de salud referente de Durango, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
               ),
             ],
           );
@@ -274,7 +274,7 @@ class QuienesSomosScreen extends StatelessWidget {
             _itemValor(
               Icons.people_alt_rounded,
               'Comunidad',
-              'Impulsamos el desarrollo de nuestra Comarca Lagunera.',
+              'Impulsamos el desarrollo de nuestra comunidad médica.',
             ),
           ],
         ),

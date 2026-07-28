@@ -101,7 +101,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                         ),
                         decoration: const InputDecoration(
                           hintText:
-                              'Filtrar por municipio (Ej. Torreón, Gómez Palacio, Lerdo...)',
+                              'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
                           hintStyle: TextStyle(
                             color: Color(0xFF94A3B8),
                             fontSize: 14.5,
@@ -433,14 +433,14 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
             // =========================================================================
             SeccionEnlacesCruzados(
               tituloSeccion: "Farmacias por categoría y ciudad",
-              columnasCiudades: const ['Torreón', 'Gómez Palacio', 'Lerdo'],
+              columnasCiudades: const ['Durango', 'Gómez Palacio', 'Lerdo'],
               enlacesPorCiudad: const {
-                'Torreón': [
-                  'Farmacias 24 Horas en Torreón',
-                  'Farmacias con Consultorio en Torreón',
-                  'Medicamentos de Especialidad en Torreón',
-                  'Farmacias Dermatológicas en Torreón',
-                  'Servicio a Domicilio en Torreón',
+                'Durango': [
+                  'Farmacias 24 Horas en Durango',
+                  'Farmacias con Consultorio en Durango',
+                  'Medicamentos de Especialidad en Durango',
+                  'Farmacias Dermatológicas en Durango',
+                  'Servicio a Domicilio en Durango',
                 ],
                 'Gómez Palacio': [
                   'Farmacias 24 Horas en Gómez Palacio',

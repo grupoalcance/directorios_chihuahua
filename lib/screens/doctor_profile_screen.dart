@@ -400,7 +400,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         currentClinic['direccion'] ?? 'Dirección por confirmar';
     String telefonoActivo = currentClinic['telefono'] ?? '';
     String whatsappActivo = currentClinic['whatsapp'] ?? '';
-    String ciudadActiva = currentClinic['ciudad'] ?? 'Torreón, Coahuila';
+    String ciudadActiva = currentClinic['ciudad'] ?? 'Durango, Coahuila';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),

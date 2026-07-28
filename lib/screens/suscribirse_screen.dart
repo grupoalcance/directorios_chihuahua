@@ -179,7 +179,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
         _itemBeneficio(
           Icons.ads_click_rounded,
           'Mayor Visibilidad',
-          'Aparece ante miles de pacientes de Torreón, Gómez y Lerdo que buscan tu especialidad a diario.',
+          'Aparece ante miles de pacientes de Durango, Gómez y Lerdo que buscan tu especialidad a diario.',
         ),
         const SizedBox(height: 20),
         _itemBeneficio(
