@@ -28,14 +28,12 @@ jobs:
       - name: 4. Compilar la aplicación para Web
         run: flutter build web --release
 
-      - name: 5. Subir los archivos por FTP a Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: 5. Subir archivos por SFTP a Hostinger
+        uses: wlixcc/SFTP-Deploy-Action@v1.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
-          port: 21
-          security: loose
-          local-dir: build/web/
-          server-dir: ./
+          port: 65002
+          local_path: "build/web/*"
+          remote_path: "/home/u492244081/domains/medicosdurango.com/public_html/"
