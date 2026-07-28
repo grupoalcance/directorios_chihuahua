@@ -208,7 +208,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Explora todas las ramas médicas disponibles en la Comarca Laguna para encontrar a tu médico.',
+                  'Explora todas las ramas médicas disponibles en la Comarca durango para encontrar a tu médico.',
                   style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 25),

@@ -35,7 +35,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
     if (_formKey.currentState!.validate()) {
       // 🛠️ CORREGIDO: Interpolación de variables estructurada correctamente para compatibilidad con WhatsApp
       final String plantillaMensaje =
-          '🩺 *Nueva Solicitud de Registro - Médicos Laguna*\n\n'
+          '🩺 *Nueva Solicitud de Registro - Médicos durango*\n\n'
           '👤 *Médico:* ${_nombreController.text.trim()}\n'
           '📞 *Teléfono:* ${_telefonoController.text.trim()}\n'
           '🩻 *Especialidad:* ${_especialidadController.text.trim()}\n\n'
@@ -94,7 +94,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
                   child: Column(
                     children: [
                       const Text(
-                        'Únete a Médicos Laguna',
+                        'Únete a Médicos durango',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 34,

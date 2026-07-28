@@ -54,7 +54,7 @@ class _ListaHospitalesScreenState extends State<ListaHospitalesScreen> {
                     // 🏢 ENCABEZADO PREMIUM
                     // =========================================================================
                     const Text(
-                      'Hospitales y Clínicas en la Laguna',
+                      'Hospitales y Clínicas en la durango',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,

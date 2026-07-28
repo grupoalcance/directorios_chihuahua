@@ -18,7 +18,7 @@ import '../widgets/phone_menu_drawer.dart';
 import '../widgets/seccion_enlaces_cruzados.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
-const List<String> las15EspecialidadesLaguna = [
+const List<String> las15Especialidadesdurango = [
   'Cardiología',
   'Dermatología',
   'Ginecología y Obstetricia',
@@ -311,7 +311,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       cleanPhone = '52$cleanPhone';
     }
     String mensaje = Uri.encodeComponent(
-      'Hola Doctor(a), vi su perfil en médicoslaguna.com y me gustaría agendar una cita.',
+      'Hola Doctor(a), vi su perfil en médicosdurango.com y me gustaría agendar una cita.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -629,8 +629,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 focusNode: FocusNode(),
                 optionsBuilder: (TextEditingValue textEditingValue) {
                   if (textEditingValue.text.isEmpty)
-                    return las15EspecialidadesLaguna;
-                  return las15EspecialidadesLaguna.where(
+                    return las15Especialidadesdurango;
+                  return las15Especialidadesdurango.where(
                     (String option) => option.toLowerCase().contains(
                       textEditingValue.text.toLowerCase(),
                     ),
@@ -875,10 +875,10 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     child: ListView.builder(
                       controller: _especialidadesScrollController,
                       scrollDirection: Axis.horizontal,
-                      itemCount: las15EspecialidadesLaguna.length,
+                      itemCount: las15Especialidadesdurango.length,
                       itemBuilder: (context, index) {
                         String nombreEspecialidad =
-                            las15EspecialidadesLaguna[index];
+                            las15Especialidadesdurango[index];
                         int cantidadMedicos =
                             conteoReal[nombreEspecialidad] ?? 0;
                         var estilo = _getEspecialidadEstilo(nombreEspecialidad);
@@ -1331,7 +1331,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                             )
                           : Image.network(fotoUrl, fit: BoxFit.cover))
                     : Image.asset(
-                        'assets/images/medicos_laguna_portada.png',
+                        'assets/images/medicos_durango_portada.png',
                         fit: BoxFit.cover,
                       ),
               ),

@@ -52,7 +52,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
   void _enviarFormularioPorWhatsApp() {
     if (_formKey.currentState!.validate()) {
       final String plantillaMensaje =
-          '📌 *Nuevo Mensaje de Contacto - Médicos Laguna*\n\n'
+          '📌 *Nuevo Mensaje de Contacto - Médicos durango*\n\n'
           '👤 *Nombre:* ${_nombreController.text.trim()}\n'
           '✉️ *Correo:* ${_correoController.text.trim()}\n\n'
           '💬 *Mensaje / Duda:*\n${_mensajeController.text.trim()}';
@@ -167,7 +167,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Elige la vía más cómoda para comunicarte de forma directa con el equipo de Médicos Laguna.',
+          'Elige la vía más cómoda para comunicarte de forma directa con el equipo de Médicos durango.',
           style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.3),
         ),
         const SizedBox(height: 28),
@@ -181,7 +181,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
           datoDestacado: '871 417 8277',
           onTap: () => _abrirWhatsApp(
             mensaje:
-                'Hola, me comunico desde la sección de Contacto de Médicos Laguna, me gustaría recibir más información.',
+                'Hola, me comunico desde la sección de Contacto de Médicos durango, me gustaría recibir más información.',
           ),
         ),
         const SizedBox(height: 16),
@@ -190,7 +190,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
           color: Colors.blue,
           titulo: 'Correo Electrónico',
           desc: 'Para propuestas comerciales o anuncios institucionales.',
-          datoDestacado: 'contacto@medicoslaguna.com',
+          datoDestacado: 'contacto@medicosdurango.com',
         ),
         const SizedBox(height: 16),
 

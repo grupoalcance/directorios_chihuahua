@@ -52,7 +52,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                     // 🏢 ENCABEZADO PREMIUM DE FARMACIAS
                     // =========================================================================
                     const Text(
-                      'Farmacias en la Laguna',
+                      'Farmacias en la durango',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,

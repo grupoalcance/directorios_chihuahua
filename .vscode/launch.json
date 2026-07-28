@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "directorios_laguna",
+            "name": "directorios_durango",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "directorios_laguna (profile mode)",
+            "name": "directorios_durango (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "directorios_laguna (release mode)",
+            "name": "directorios_durango (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

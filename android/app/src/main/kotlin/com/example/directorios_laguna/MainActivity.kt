@@ -1,4 +1,4 @@
-package com.example.directorios_laguna
+package com.example.directorios_durango
 
 import io.flutter.embedding.android.FlutterActivity
 

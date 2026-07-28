@@ -115,7 +115,7 @@ class QuienesSomosScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text(
-          'Médicos Laguna',
+          'Médicos durango',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -135,7 +135,7 @@ class QuienesSomosScreen extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Image.asset(
-        'assets/images/medicos_laguna_portada.png',
+        'assets/images/medicos_durango_portada.png',
         fit: BoxFit.cover,
         height: 280,
         width: double.infinity,

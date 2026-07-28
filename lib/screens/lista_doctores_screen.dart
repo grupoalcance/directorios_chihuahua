@@ -39,7 +39,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
       cleanPhone = '52$cleanPhone';
     }
     String mensaje = Uri.encodeComponent(
-      'Hola, vi su perfil en médicoslaguna.com y me gustaría agendar una cita o pedir información.',
+      'Hola, vi su perfil en médicosdurango.com y me gustaría agendar una cita o pedir información.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {

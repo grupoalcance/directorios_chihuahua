@@ -39,8 +39,8 @@ class TextosLegalesScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
                 Text(
-                  'Bienvenido a médicoslaguna.com. Al registrarte y utilizar nuestra plataforma, aceptas los siguientes términos:\n\n'
-                  '• Naturaleza de la Plataforma: médicoslaguna.com funciona exclusivamente como un directorio web y herramienta de contacto. No somos proveedores de servicios de salud, diagnósticos ni tratamientos médicos.\n\n'
+                  'Bienvenido a médicosdurango.com. Al registrarte y utilizar nuestra plataforma, aceptas los siguientes términos:\n\n'
+                  '• Naturaleza de la Plataforma: médicosdurango.com funciona exclusivamente como un directorio web y herramienta de contacto. No somos proveedores de servicios de salud, diagnósticos ni tratamientos médicos.\n\n'
                   '• Responsabilidad: El vínculo médico-paciente que se genere a través de esta plataforma es responsabilidad exclusiva de ambas partes. La plataforma no se hace responsable por negligencias, diagnósticos erróneos o conflictos derivados de la consulta.\n\n'
                   '• Veracidad de la Información: Los médicos registrados aseguran que la información proporcionada (cédula profesional, especialidad, ubicación) es verídica y comprobable. La plataforma se reserva el derecho de suspender perfiles que proporcionen información falsa.\n\n'
                   '• Uso Adecuado: Los usuarios se comprometen a utilizar la plataforma con respeto, sin usar lenguaje ofensivo ni intentar vulnerar la seguridad del sitio.',

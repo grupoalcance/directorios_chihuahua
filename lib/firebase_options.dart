@@ -63,7 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '548020924115',
     projectId: 'directorios-durango',
     storageBucket: 'directorios-durango.firebasestorage.app',
-    iosBundleId: 'com.example.directoriosLaguna',
+    iosBundleId: 'com.example.directoriosdurango',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
@@ -71,7 +71,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '548020924115',
     projectId: 'directorios-durango',
     storageBucket: 'directorios-durango.firebasestorage.app',
-    iosBundleId: 'com.example.directoriosLaguna',
+    iosBundleId: 'com.example.directoriosdurango',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

@@ -26,7 +26,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
       cleanPhone = '52$cleanPhone';
     }
     String mensaje = Uri.encodeComponent(
-      'Hola, vi su sucursal de $nombreFarmacia en médicoslaguna.com y me gustaría cotizar un medicamento.',
+      'Hola, vi su sucursal de $nombreFarmacia en médicosdurango.com y me gustaría cotizar un medicamento.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -327,7 +327,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
               _buildIconServiceItem(
                 Icons.delivery_dining_rounded,
                 'Servicio a Domicilio Express',
-                'Llevamos tus medicamentos directo a tu casa en la Laguna.',
+                'Llevamos tus medicamentos directo a tu casa en la durango.',
               ),
               const Divider(height: 24),
               _buildIconServiceItem(

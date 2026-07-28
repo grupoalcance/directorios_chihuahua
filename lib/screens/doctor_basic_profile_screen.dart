@@ -76,7 +76,7 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
 
     // Creamos un mensaje automático genial
     String mensaje = Uri.encodeComponent(
-      'Hola Doctor(a), vi su perfil en médicoslaguna.com y me gustaría agendar una cita.',
+      'Hola Doctor(a), vi su perfil en médicosdurango.com y me gustaría agendar una cita.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
 
@@ -255,7 +255,7 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
     String doctorId,
   ) {
     // Generamos el link único de este doctor
-    String dominio = "https://medicoslaguna.com";
+    String dominio = "https://medicosdurango.com";
     String urlPerfil = "$dominio/#/perfil?id=$doctorId";
 
     return Row(
@@ -277,7 +277,7 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
             InkWell(
               onTap: () async {
                 String mensaje = Uri.encodeComponent(
-                  'Te recomiendo a este especialista en Médicos Laguna: $urlPerfil',
+                  'Te recomiendo a este especialista en Médicos durango: $urlPerfil',
                 );
                 final Uri url = Uri.parse('https://wa.me/?text=$mensaje');
                 await launchUrl(url, mode: LaunchMode.externalApplication);
