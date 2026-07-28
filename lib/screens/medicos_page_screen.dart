@@ -531,7 +531,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Encuentra a los\nmejores médicos\nen la Comarca Lagunera',
+                      'Encuentra a los\nmejores médicos\nen Durango',
                       style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w800,

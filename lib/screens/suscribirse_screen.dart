@@ -275,7 +275,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
             _buildInputLabel('Nombre Completo del Médico'),
             TextFormField(
               controller: _nombreController,
-              decoration: _inputDecoration('Ej. Dr. Alejandro Martínez Ruiz'),
+              decoration: _inputDecoration(''),
               validator: (v) =>
                   v == null || v.isEmpty ? 'Por favor ingresa tu nombre' : null,
             ),
@@ -286,7 +286,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
             TextFormField(
               controller: _telefonoController,
               keyboardType: TextInputType.phone,
-              decoration: _inputDecoration('Ej. 871 123 4567'),
+              decoration: _inputDecoration(''),
               validator: (v) => v == null || v.isEmpty
                   ? 'Por favor ingresa tu número de contacto'
                   : null,
@@ -298,7 +298,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
             TextFormField(
               controller: _especialidadController,
               decoration: _inputDecoration(
-                'Ej. Cardiología, Pediatría, Ginecología...',
+                '',
               ),
               validator: (v) => v == null || v.isEmpty
                   ? 'Por favor escribe tu especialidad'
