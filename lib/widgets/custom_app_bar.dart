@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'dart:async';
-import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,11 +41,23 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   late Stream<DateTime> _timeStream;
 
+  // 🎯 BANNERS ESTÁTICOS DESDE CÓDIGO (ACEPTA GIFS E IMÁGENES)
+  // Puedes agregar hasta 10 banners en esta lista
+  final List<Map<String, String>> misBannersEstaticos = [
+    {
+      'imagen': 'assets/banners/sanjorge.png', // Soporta .gif
+      'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
+    },
+    {
+      'imagen': 'assets/banners/alcance.gif', // Soporta .png, .jpg, .webp
+      'url': 'https://agenciaalcance.com/',
+    },
+  ];
+
   // Variables para la rotación automática de Banners
   final PageController _bannerPageController = PageController();
   Timer? _bannerTimer;
   int _bannerPaginaActual = 0;
-  int _totalBanners = 0;
 
   @override
   void initState() {
@@ -60,9 +71,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   void _iniciarTemporizadorBanners() {
     _bannerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_totalBanners > 1 && _bannerPageController.hasClients) {
+      if (misBannersEstaticos.length > 1 && _bannerPageController.hasClients) {
         _bannerPaginaActual++;
-        if (_bannerPaginaActual >= _totalBanners) {
+        if (_bannerPaginaActual >= misBannersEstaticos.length) {
           _bannerPaginaActual = 0;
         }
         _bannerPageController.animateToPage(
@@ -179,15 +190,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     ),
 
-                    // 🎯 PUBLICIDAD MASTER (CENTRO)
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('banners')
-                          .where('activo', isEqualTo: true)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return Container(
+                    // 🎯 PUBLICIDAD MASTER (ESTÁTICA CÓDIGO)
+                    misBannersEstaticos.isEmpty
+                        ? Container(
                             width: 500,
                             height: 70,
                             decoration: BoxDecoration(
@@ -204,69 +209,55 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                 ),
                               ),
                             ),
-                          );
-                        }
+                          )
+                        : Container(
+                            width: 500,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.02),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: PageView.builder(
+                                controller: _bannerPageController,
+                                itemCount: misBannersEstaticos.length,
+                                onPageChanged: (index) =>
+                                    _bannerPaginaActual = index,
+                                itemBuilder: (context, index) {
+                                  var bannerData = misBannersEstaticos[index];
+                                  String fotoUrl = bannerData['imagen'] ?? '';
+                                  String destinoUrl = bannerData['url'] ?? '';
 
-                        final bannerDocs = snapshot.data!.docs;
-                        _totalBanners = bannerDocs.length;
-
-                        return Container(
-                          width: 500,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.02),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: PageView.builder(
-                              controller: _bannerPageController,
-                              itemCount: bannerDocs.length,
-                              onPageChanged: (index) =>
-                                  _bannerPaginaActual = index,
-                              itemBuilder: (context, index) {
-                                var bannerData =
-                                    bannerDocs[index].data()
-                                        as Map<String, dynamic>;
-                                String fotoUrl = bannerData['foto_url'] ?? '';
-                                String destinoUrl =
-                                    bannerData['destino_url'] ?? '';
-
-                                return MouseRegion(
-                                  cursor: destinoUrl.isNotEmpty
-                                      ? SystemMouseCursors.click
-                                      : SystemMouseCursors.basic,
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        _abrirEnlaceAnuncio(destinoUrl),
-                                    child:
-                                        fotoUrl.startsWith('data:image') ||
-                                            !fotoUrl.startsWith('http')
-                                        ? Image.memory(
-                                            base64Decode(
-                                              fotoUrl.split(',').last,
+                                  return MouseRegion(
+                                    cursor: destinoUrl.isNotEmpty
+                                        ? SystemMouseCursors.click
+                                        : SystemMouseCursors.basic,
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          _abrirEnlaceAnuncio(destinoUrl),
+                                      child: Image.asset(
+                                        fotoUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) => Container(
+                                          color: Colors.grey.shade100,
+                                          child: const Center(
+                                            child: Text(
+                                              'Espacio Disponible para Publicidad',
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 11,
+                                              ),
                                             ),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Image.network(
-                                            fotoUrl,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (c, e, s) =>
-                                                const Center(
-                                                  child: Icon(
-                                                    Icons.broken_image,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
                                           ),
-                                  ),
-                                );
-                              },
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        );
-                      },
-                    ),
 
                     // CLIMA Y HORA (DERECHA)
                     Expanded(
