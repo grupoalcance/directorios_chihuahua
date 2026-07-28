@@ -35,5 +35,6 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 65002
-          local_path: "build/web/*"
+          local_path: "./build/web/"
           remote_path: "/home/u492244081/domains/medicosdurango.com/public_html/"
+          sftpOnly: true
