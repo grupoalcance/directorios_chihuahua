@@ -59,6 +59,16 @@ class PhoneMenuDrawer extends StatelessWidget {
             ),
           ),
 
+          // 0. Inicio / Home
+          ListTile(
+            leading: Icon(Icons.home_outlined, color: AppConfig.primaryColor),
+            title: const Text('Inicio'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+          ),
+
           // 1. ¿Quiénes somos?
           ListTile(
             leading: Icon(Icons.info_outline, color: AppConfig.primaryColor),
@@ -79,7 +89,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             }).toList(),
           ),
 
-          // 3. Desplegable Especialidad (Top 10 Alfabético)
+          // 3. Desplegable Especialidad
           ExpansionTile(
             leading: Icon(
               Icons.medical_services_outlined,
@@ -106,7 +116,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                       Text(
                         'Ver todas las especialidades ',
                         style: TextStyle(
-                          color: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                          color: AppConfig.primaryColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -213,9 +223,7 @@ class PhoneMenuDrawer extends StatelessWidget {
 
           const Divider(),
 
-          // =========================================================================
-          //  CONTROL DE ACCESO DINÁMICO HOMOLOGADO PARA DISPOSITIVOS MÓVILES
-          // =========================================================================
+          // CONTROL DE ACCESO DINÁMICO
           StreamBuilder<User?>(
             stream: FirebaseAuth.instance.authStateChanges(),
             builder: (context, snapshot) {
@@ -258,7 +266,6 @@ class PhoneMenuDrawer extends StatelessWidget {
                           onTap: () {
                             Navigator.pop(context);
                             if (rutaDestino == 'php') {
-                              // 🔑 ENLACE DINÁMICO DEL CRM
                               final Uri url = Uri.parse(AppConfig.crmUrl);
                               launchUrl(
                                 url,
@@ -285,7 +292,6 @@ class PhoneMenuDrawer extends StatelessWidget {
                             ),
                             onTap: () {
                               Navigator.pop(context);
-                              // 🔑 ENLACE DINÁMICO DEL CRM
                               final Uri url = Uri.parse(AppConfig.crmUrl);
                               launchUrl(
                                 url,
@@ -350,7 +356,7 @@ class PhoneMenuDrawer extends StatelessWidget {
             },
           ),
 
-          // 9. Botón Destacado Fijo: Suscribirse (Ruta Nombrada)
+          // 9. Botón Destacado Fijo: Suscribirse
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
@@ -359,7 +365,7 @@ class PhoneMenuDrawer extends StatelessWidget {
                 Navigator.pushNamed(context, '/suscribirse');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                backgroundColor: AppConfig.primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -405,10 +411,6 @@ class PhoneMenuDrawer extends StatelessWidget {
     BuildContext context,
     String nombreEspecialidad,
   ) {
-    return TypographyItem(context, nombreEspecialidad);
-  }
-
-  Widget TypographyItem(BuildContext context, String nombreEspecialidad) {
     return ListTile(
       title: Padding(
         padding: const EdgeInsets.only(left: 16.0),

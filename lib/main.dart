@@ -13,6 +13,8 @@ import 'package:directorios_durango/screens/doctor_profile_screen.dart';
 import 'package:directorios_durango/screens/admin_dashboard_screen.dart';
 import 'package:directorios_durango/screens/login_screen.dart';
 import 'package:directorios_durango/screens/suscribirse_screen.dart';
+import 'package:directorios_durango/screens/contacto_screen.dart';
+import 'package:directorios_durango/screens/quienes_somos_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppConfig.appName, // 🔑 AHORA TOMA EL NOMBRE DEL ARCHIVO MAESTRO
+      title: AppConfig.appName, // 🔑 TOMA EL NOMBRE DEL ARCHIVO MAESTRO
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -50,17 +52,36 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         final String? routeName = settings.name;
 
-        // 💳 1. NUEVA RUTA REGISTRADA PARA SUSCRIBIRSE / UNETE
+        // 💳 1. RUTA PARA SUSCRIBIRSE / UNETE
         if (routeName != null &&
             (routeName == '/suscribirse' ||
                 routeName.contains('suscribirse'))) {
           return MaterialPageRoute(
-            settings: settings, // Transmite el nombre de la ruta a la URL
+            settings: settings,
             builder: (context) => const SuscribirseScreen(),
           );
         }
 
-        // 🔑 2. INTERCEPTOR DE LOGIN
+        // 📞 2. NUEVA RUTA REGISTRADA PARA CONTACTO
+        if (routeName != null &&
+            (routeName == '/contacto' || routeName.contains('contacto'))) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const ContactoScreen(),
+          );
+        }
+
+        // ℹ️ 3. NUEVA RUTA REGISTRADA PARA QUIÉNES SOMOS
+        if (routeName != null &&
+            (routeName == '/quienes-somos' ||
+                routeName.contains('quienes-somos'))) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const QuienesSomosScreen(),
+          );
+        }
+
+        // 🔑 4. INTERCEPTOR DE LOGIN
         if (routeName != null &&
             (routeName == '/ingresar' || routeName.contains('ingresar'))) {
           return MaterialPageRoute(
@@ -69,7 +90,7 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        // 📊 3. DASHBOARD ADMINISTRACIÓN
+        // 📊 5. DASHBOARD ADMINISTRACIÓN
         if (routeName != null &&
             (routeName == '/admin_dashboard' ||
                 routeName.contains('admin_dashboard'))) {
@@ -79,7 +100,7 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        // 🩺 4. PERFILES DE MÉDICOS (Ej: /perfil?id=123)
+        // 🩺 6. PERFILES DE MÉDICOS (Ej: /perfil?id=123)
         if (routeName != null && routeName.startsWith('/perfil')) {
           final uri = Uri.parse(routeName);
           final doctorId = uri.queryParameters['id'];
@@ -92,7 +113,7 @@ class MyApp extends StatelessWidget {
           }
         }
 
-        // 🏠 5. RUTA POR DEFECTO (Home / Inicio)
+        // 🏠 7. RUTA POR DEFECTO (Home / Inicio)
         return MaterialPageRoute(
           settings: settings,
           builder: (context) => const MedicosPageScreen(),

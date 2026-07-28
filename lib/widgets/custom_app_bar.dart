@@ -15,6 +15,7 @@ import '../screens/lista_doctores_screen.dart';
 import '../screens/lista_farmacias_screen.dart';
 import '../screens/lista_hospitales_screen.dart';
 import '../services/auth_service.dart';
+import '../screens/contacto_screen.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Function(String)? onCiudadSeleccionada;
@@ -472,9 +473,21 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/contacto'),
-                      child: Text('Contacto', style: menuStyle),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ContactoScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Contacto',
+                        style: TextStyle(
+                          color: Color(0xFF334155),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
 
                     const SizedBox(width: 15),
