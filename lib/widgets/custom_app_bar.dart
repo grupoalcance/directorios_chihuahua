@@ -43,10 +43,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   // 🎯 BANNERS ESTÁTICOS CON URL DIRECTA (Cero fallos en Flutter Web)
   final List<Map<String, String>> misBannersEstaticos = [
-    {
-      'imagen': 'assets/banners/sanjorge.png',
-      'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
-    },
+  
     {
       'imagen': 'assets/banners/alcance.gif',
       'url': 'https://agenciaalcance.com/',
