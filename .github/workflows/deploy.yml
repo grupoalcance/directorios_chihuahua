@@ -3,7 +3,7 @@ name: Despliegue Automático a Hostinger
 on:
   push:
     branches:
-      - main # 👈 El robot SOLO se activará cuando mandes cambios a la rama main
+      - main
 
 jobs:
   web-deploy:
@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: 1. Descargar el código de GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: 2. Instalar Java (Requisito de Flutter)
-        uses: actions/setup-java@v3
+      - name: 2. Instalar Java
+        uses: actions/setup-java@v4
         with:
           distribution: "zulu"
           java-version: "17"
@@ -26,13 +26,14 @@ jobs:
           channel: "stable"
 
       - name: 4. Compilar la aplicación para Web
-        run: flutter build web
+        run: flutter build web --release
 
-      - name: 5. Subir los archivos por FTP a Hostinger
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: 5. Subir archivos por SFTP a Hostinger
+        uses: wlixcc/SFTP-Deploy-Action@v1.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: build/web/
-          server-dir: ./
+          port: 65002
+          local_path: "build/web/*"
+          remote_path: "/home/u492244081/domains/medicosdurango.com/public_html/"
