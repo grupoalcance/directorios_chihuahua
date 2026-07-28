@@ -41,15 +41,14 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   late Stream<DateTime> _timeStream;
 
-  // 🎯 BANNERS ESTÁTICOS DESDE CÓDIGO (ACEPTA GIFS E IMÁGENES)
-  // Puedes agregar hasta 10 banners en esta lista
+  // 🎯 BANNERS ESTÁTICOS CON URL DIRECTA (Cero fallos en Flutter Web)
   final List<Map<String, String>> misBannersEstaticos = [
     {
-      'imagen': 'assets/banners/sanjorge.png', // Soporta .gif
+      'imagen': 'assets/banners/sanjorge.png',
       'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
     },
     {
-      'imagen': 'assets/banners/alcance.gif', // Soporta .png, .jpg, .webp
+      'imagen': 'assets/banners/alcance.gif',
       'url': 'https://agenciaalcance.com/',
     },
   ];
@@ -100,7 +99,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
     }
   }
 
-  // OBTENER EL ROL DEL USUARIO ACTUAL DE FORMA SEGURA
   Future<String> _obtenerRolUsuario() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 'paciente';
@@ -145,7 +143,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   '/',
                   (route) => false,
                 ),
-                // 🔑 LOGO DINÁMICO (MÓVIL)
                 child: Image.asset(
                   AppConfig.logoPath,
                   height: 40,
@@ -160,7 +157,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           color: Colors.white,
           child: Column(
             children: [
-              // --- PISO 1: LOGOTIPO, ANUNCIOS ROTATIVOS (GIF/IMG) Y CLIMA ---
+              // --- PISO 1: LOGOTIPO, ANUNCIOS ROTATIVOS Y CLIMA ---
               Container(
                 height: 90,
                 padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -179,7 +176,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                               '/',
                               (route) => false,
                             ),
-                            // 🔑 LOGO DINÁMICO (ESCRITORIO)
                             child: Image.asset(
                               AppConfig.logoPath,
                               height: 65,
@@ -190,7 +186,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     ),
 
-                    // 🎯 PUBLICIDAD MASTER (ESTÁTICA CÓDIGO)
+                    // 🎯 PUBLICIDAD MASTER
                     misBannersEstaticos.isEmpty
                         ? Container(
                             width: 500,
@@ -226,7 +222,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     _bannerPaginaActual = index,
                                 itemBuilder: (context, index) {
                                   var bannerData = misBannersEstaticos[index];
-                                  String fotoUrl = bannerData['imagen'] ?? '';
+                                  String fotoRuta = bannerData['imagen'] ?? '';
                                   String destinoUrl = bannerData['url'] ?? '';
 
                                   return MouseRegion(
@@ -236,22 +232,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     child: GestureDetector(
                                       onTap: () =>
                                           _abrirEnlaceAnuncio(destinoUrl),
-                                      child: Image.asset(
-                                        fotoUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, e, s) => Container(
-                                          color: Colors.grey.shade100,
-                                          child: const Center(
-                                            child: Text(
-                                              'Espacio Disponible para Publicidad',
-                                              style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: 11,
-                                              ),
+                                      child: fotoRuta.startsWith('http')
+                                          ? Image.network(
+                                              fotoRuta,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (c, e, s) =>
+                                                  _buildErrorPlaceholder(),
+                                            )
+                                          : Image.asset(
+                                              fotoRuta,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (c, e, s) =>
+                                                  _buildErrorPlaceholder(),
                                             ),
-                                          ),
-                                        ),
-                                      ),
                                     ),
                                   );
                                 },
@@ -275,7 +268,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // 🔑 CIUDAD PRINCIPAL DINÁMICA
                               Text(
                                 '${AppConfig.ciudadesActivas[0]} 34°C',
                                 style: const TextStyle(
@@ -332,8 +324,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       context: context,
                       label: 'Ciudad',
                       style: menuStyle,
-                      items: AppConfig
-                          .ciudadesActivas, // 🔑 LISTA DINÁMICA DE CIUDADES
+                      items: AppConfig.ciudadesActivas,
                     ),
                     const SizedBox(width: 5),
                     PopupMenuButton<String>(
@@ -397,15 +388,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   Text(
                                     'Ver todas las especialidades',
                                     style: TextStyle(
-                                      color: AppConfig
-                                          .primaryColor, // 🔑 COLOR DINÁMICO
+                                      color: AppConfig.primaryColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Icon(
                                     Icons.arrow_forward,
-                                    color: AppConfig
-                                        .primaryColor, // 🔑 COLOR DINÁMICO
+                                    color: AppConfig.primaryColor,
                                     size: 16,
                                   ),
                                 ],
@@ -483,9 +472,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
                     const SizedBox(width: 15),
 
-                    // =========================================================================
-                    // 🔐 CONTROL DE ACCESO DINÁMICO
-                    // =========================================================================
                     StreamBuilder<User?>(
                       stream: FirebaseAuth.instance.authStateChanges(),
                       builder: (context, snapshot) {
@@ -526,7 +512,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                         '/admin_dashboard',
                                       );
                                     } else if (rolDetectado == 'vendedor') {
-                                      // 🔑 ENLACE DINÁMICO DEL CRM
                                       final Uri url = Uri.parse(
                                         AppConfig.crmUrl,
                                       );
@@ -541,7 +526,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       );
                                     }
                                   } else if (valor == 'ir_captura') {
-                                    // 🔑 ENLACE DINÁMICO DEL CRM
                                     final Uri url = Uri.parse(AppConfig.crmUrl);
                                     launchUrl(
                                       url,
@@ -574,8 +558,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     children: [
                                       Icon(
                                         Icons.account_circle_rounded,
-                                        color: AppConfig
-                                            .primaryColor, // 🔑 COLOR DINÁMICO
+                                        color: AppConfig.primaryColor,
                                         size: 18,
                                       ),
                                       const SizedBox(width: 6),
@@ -603,8 +586,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       children: [
                                         Icon(
                                           Icons.dashboard_rounded,
-                                          color: AppConfig
-                                              .primaryColor, // 🔑 COLOR DINÁMICO
+                                          color: AppConfig.primaryColor,
                                           size: 18,
                                         ),
                                         const SizedBox(width: 10),
@@ -676,13 +658,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
                     const SizedBox(width: 10),
 
-                    // 🔑 BOTÓN DE SUSCRIBIRSE DINÁMICO
                     ElevatedButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, '/suscribirse'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                        backgroundColor: AppConfig.primaryColor,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
@@ -703,6 +683,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildErrorPlaceholder() {
+    return Container(
+      color: Colors.grey.shade100,
+      child: const Center(
+        child: Text(
+          'Espacio Disponible para Publicidad',
+          style: TextStyle(color: Colors.grey, fontSize: 11),
+        ),
+      ),
     );
   }
 
