@@ -10,7 +10,7 @@ class AppConfig {
 
   // 3. Rutas
   static const String logoPath =
-      'assets/images/logo_durango.webp'; // Asegúrate de meter tu logo en esta ruta
+      'assets/images/logo-durango.png'; // Asegúrate de meter tu logo en esta ruta
   static const String crmUrl =
       'https://medicosdurango.com/asesores/'; // URL de tu CRM para Durango
 
