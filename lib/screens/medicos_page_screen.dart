@@ -5,6 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:intl/intl.dart';
+
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+import 'package:directorios_durango/config/app_config.dart';
+
 import 'doctor_profile_screen.dart';
 import 'lista_doctores_screen.dart';
 import 'lista_farmacias_screen.dart';
@@ -39,7 +43,6 @@ const List<String> las15Especialidadesdurango = [
 class MedicosPageScreen extends StatefulWidget {
   const MedicosPageScreen({super.key});
 
-  // 🔑 CORREGIDO: El build original llamaba infinitamente a la clase provocando desbordamiento
   @override
   State<MedicosPageScreen> createState() => _MedicosPageScreenState();
 }
@@ -49,9 +52,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   final TextEditingController _ciudadBuscadorController =
       TextEditingController();
 
-  // Controlador de scroll principal para el suavizado web
   final ScrollController _mainScrollController = ScrollController();
-
   final ScrollController _especialidadesScrollController = ScrollController();
   final ScrollController _medicosScrollController = ScrollController();
   Timer? _timerEspecialidades;
@@ -465,16 +466,14 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         },
       ),
       drawer: screenWidth < 1100 ? const PhoneMenuDrawer() : null,
-      // 🔑 SOLUCIÓN: Agregamos Scrollbar nativo compatible con la barrita lateral derecha
       body: Scrollbar(
         controller: _mainScrollController,
-        thumbVisibility: true, // Hace visible la barra siempre
-        trackVisibility: true, // Muestra la guía de fondo de la barra
+        thumbVisibility: true,
+        trackVisibility: true,
         child: WebSmoothScroll(
           controller: _mainScrollController,
           scrollSpeed: 130,
           child: CustomScrollView(
-            // 🔑 CAMBIADO: Se eliminó NeverScrollableScrollPhysics para permitir la interacción del mouse y barra lateral
             physics: const AlwaysScrollableScrollPhysics(),
             controller: _mainScrollController,
             slivers: [
@@ -699,12 +698,10 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
+  // 🔑 CORREGIDO: Lista de ciudades vinculada dinámicamente a AppConfig.ciudadesActivas
   Widget _buildInputCiudadAutocompletar() {
-    final List<String> lasCiudades = [
-      'Victoria de Durango',
-      'Gómez Palacio',
-      'Lerdo',
-    ];
+    final List<String> lasCiudades = AppConfig.ciudadesActivas;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -749,7 +746,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           color: Color(0xFF334155),
                         ),
                         decoration: const InputDecoration(
-                          hintText: '',
+                          // 🔑 CORREGIDO: Texto sugerido visible
+                          hintText: 'Ej. Victoria de Durango, Gómez Palacio...',
                           hintStyle: TextStyle(
                             color: Color(0xFF94A3B8),
                             fontSize: 13,
@@ -1280,7 +1278,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   Widget _cardDinamicaInformativa(QueryDocumentSnapshot doc, bool esFarmacia) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     String nombre = data['nombre'] ?? '';
-    String ciudad = data['ciudad'] ?? 'Comarca Lagunera';
+    String ciudad = data['ciudad'] ?? 'Durango';
     String score = data['score'] ?? '5.0';
     String? fotoUrl = data['foto_url'];
 
@@ -1365,7 +1363,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              esFarmacia ? 'Ver sucursales >' : '$ciudad, Coah',
+              esFarmacia ? 'Ver sucursales >' : '$ciudad, Dgo',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -1600,33 +1598,16 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     return SliverToBoxAdapter(
       child: SeccionEnlacesCruzados(
         tituloSeccion: "Médicos por categoría y ciudad",
-        columnasCiudades: const [
-          'Victoria de Durango',
-          'Gómez Palacio',
-          'Lerdo',
-        ],
-        enlacesPorCiudad: const {
-          'Victoria de Durango': [
-            'Cardiólogos en Victoria de Durango',
-            'Pediatras en Victoria de Durango',
-            'Ginecólogos en Victoria de Durango',
-            'Dentistas en Victoria de Durango',
-            'Dermatólogos en Victoria de Durango',
-          ],
-          'Gómez Palacio': [
-            'Cardiólogos en Gómez Palacio',
-            'Pediatras en Gómez Palacio',
-            'Ginecólogos en Gómez Palacio',
-            'Dentistas en Gómez Palacio',
-            'Dermatólogos en Gómez Palacio',
-          ],
-          'Lerdo': [
-            'Cardiólogos en Lerdo',
-            'Pediatras en Lerdo',
-            'Ginecólogos en Lerdo',
-            'Dentistas en Lerdo',
-            'Dermatólogos en Lerdo',
-          ],
+        columnasCiudades: AppConfig.ciudadesActivas,
+        enlacesPorCiudad: {
+          for (var ciudad in AppConfig.ciudadesActivas)
+            ciudad: [
+              'Cardiólogos en $ciudad',
+              'Pediatras en $ciudad',
+              'Ginecólogos en $ciudad',
+              'Dentistas en $ciudad',
+              'Dermatólogos en $ciudad',
+            ],
         },
         ctaTitulo: "¿Eres médico?",
         ctaSubtitulo:

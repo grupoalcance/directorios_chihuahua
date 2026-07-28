@@ -41,11 +41,14 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   late Stream<DateTime> _timeStream;
 
-  // 🎯 BANNERS ESTÁTICOS CON URL DIRECTA (Cero fallos en Flutter Web)
+  // 🎯 BANNERS ESTÁTICOS
   final List<Map<String, String>> misBannersEstaticos = [
-  
     {
-      'imagen': 'assets/banners/alcance.gif',
+      'imagen': 'https://medicosdurango.com/assets/banners/sanjorge.png',
+      'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
+    },
+    {
+     'imagen': 'https://medicosdurango.com/assets/banners/alcance.gif',
       'url': 'https://agenciaalcance.com/',
     },
   ];

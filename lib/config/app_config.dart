@@ -4,9 +4,9 @@ class AppConfig {
   // 1. Nombres Globales
   static const String appName = 'Médicos Durango';
 
-  // 2. Colores Corporativos (Ej. Verde azulado)
-  static const Color primaryColor = Color(0xFF00796B);
-  static const Color secondaryColor = Color(0xFF004D40);
+  // 2. Colores Corporativos
+  static const Color primaryColor = Colors.blue;
+  static const Color secondaryColor = Color(0xFF0061E0);
 
   // 3. Rutas
   static const String logoPath =
