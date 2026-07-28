@@ -704,9 +704,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       'Victoria de Durango',
       'Gómez Palacio',
       'Lerdo',
-      'Santiago Papasquiaro',
-      'Guadalupe Victoria',
-      'El Salto',
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1607,9 +1604,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           'Victoria de Durango',
           'Gómez Palacio',
           'Lerdo',
-          'Santiago Papasquiaro',
-          'Guadalupe Victoria',
-          'El Salto',
         ],
         enlacesPorCiudad: const {
           'Victoria de Durango': [
@@ -1636,7 +1630,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         },
         ctaTitulo: "¿Eres médico?",
         ctaSubtitulo:
-            "Suscríbete al directorio y llega a más pacientes en la Comarca Lagunera.",
+            "Suscríbete al directorio y llega a más pacientes en Durango.",
         ctaBotonTexto: "Suscríbete",
         onCtaPressed: () => Navigator.push(
           context,
