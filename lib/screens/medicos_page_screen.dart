@@ -1595,12 +1595,14 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   }
 
   Widget _buildSeccionMedicosCruzados() {
+    final tresCiudades = AppConfig.ciudadesActivas.take(3).toList();
+
     return SliverToBoxAdapter(
       child: SeccionEnlacesCruzados(
         tituloSeccion: "Médicos por categoría y ciudad",
-        columnasCiudades: AppConfig.ciudadesActivas,
+        columnasCiudades: tresCiudades,
         enlacesPorCiudad: {
-          for (var ciudad in AppConfig.ciudadesActivas)
+          for (var ciudad in tresCiudades)
             ciudad: [
               'Cardiólogos en $ciudad',
               'Pediatras en $ciudad',
