@@ -36,23 +36,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   String _perfilParaRegistrar = 'Médico';
   bool _guardandoPerfil = false;
 
-  // Stream unificado nativo para escuchar las 3 colecciones en paralelo sin librerías externas
-  Stream<List<QuerySnapshot>> _obtenerDatosCombinados() {
-    final usuariosStream = FirebaseFirestore.instance
-        .collection('usuarios')
-        .snapshots();
-    final hospitalesStream = FirebaseFirestore.instance
-        .collection('hospitales')
-        .snapshots();
-    final farmaciasStream = FirebaseFirestore.instance
-        .collection('farmacias')
-        .snapshots();
-
-    return StreamController<List<QuerySnapshot>>.broadcast(
-      onListen: () {},
-    ).stream;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -115,7 +98,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           'cedula': _cedulaController.text.trim(),
           'rol': rol,
           'activo': true,
-          'tipo_perfil': 'basic',
+          'tipo_perfil': 'basico', // 🔑 CORREGIDO: "basico" en español
           'reseñas_count': 0,
           'clics_wa': 0,
           'visitas': 0,
@@ -191,7 +174,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   Icon(
                     Icons.add_business_rounded,
                     color: AppConfig.primaryColor,
-                  ), // 🔑 COLOR DINÁMICO
+                  ),
                   const SizedBox(width: 10),
                   const Text(
                     'Nuevo Registro Manual',
@@ -287,7 +270,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _ciudadController,
                           decoration: _inputDecoration(
-                            'Ej. Durango, Gómez Palacio, Lerdo', // Esto es solo un ejemplo visual (Placeholder)
+                            'Ej. Durango, Gómez Palacio, Lerdo',
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
@@ -335,8 +318,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ElevatedButton(
                   onPressed: _guardandoPerfil ? null : _guardarAltaManual,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                    backgroundColor: AppConfig.primaryColor,
                   ),
                   child: _guardandoPerfil
                       ? const SizedBox(
@@ -380,7 +362,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             ),
             const SizedBox(width: 15),
             Text(
-              '${AppConfig.appName} · Control total del directorio', // 🔑 NOMBRE DE APP DINÁMICO
+              '${AppConfig.appName} · Control total del directorio',
               style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
             ),
           ],
@@ -393,10 +375,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 builder: (context) => const MedicosPageScreen(),
               ),
             ),
-            icon: Icon(
-              Icons.public,
-              color: AppConfig.primaryColor,
-            ), // 🔑 COLOR DINÁMICO
+            icon: Icon(Icons.public, color: AppConfig.primaryColor),
             label: Text(
               'Ver sitio público',
               style: TextStyle(
@@ -497,12 +476,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   spacing: 20,
                   runSpacing: 20,
                   children: [
-                    // 🔑 TARJETA DE AUDITORÍA DE CONTRATOS - REDIRIGE A PHP DINÁMICAMENTE
                     GestureDetector(
                       onTap: () async {
-                        final Uri url = Uri.parse(
-                          AppConfig.crmUrl,
-                        ); // 🔑 URL DINÁMICA
+                        final Uri url = Uri.parse(AppConfig.crmUrl);
                         if (!await launchUrl(
                           url,
                           mode: LaunchMode.externalApplication,
@@ -514,9 +490,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         width: 180,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF0F172A,
-                          ), // Color oscuro premium corporativo
+                          color: const Color(0xFF0F172A),
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
@@ -586,7 +560,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                       totalRegistradosGlobal.toString(),
                       Icon(
                         Icons.analytics_rounded,
-                        color: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                        color: AppConfig.primaryColor,
                         size: 30,
                       ),
                       AppConfig.primaryColor,
@@ -618,9 +592,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                   child: TabBar(
                     controller: _tabController,
-                    labelColor: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                    labelColor: AppConfig.primaryColor,
                     unselectedLabelColor: Colors.grey,
-                    indicatorColor: AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                    indicatorColor: AppConfig.primaryColor,
                     onTap: (index) => setState(() => _currentTabIndex = index),
                     tabs: [
                       Tab(
@@ -710,8 +684,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                                backgroundColor: AppConfig.primaryColor,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
                                   vertical: 16,
@@ -847,15 +820,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 bool isActive = data['activo'] ?? false;
                 String uid = doc.id;
 
-                String tituloVisual =
-                    '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}';
+                // 🔑 CORREGIDO: Manejo seguro de nulos en nombre y apellidos
+                String nombreStr = (data['nombre'] ?? '').toString().trim();
+                String apellidosStr = (data['apellidos'] ?? '')
+                    .toString()
+                    .trim();
+                String tituloVisual = '$nombreStr $apellidosStr'.trim();
+                if (tituloVisual.isEmpty) tituloVisual = 'Usuario Sin Nombre';
+
                 String subtituloFiltro = data['especialidad'] ?? 'General';
 
-                String ubicacionVisual =
-                    (data['consultorios'] != null &&
-                        (data['consultorios'] as List).isNotEmpty)
-                    ? '${data['consultorios'][0]['ciudad'] ?? ''} - ${data['consultorios'][0]['direccion'] ?? ''}'
-                    : 'Sin dirección configurada';
+                // 🔑 CORREGIDO: Manejo seguro de nulos en consultorios
+                String ubicacionVisual = 'Sin dirección configurada';
+                if (data['consultorios'] != null &&
+                    (data['consultorios'] is List) &&
+                    (data['consultorios'] as List).isNotEmpty) {
+                  var primerConsultorio = data['consultorios'][0];
+                  if (primerConsultorio is Map) {
+                    String ciudad = primerConsultorio['ciudad'] ?? '';
+                    String direccion = primerConsultorio['direccion'] ?? '';
+                    if (ciudad.isNotEmpty || direccion.isNotEmpty) {
+                      ubicacionVisual = '$ciudad - $direccion'.trim();
+                    }
+                  }
+                }
 
                 return DataRow(
                   cells: [
@@ -898,8 +886,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 fontWeight: FontWeight.bold,
                                 color: (esEnfermero || esPestanaPendientes)
                                     ? const Color(0xFF334155)
-                                    : AppConfig
-                                          .primaryColor, // 🔑 COLOR DINÁMICO
+                                    : AppConfig.primaryColor,
                                 decoration: (esEnfermero || esPestanaPendientes)
                                     ? TextDecoration.none
                                     : TextDecoration.underline,
@@ -1087,8 +1074,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CircleAvatar(
-                                backgroundColor:
-                                    AppConfig.primaryColor, // 🔑 COLOR DINÁMICO
+                                backgroundColor: AppConfig.primaryColor,
                                 radius: 14,
                                 child: Icon(
                                   nombreColeccion == 'hospitales'
@@ -1099,7 +1085,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                 ),
                               ),
                               const SizedBox(width: 10),
-
                               InkWell(
                                 onTap: () {
                                   Navigator.push(
@@ -1120,8 +1105,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                                   data['nombre'] ?? '',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: AppConfig
-                                        .primaryColor, // 🔑 COLOR DINÁMICO
+                                    color: AppConfig.primaryColor,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
@@ -1203,13 +1187,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         var data = doctores[index].data() as Map<String, dynamic>;
+        String nombreStr = data['nombre'] ?? '';
+        String apellidosStr = data['apellidos'] ?? '';
+
         return ListTile(
           leading: const CircleAvatar(
             backgroundColor: Colors.blueGrey,
             child: Icon(Icons.analytics_outlined, color: Colors.white),
           ),
           title: Text(
-            'Dr. ${data['nombre']} ${data['apellidos']}',
+            'Dr. $nombreStr $apellidosStr'.trim(),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           subtitle: Text(data['especialidad'] ?? 'Sin especialidad'),
@@ -1311,10 +1298,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(
-          color: AppConfig.primaryColor,
-          width: 1.5,
-        ), // 🔑 COLOR DINÁMICO
+        borderSide: BorderSide(color: AppConfig.primaryColor, width: 1.5),
       ),
     );
   }
