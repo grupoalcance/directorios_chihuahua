@@ -41,14 +41,15 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   late Stream<DateTime> _timeStream;
 
-  // 🎯 BANNERS ESTÁTICOS
+  // 🎯 BANNERS ESTÁTICOS CON URLS ABSOLUTAS
   final List<Map<String, String>> misBannersEstaticos = [
     {
-      'imagen': 'https://medicosdurango.com/assets/banners/sanjorge.png',
+      'imagen':
+          'https://medicosdurango.com/assets/assets/banners/sanjorgebanner.png',
       'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
     },
     {
-     'imagen': 'https://medicosdurango.com/assets/banners/alcance.gif',
+      'imagen': 'https://medicosdurango.com/assets/assets/banners/alcance.gif',
       'url': 'https://agenciaalcance.com/',
     },
   ];
@@ -97,24 +98,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint('No se pudo abrir el enlace publicitario');
     }
-  }
-
-  Future<String> _obtenerRolUsuario() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return 'paciente';
-    try {
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(user.uid)
-          .get();
-      if (doc.exists && doc.data() != null) {
-        final data = doc.data() as Map<String, dynamic>;
-        return (data['rol'] ?? 'paciente').toString().trim().toLowerCase();
-      }
-    } catch (e) {
-      debugPrint("Error al obtener rol: $e");
-    }
-    return 'paciente';
   }
 
   @override
@@ -232,7 +215,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     child: GestureDetector(
                                       onTap: () =>
                                           _abrirEnlaceAnuncio(destinoUrl),
-                                      child: fotoRuta.startsWith('http')
+                                      // 🔑 CORREGIDO: Detección estricta de URL Web HTTP/HTTPS
+                                      child:
+                                          fotoRuta.toLowerCase().startsWith(
+                                            'http',
+                                          )
                                           ? Image.network(
                                               fotoRuta,
                                               fit: BoxFit.cover,
