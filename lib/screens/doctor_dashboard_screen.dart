@@ -5,7 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
-// IMPORTAMOS LA BARRA Y LAS OTRAS PANTALLAS CON SUS RUTAS
+
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+import 'package:directorios_durango/config/app_config.dart';
+
 import '../widgets/custom_app_bar.dart';
 import 'login_screen.dart';
 
@@ -58,14 +61,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   List<dynamic> servicios = [];
   final TextEditingController _servicioCtrl = TextEditingController();
 
-  final List<String> _listaCiudades = [
-    'Durango, Coah.',
-    'Gómez Palacio, Dgo.',
-    'Lerdo, Dgo.',
-    'Matamoros, Coah.',
-    'Francisco I. Madero, Coah.',
-    'San Pedro, Coah.',
-  ];
+  // 🔑 LISTA NORMALIZADA DE CIUDADES DE DURANGO
+  final List<String> _listaCiudades = AppConfig.ciudadesActivas;
 
   final List<String> diasSemana = [
     'Lunes',
@@ -154,7 +151,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
 
         await FirebaseFirestore.instance
             .collection('usuarios')
-            .doc(targetUid) // <-- Usamos targetUid
+            .doc(targetUid)
             .update({'foto_url': base64Image});
 
         setState(() {
@@ -182,21 +179,19 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
     }
   }
 
-  // --- SELECCIONAR IMAGEN DEL BLOG CON COMPRESIÓN AGRESIVA ---
   Future<void> _seleccionarImagenBlog() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 600,
       maxHeight: 400,
-      imageQuality: 30, // Calidad baja para que no pese nada
+      imageQuality: 30,
     );
 
     if (image != null) {
       try {
         Uint8List imageBytes = await image.readAsBytes();
 
-        // Bloqueo de seguridad: Si pesa más de 500KB no la dejamos pasar
         if (imageBytes.lengthInBytes > 500000) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -225,184 +220,148 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
     }
   }
 
-  // 👇 ACTUALIZADO PARA CREAR NUEVO CONSULTORIO CON ESTRUCTURA DE DOBLE TURNO
+  Map<String, dynamic> _crearEstructuraHorarioDefecto() {
+    return {
+      for (var dia in diasSemana)
+        dia: {
+          'abierto': dia != 'Sábado' && dia != 'Domingo',
+          'de': '09:00 AM',
+          'a': '05:00 PM',
+          'tieneTurno2': false,
+          'de2': '05:00 PM',
+          'a2': '08:00 PM',
+        },
+    };
+  }
+
   void _agregarNuevoConsultorio() {
     setState(() {
       consultorios.add({
         'nombre': 'Consultorio ${consultorios.length + 1}',
         'calle_numero': '',
-        'ciudad': 'Durango, Coah.',
+        'ciudad': _listaCiudades.first,
         'direccion': '',
         'telefono': '',
         'whatsapp': '',
-        'horario': {
-          'Lunes': {
-            'abierto': true,
-            'de': '09:00 AM',
-            'a': '05:00 PM',
-            'tieneTurno2': false,
-            'de2': '05:00 PM',
-            'a2': '08:00 PM',
-          },
-          'Martes': {
-            'abierto': true,
-            'de': '09:00 AM',
-            'a': '05:00 PM',
-            'tieneTurno2': false,
-            'de2': '05:00 PM',
-            'a2': '08:00 PM',
-          },
-          'Miércoles': {
-            'abierto': true,
-            'de': '09:00 AM',
-            'a': '05:00 PM',
-            'tieneTurno2': false,
-            'de2': '05:00 PM',
-            'a2': '08:00 PM',
-          },
-          'Jueves': {
-            'abierto': true,
-            'de': '09:00 AM',
-            'a': '05:00 PM',
-            'tieneTurno2': false,
-            'de2': '05:00 PM',
-            'a2': '08:00 PM',
-          },
-          'Viernes': {
-            'abierto': true,
-            'de': '09:00 AM',
-            'a': '05:00 PM',
-            'tieneTurno2': false,
-            'de2': '05:00 PM',
-            'a2': '08:00 PM',
-          },
-          'Sábado': {
-            'abierto': false,
-            'de': '09:00 AM',
-            'a': '02:00 PM',
-            'tieneTurno2': false,
-            'de2': '04:00 PM',
-            'a2': '06:00 PM',
-          },
-          'Domingo': {
-            'abierto': false,
-            'de': '09:00 AM',
-            'a': '02:00 PM',
-            'tieneTurno2': false,
-            'de2': '04:00 PM',
-            'a2': '06:00 PM',
-          },
-        },
+        'horario': _crearEstructuraHorarioDefecto(),
       });
     });
   }
 
   Future<void> _loadDoctorData() async {
     if (targetUid != null) {
-      // 1. Cargamos los datos principales del doctor usando targetUid
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(targetUid) // <-- Usamos targetUid
-          .get();
-
-      if (doc.exists) {
-        // 2. Cargamos los blogs desde la NUEVA Sub-colección
-        QuerySnapshot blogsSnapshot = await FirebaseFirestore.instance
+      try {
+        DocumentSnapshot doc = await FirebaseFirestore.instance
             .collection('usuarios')
-            .doc(targetUid) // <-- Usamos targetUid
-            .collection('mis_blogs')
-            .orderBy('fecha', descending: true)
+            .doc(targetUid)
             .get();
 
-        setState(() {
-          userData = doc.data() as Map<String, dynamic>;
-          isPro = userData?['tipo_perfil'] == 'pro';
-          _fotoUrl = userData?['foto_url'];
-          servicios = userData?['servicios'] ?? [];
+        if (doc.exists) {
+          QuerySnapshot blogsSnapshot = await FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(targetUid)
+              .collection('mis_blogs')
+              .orderBy('fecha', descending: true)
+              .get();
 
-          // Guardamos los blogs traídos de la sub-colección
-          blogs = blogsSnapshot.docs.map((blogDoc) {
-            var data = blogDoc.data() as Map<String, dynamic>;
-            data['id'] = blogDoc
-                .id; // Guardamos el ID del documento para poder borrarlo después
-            return data;
-          }).toList();
+          setState(() {
+            userData = doc.data() as Map<String, dynamic>? ?? {};
+            isPro = userData?['tipo_perfil'] == 'pro';
+            _fotoUrl = userData?['foto_url'] ?? '';
+            servicios = userData?['servicios'] ?? [];
 
-          _nombreCtrl.text = userData?['nombre'] ?? '';
-          _apellidosCtrl.text = userData?['apellidos'] ?? '';
-          _especialidadCtrl.text = userData?['especialidad'] ?? '';
-          _cedulaCtrl.text = userData?['cedula'] ?? '';
+            blogs = blogsSnapshot.docs.map((blogDoc) {
+              var data = blogDoc.data() as Map<String, dynamic>;
+              data['id'] = blogDoc.id;
+              return data;
+            }).toList();
 
-          if (userData?['consultorios'] != null) {
-            consultorios = List<Map<String, dynamic>>.from(
-              userData?['consultorios'].map((item) {
-                var map = Map<String, dynamic>.from(item);
+            _nombreCtrl.text = userData?['nombre'] ?? '';
+            _apellidosCtrl.text = userData?['apellidos'] ?? '';
+            _especialidadCtrl.text = userData?['especialidad'] ?? '';
+            _cedulaCtrl.text = userData?['cedula'] ?? '';
 
-                // Asegurar que exista la estructura del segundo turno si es un doc viejo
-                if (map['horario'] != null) {
-                  Map<String, dynamic> horario = map['horario'];
-                  for (String dia in diasSemana) {
-                    if (horario[dia] != null) {
-                      horario[dia]['tieneTurno2'] =
-                          horario[dia]['tieneTurno2'] ?? false;
-                      horario[dia]['de2'] = horario[dia]['de2'] ?? '05:00 PM';
-                      horario[dia]['a2'] = horario[dia]['a2'] ?? '08:00 PM';
-                    }
-                  }
-                }
+            if (userData?['consultorios'] != null &&
+                (userData!['consultorios'] is List) &&
+                (userData!['consultorios'] as List).isNotEmpty) {
+              consultorios = List<Map<String, dynamic>>.from(
+                userData!['consultorios'].map((item) {
+                  var map = Map<String, dynamic>.from(item as Map);
 
-                if (map['calle_numero'] == null || map['ciudad'] == null) {
-                  String dirAntigua = map['direccion'] ?? '';
-                  String ciudadAsignada = 'Durango, Coah.'; // Por defecto
-                  String calleAsignada = dirAntigua;
-
-                  for (String ciudad in _listaCiudades) {
-                    if (dirAntigua.endsWith(ciudad)) {
-                      ciudadAsignada = ciudad;
-                      int index = dirAntigua.lastIndexOf(ciudad);
-                      if (index > 0) {
-                        calleAsignada = dirAntigua.substring(0, index).trim();
-                        if (calleAsignada.endsWith(',')) {
-                          calleAsignada = calleAsignada
-                              .substring(0, calleAsignada.length - 1)
-                              .trim();
-                        }
+                  // 🔑 ASEGURAR ESTRUCTURA DE HORARIO SEGURA
+                  if (map['horario'] == null || map['horario'] is! Map) {
+                    map['horario'] = _crearEstructuraHorarioDefecto();
+                  } else {
+                    Map<String, dynamic> horario = Map<String, dynamic>.from(
+                      map['horario'] as Map,
+                    );
+                    for (String dia in diasSemana) {
+                      if (horario[dia] == null || horario[dia] is! Map) {
+                        horario[dia] = {
+                          'abierto': false,
+                          'de': '09:00 AM',
+                          'a': '05:00 PM',
+                          'tieneTurno2': false,
+                          'de2': '05:00 PM',
+                          'a2': '08:00 PM',
+                        };
+                      } else {
+                        Map<String, dynamic> diaData =
+                            Map<String, dynamic>.from(horario[dia] as Map);
+                        diaData['abierto'] ??= false;
+                        diaData['de'] ??= '09:00 AM';
+                        diaData['a'] ??= '05:00 PM';
+                        diaData['tieneTurno2'] ??= false;
+                        diaData['de2'] ??= '05:00 PM';
+                        diaData['a2'] ??= '08:00 PM';
+                        horario[dia] = diaData;
                       }
-                      break;
                     }
+                    map['horario'] = horario;
                   }
-                  map['ciudad'] = ciudadAsignada;
-                  map['calle_numero'] = calleAsignada;
-                }
-                return map;
-              }),
-            );
-          } else {
-            _agregarNuevoConsultorio();
-          }
 
-          _costoCtrl.text = userData?['costo_consulta'] ?? '';
-          _experienciaCtrl.text = userData?['experiencia'] ?? '';
-          _descripcionCtrl.text = userData?['descripcion'] ?? '';
+                  // 🔑 NORMALIZACIÓN SEGURA DE CIUDADES
+                  String ciudadGuardada = map['ciudad'] ?? '';
+                  if (!_listaCiudades.contains(ciudadGuardada)) {
+                    map['ciudad'] = _listaCiudades.first;
+                  }
+                  map['calle_numero'] ??= map['direccion'] ?? '';
 
-          _facebookCtrl.text = userData?['link_facebook'] ?? '';
-          _instagramCtrl.text = userData?['link_instagram'] ?? '';
-          _tiktokCtrl.text = userData?['link_tiktok'] ?? '';
-          _xCtrl.text = userData?['link_x'] ?? '';
-          _webCtrl.text = userData?['link_web'] ?? '';
+                  return map;
+                }),
+              );
+            } else {
+              consultorios = [];
+              _agregarNuevoConsultorio();
+            }
 
-          List<dynamic> pagosGuardados = userData?['metodos_pago'] ?? [];
-          for (var metodo in pagosGuardados) {
-            if (metodosPago.containsKey(metodo)) metodosPago[metodo] = true;
-          }
+            _costoCtrl.text = userData?['costo_consulta'] ?? '';
+            _experienciaCtrl.text = userData?['experiencia'] ?? '';
+            _descripcionCtrl.text = userData?['descripcion'] ?? '';
 
-          List<dynamic> aseguradorasGuardadas = userData?['aseguradoras'] ?? [];
-          for (var ase in aseguradorasGuardadas) {
-            if (aseguradoras.containsKey(ase)) aseguradoras[ase] = true;
-          }
+            _facebookCtrl.text = userData?['link_facebook'] ?? '';
+            _instagramCtrl.text = userData?['link_instagram'] ?? '';
+            _tiktokCtrl.text = userData?['link_tiktok'] ?? '';
+            _xCtrl.text = userData?['link_x'] ?? '';
+            _webCtrl.text = userData?['link_web'] ?? '';
 
-          _isLoading = false;
-        });
+            List<dynamic> pagosGuardados = userData?['metodos_pago'] ?? [];
+            for (var metodo in pagosGuardados) {
+              if (metodosPago.containsKey(metodo)) metodosPago[metodo] = true;
+            }
+
+            List<dynamic> aseguradorasGuardadas =
+                userData?['aseguradoras'] ?? [];
+            for (var ase in aseguradorasGuardadas) {
+              if (aseguradoras.containsKey(ase)) aseguradoras[ase] = true;
+            }
+
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint("Error al cargar datos del doctor: $e");
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -423,28 +382,29 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
       });
 
       for (var c in consultorios) {
-        c['direccion'] = '${c['calle_numero']}, ${c['ciudad']}';
+        c['direccion'] = '${c['calle_numero'] ?? ''}, ${c['ciudad'] ?? ''}'
+            .trim();
       }
 
       Map<String, dynamic> datosActualizados = {
-        'nombre': _nombreCtrl.text,
-        'apellidos': _apellidosCtrl.text,
-        'especialidad': _especialidadCtrl.text,
-        'cedula': _cedulaCtrl.text,
+        'nombre': _nombreCtrl.text.trim(),
+        'apellidos': _apellidosCtrl.text.trim(),
+        'especialidad': _especialidadCtrl.text.trim(),
+        'cedula': _cedulaCtrl.text.trim(),
         'consultorios': consultorios,
         'servicios': servicios,
       };
 
       if (isPro) {
         datosActualizados.addAll({
-          'descripcion': _descripcionCtrl.text,
-          'costo_consulta': _costoCtrl.text,
-          'experiencia': _experienciaCtrl.text,
-          'link_facebook': _facebookCtrl.text,
-          'link_instagram': _instagramCtrl.text,
-          'link_tiktok': _tiktokCtrl.text,
-          'link_x': _xCtrl.text,
-          'link_web': _webCtrl.text,
+          'descripcion': _descripcionCtrl.text.trim(),
+          'costo_consulta': _costoCtrl.text.trim(),
+          'experiencia': _experienciaCtrl.text.trim(),
+          'link_facebook': _facebookCtrl.text.trim(),
+          'link_instagram': _instagramCtrl.text.trim(),
+          'link_tiktok': _tiktokCtrl.text.trim(),
+          'link_x': _xCtrl.text.trim(),
+          'link_web': _webCtrl.text.trim(),
           'metodos_pago': pagosSeleccionados,
           'aseguradoras': aseguradorasSeleccionadas,
         });
@@ -452,7 +412,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
 
       await FirebaseFirestore.instance
           .collection('usuarios')
-          .doc(targetUid) // <-- Usamos targetUid
+          .doc(targetUid)
           .set(datosActualizados, SetOptions(merge: true));
 
       if (!mounted) return;
@@ -511,8 +471,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                   ),
                   const SizedBox(height: 30),
                   SizedBox(
-                    height:
-                        3000, // <-- Aumentamos el tamaño para los dobles turnos
+                    height: 3000,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -535,9 +494,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   }
 
   Widget _buildHeader() {
-    String iniciales =
-        (_nombreCtrl.text.isNotEmpty ? _nombreCtrl.text[0] : '') +
-        (_apellidosCtrl.text.isNotEmpty ? _apellidosCtrl.text[0] : '');
+    // 🔑 OBTENCIÓN SEGURA DE INICIALES EVITANDO ERROR DE ÍNDICE
+    String n = _nombreCtrl.text.trim();
+    String a = _apellidosCtrl.text.trim();
+    String iniciales = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}';
+    if (iniciales.isEmpty) iniciales = 'MD';
 
     return Container(
       color: Colors.white,
@@ -590,9 +551,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 👇 QUITAMOS EL "Dr(a)." QUEMADO AQUI
               Text(
-                '${_nombreCtrl.text} ${_apellidosCtrl.text}'.trim(),
+                '$n $a'.trim().isEmpty ? 'Doctor' : '$n $a'.trim(),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -601,7 +561,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
               Row(
                 children: [
                   Text(
-                    _especialidadCtrl.text,
+                    _especialidadCtrl.text.isEmpty
+                        ? 'Medicina General'
+                        : _especialidadCtrl.text,
                     style: const TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const Text(
@@ -637,8 +599,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             ],
           ),
           const Spacer(),
-          // Si estás en "Modo Dios", mostramos un botón para volver al panel.
-          // Si es el doctor real, mostramos el botón de cerrar sesión.
           widget.adminViewUid != null
               ? TextButton.icon(
                   onPressed: () {
@@ -738,7 +698,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
     );
   }
 
-  // --- SECCIÓN DE BLOGS ACTUALIZADA (AHORA GUARDA EN UNA SUB-COLECCIÓN) ---
   Widget _buildBlogsTab() {
     if (!isPro) {
       return const Center(
@@ -847,7 +806,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                             DocumentReference docRef = await FirebaseFirestore
                                 .instance
                                 .collection('usuarios')
-                                .doc(targetUid) // <-- Usamos targetUid
+                                .doc(targetUid)
                                 .collection('mis_blogs')
                                 .add(nuevoBlog);
 
@@ -989,7 +948,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                                   setState(() => _isLoading = true);
                                   await FirebaseFirestore.instance
                                       .collection('usuarios')
-                                      .doc(targetUid) // <-- Usamos targetUid
+                                      .doc(targetUid)
                                       .collection('mis_blogs')
                                       .doc(blog['id'])
                                       .delete();
@@ -1050,17 +1009,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           Row(
             children: [
               Expanded(
-                child: _textField(
-                  'Nombre (Ej: Clínica Sonrisas, Dr. Juan)',
-                  _nombreCtrl,
-                ),
+                child: _textField('Nombre (Ej: Dr. Armando)', _nombreCtrl),
               ),
               const SizedBox(width: 20),
               Expanded(
-                child: _textField(
-                  'Apellidos (Opcional si eres Clínica)',
-                  _apellidosCtrl,
-                ),
+                child: _textField('Apellidos (Ej: Lozano)', _apellidosCtrl),
               ),
             ],
           ),
@@ -1366,6 +1319,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   }
 
   Widget _buildConsultorioCard(int index, Map<String, dynamic> clinic) {
+    String ciudadActual = clinic['ciudad'] ?? _listaCiudades.first;
+    if (!_listaCiudades.contains(ciudadActual)) {
+      ciudadActual = _listaCiudades.first;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 30),
       padding: const EdgeInsets.all(25),
@@ -1410,7 +1368,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
               Expanded(
                 flex: 2,
                 child: TextFormField(
-                  initialValue: clinic['calle_numero'],
+                  initialValue: clinic['calle_numero'] ?? '',
                   onChanged: (val) => consultorios[index]['calle_numero'] = val,
                   decoration: InputDecoration(
                     labelText: 'Calle, Hospital o Número',
@@ -1428,9 +1386,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
               Expanded(
                 flex: 1,
                 child: DropdownButtonFormField<String>(
-                  value: _listaCiudades.contains(clinic['ciudad'])
-                      ? clinic['ciudad']
-                      : 'Durango, Coah.',
+                  value: ciudadActual,
                   decoration: InputDecoration(
                     labelText: 'Ciudad',
                     border: OutlineInputBorder(
@@ -1458,7 +1414,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             children: [
               Expanded(
                 child: TextFormField(
-                  initialValue: clinic['telefono'],
+                  initialValue: clinic['telefono'] ?? '',
                   onChanged: (val) => consultorios[index]['telefono'] = val,
                   decoration: InputDecoration(
                     labelText: 'Teléfono fijo',
@@ -1472,7 +1428,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
               const SizedBox(width: 20),
               Expanded(
                 child: TextFormField(
-                  initialValue: clinic['whatsapp'],
+                  initialValue: clinic['whatsapp'] ?? '',
                   onChanged: (val) => consultorios[index]['whatsapp'] = val,
                   decoration: InputDecoration(
                     labelText: 'WhatsApp para Citas (Opcional)',
@@ -1501,19 +1457,20 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             ),
           ),
           const SizedBox(height: 10),
-          // 👇 AQUÍ LLAMAMOS A LA NUEVA LÓGICA DE TURNOS
           ...diasSemana.map((dia) => _buildHorarioRow(index, dia)).toList(),
         ],
       ),
     );
   }
 
-  // 👇 LÓGICA DE DOBLE TURNO INCORPORADA 👇
+  // 🔑 MANEJO DE HORARIOS CON LECTURA PROTEGIDA CONTRA NULL
   Widget _buildHorarioRow(int clinicIndex, String dia) {
-    var diaData = consultorios[clinicIndex]['horario'][dia];
-    bool abierto = diaData['abierto'];
-    bool tieneTurno2 =
-        diaData['tieneTurno2'] ?? false; // Seguro para los doctores viejos
+    Map<String, dynamic> horarioMap =
+        consultorios[clinicIndex]['horario'] ?? {};
+    Map<String, dynamic> diaData = horarioMap[dia] ?? {};
+
+    bool abierto = diaData['abierto'] ?? false;
+    bool tieneTurno2 = diaData['tieneTurno2'] ?? false;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
@@ -1535,7 +1492,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                   value: abierto,
                   onChanged: (val) => setState(() {
                     consultorios[clinicIndex]['horario'][dia]['abierto'] = val;
-                    // Si cierras el día, apagamos automáticamente el turno 2
                     if (val == false) {
                       consultorios[clinicIndex]['horario'][dia]['tieneTurno2'] =
                           false;
@@ -1558,7 +1514,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                 ),
                 _timeDrop(clinicIndex, dia, 'a'),
 
-                // BOTÓN PARA AGREGAR EL SEGUNDO TURNO
                 if (!tieneTurno2)
                   TextButton.icon(
                     onPressed: () => setState(
@@ -1587,7 +1542,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             ],
           ),
 
-          // FILA DEL SEGUNDO TURNO (Aparece abajo si le dio a +)
           if (abierto && tieneTurno2)
             Padding(
               padding: const EdgeInsets.only(left: 140, top: 5),
@@ -1605,7 +1559,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                   ),
                   _timeDrop(clinicIndex, dia, 'a2'),
 
-                  // Botón para eliminar el turno de tarde
                   IconButton(
                     onPressed: () => setState(
                       () =>
@@ -1624,6 +1577,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   }
 
   Widget _timeDrop(int clinicIdx, String dia, String key) {
+    String horaSeleccionada =
+        consultorios[clinicIdx]['horario'][dia][key] ?? '09:00 AM';
+
+    if (!horasDisponibles.contains(horaSeleccionada)) {
+      horaSeleccionada = '09:00 AM';
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 5),
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -1634,9 +1594,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value:
-              consultorios[clinicIdx]['horario'][dia][key] ??
-              '05:00 PM', // Fallback por si acaso
+          value: horaSeleccionada,
           items: horasDisponibles
               .map(
                 (h) => DropdownMenuItem(
