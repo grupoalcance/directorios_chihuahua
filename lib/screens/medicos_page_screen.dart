@@ -70,9 +70,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
+  // 🔑 LÓGICA DE AUTO-SCROLL BLINDADA CONTRA NULOS Y DESCONEXIONES
   void _iniciarAutoScrolls() {
     _timerEspecialidades = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_especialidadesScrollController.hasClients) {
+      if (!mounted) return;
+      if (_especialidadesScrollController.hasClients &&
+          _especialidadesScrollController.position.hasContentDimensions) {
         try {
           double currentScroll = _especialidadesScrollController.offset;
           double maxScroll =
@@ -99,7 +102,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     });
 
     _timerMedicos = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_medicosScrollController.hasClients) {
+      if (!mounted) return;
+      if (_medicosScrollController.hasClients &&
+          _medicosScrollController.position.hasContentDimensions) {
         try {
           double currentScroll = _medicosScrollController.offset;
           double maxScroll = _medicosScrollController.position.maxScrollExtent;
@@ -698,7 +703,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
-  // 🔑 CORREGIDO: Lista de ciudades vinculada dinámicamente a AppConfig.ciudadesActivas
   Widget _buildInputCiudadAutocompletar() {
     final List<String> lasCiudades = AppConfig.ciudadesActivas;
 
@@ -746,7 +750,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           color: Color(0xFF334155),
                         ),
                         decoration: const InputDecoration(
-                          // 🔑 CORREGIDO: Texto sugerido visible
                           hintText: 'Ej. Victoria de Durango, Gómez Palacio...',
                           hintStyle: TextStyle(
                             color: Color(0xFF94A3B8),
