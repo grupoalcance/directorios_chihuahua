@@ -70,7 +70,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
-  // 🔑 LÓGICA DE AUTO-SCROLL BLINDADA CONTRA NULOS Y DESCONEXIONES
   void _iniciarAutoScrolls() {
     _timerEspecialidades = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (!mounted) return;
@@ -803,6 +802,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
+  // 🔑 SECCIÓN DE ESPECIALIDADES MEJORADA: COMBINA LAS BASE Y AGREGA LAS NUEVAS REGISTRADAS
   Widget _buildEspecialidadesSection(double width) {
     return SliverToBoxAdapter(
       child: Center(
@@ -840,14 +840,18 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 ],
               ),
               const SizedBox(height: 15),
-              FutureBuilder<QuerySnapshot>(
-                future: FirebaseFirestore.instance
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
                     .collection('usuarios')
                     .where('rol', isEqualTo: 'medico')
                     .where('activo', isEqualTo: true)
-                    .get(),
+                    .snapshots(),
                 builder: (context, snapshot) {
                   Map<String, int> conteoReal = {};
+                  List<String> listaCombinada = List.from(
+                    las15Especialidadesdurango,
+                  );
+
                   if (snapshot.hasData && snapshot.data != null) {
                     for (var doc in snapshot.data!.docs) {
                       Map<String, dynamic> data =
@@ -855,31 +859,41 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                       String esp = (data['especialidad'] ?? '')
                           .toString()
                           .trim();
+
                       if (esp.toLowerCase() == 'dentista' ||
                           esp.toLowerCase() == 'odontología') {
                         esp = 'Odontología (Dentista)';
                       }
-                      if (esp.toLowerCase() == 'ginecología')
+                      if (esp.toLowerCase() == 'ginecología') {
                         esp = 'Ginecología y Obstetricia';
-                      if (esp.toLowerCase() == 'traumatología')
+                      }
+                      if (esp.toLowerCase() == 'traumatología') {
                         esp = 'Traumatología y Ortopedia';
+                      }
+
                       if (esp.isNotEmpty) {
                         conteoReal[esp] = (conteoReal[esp] ?? 0) + 1;
+
+                        // 🔑 SI NO EXISTE EN LA LISTA BASE, SE AGREGA DINÁMICAMENTE
+                        if (!listaCombinada.contains(esp)) {
+                          listaCombinada.add(esp);
+                        }
                       }
                     }
                   }
+
                   return SizedBox(
                     height: 140,
                     child: ListView.builder(
                       controller: _especialidadesScrollController,
                       scrollDirection: Axis.horizontal,
-                      itemCount: las15Especialidadesdurango.length,
+                      itemCount: listaCombinada.length,
                       itemBuilder: (context, index) {
-                        String nombreEspecialidad =
-                            las15Especialidadesdurango[index];
+                        String nombreEspecialidad = listaCombinada[index];
                         int cantidadMedicos =
                             conteoReal[nombreEspecialidad] ?? 0;
                         var estilo = _getEspecialidadEstilo(nombreEspecialidad);
+
                         return _itemEspecialidad(
                           nombreEspecialidad,
                           estilo['icon'] as Widget,
@@ -993,6 +1007,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
+  // 🔑 TARJETA DE DOCTOR CORREGIDA (INYECTA doc.id Y ENFOCA LA CABEZA EN LA FOTO)
   Widget _cardDoctorPro(QueryDocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     int totalResenas = data['reseñas_count'] ?? 0;
@@ -1001,7 +1016,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     String iniciales =
         '${nombre.isNotEmpty ? nombre[0] : ''}${apellidos.isNotEmpty ? apellidos[0] : ''}';
     String nombreCompleto = '$nombre $apellidos'.trim();
-    String specialty = data['especialidad'] ?? 'Medicina General';
+
+    // Manejo de especialidad principal y subespecialidad opcional
+    String esp = data['especialidad'] ?? 'Medicina General';
+    String subEsp = data['subespecialidad'] ?? '';
+    String specialty = subEsp.isNotEmpty ? '$esp • $subEsp' : esp;
+
     String? fotoUrl = data['foto_url'];
 
     List<dynamic> consultorios = data['consultorios'] ?? [];
@@ -1044,10 +1064,17 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                   color: Colors.grey.shade100,
                   child: (fotoUrl != null && fotoUrl.isNotEmpty)
                       ? (fotoUrl.startsWith('http')
-                            ? Image.network(fotoUrl, fit: BoxFit.cover)
+                            ? Image.network(
+                                fotoUrl,
+                                fit: BoxFit.cover,
+                                alignment: Alignment
+                                    .topCenter, // 👈 ENFOCA EL ROSTRO Y CABEZA
+                              )
                             : Image.memory(
                                 base64Decode(fotoUrl),
                                 fit: BoxFit.cover,
+                                alignment: Alignment
+                                    .topCenter, // 👈 ENFOCA EL ROSTRO Y CABEZA
                               ))
                       : Center(
                           child: Text(
@@ -1103,6 +1130,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
               color: Colors.blue,
               fontWeight: FontWeight.w600,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 6),
           Row(
@@ -1153,13 +1182,20 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          DoctorProfileScreen(doctorData: data),
-                    ),
-                  ),
+                  // 🔑 NAVEGACIÓN GARANTIZADA SIN PANTALLA ROJA (Inyectamos doc.id)
+                  onPressed: () {
+                    Map<String, dynamic> doctorDataConId = Map.from(data);
+                    doctorDataConId['uid'] = doc.id;
+                    doctorDataConId['id'] = doc.id;
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DoctorProfileScreen(doctorData: doctorDataConId),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.blue,

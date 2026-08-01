@@ -54,6 +54,22 @@ class _CustomAppBarState extends State<CustomAppBar> {
     },
   ];
 
+  // 📝 ESPECIALIDADES BASE PARA EL MENÚ
+  final List<String> _especialidadesBaseAppBar = [
+    'Cardiología',
+    'Dermatología',
+    'Ginecología y Obstetricia',
+    'Medicina General',
+    'Neumología',
+    'Neurología',
+    'Nutrición',
+    'Odontología (Dentista)',
+    'Oftalmología',
+    'Pediatría',
+  ];
+
+  List<String> _especialidadesDinamicas = [];
+
   // Variables para la rotación automática de Banners
   final PageController _bannerPageController = PageController();
   Timer? _bannerTimer;
@@ -62,11 +78,48 @@ class _CustomAppBarState extends State<CustomAppBar> {
   @override
   void initState() {
     super.initState();
+    _especialidadesDinamicas = List.from(_especialidadesBaseAppBar);
+    _cargarEspecialidadesDinamicas();
     _timeStream = Stream<DateTime>.periodic(
       const Duration(seconds: 1),
       (_) => DateTime.now(),
     );
     _iniciarTemporizadorBanners();
+  }
+
+  // 🔑 CARGA SEGURA Y ESTABLE DE ESPECIALIDADES DESDE FIRESTORE
+  Future<void> _cargarEspecialidadesDinamicas() async {
+    try {
+      var query = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('rol', isEqualTo: 'medico')
+          .where('activo', isEqualTo: true)
+          .get();
+
+      Set<String> setEsp = _especialidadesBaseAppBar.map((e) => e).toSet();
+      for (var doc in query.docs) {
+        String esp = (doc.data()['especialidad'] ?? '').toString().trim();
+        if (esp.isNotEmpty) {
+          if (esp.toLowerCase() == 'dentista' ||
+              esp.toLowerCase() == 'odontología') {
+            esp = 'Odontología (Dentista)';
+          } else if (esp.toLowerCase() == 'ginecología') {
+            esp = 'Ginecología y Obstetricia';
+          } else if (esp.toLowerCase() == 'traumatología') {
+            esp = 'Traumatología y Ortopedia';
+          }
+          setEsp.add(esp);
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _especialidadesDinamicas = setEsp.toList()..sort();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cargando especialidades en AppBar: $e');
+    }
   }
 
   void _iniciarTemporizadorBanners() {
@@ -215,7 +268,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     child: GestureDetector(
                                       onTap: () =>
                                           _abrirEnlaceAnuncio(destinoUrl),
-                                      // 🔑 CORREGIDO: Detección estricta de URL Web HTTP/HTTPS
                                       child:
                                           fotoRuta.toLowerCase().startsWith(
                                             'http',
@@ -312,27 +364,33 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       label: 'Ciudad',
                       style: menuStyle,
                       items: AppConfig.ciudadesActivas,
+                      onSelected: (ciudad) {
+                        if (widget.onCiudadSeleccionada != null) {
+                          widget.onCiudadSeleccionada!.call(ciudad);
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ListaDoctoresScreen(
+                                especialidad: '',
+                                ciudad: ciudad,
+                              ),
+                            ),
+                          );
+                        }
+                      },
                     ),
                     const SizedBox(width: 5),
-                    PopupMenuButton<String>(
-                      tooltip: 'Seleccionar Especialidad',
-                      color: Colors.white,
-                      surfaceTintColor: Colors.white,
-                      elevation: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Row(
-                          children: [
-                            Text('Especialidad', style: menuStyle),
-                            Icon(
-                              Icons.keyboard_arrow_down,
-                              color: menuStyle.color,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                      onSelected: (String especialidad) {
+
+                    // 🔑 MENÚ DESPLEGABLE DE ESPECIALIDAD HOMOLOGADO AL DE CIUDAD (100% FUNCIONAL EN WEB)
+                    _buildDropdownMenu(
+                      context: context,
+                      label: 'Especialidad',
+                      style: menuStyle,
+                      items: _especialidadesDinamicas.isNotEmpty
+                          ? [..._especialidadesDinamicas, 'ver_todas']
+                          : [..._especialidadesBaseAppBar, 'ver_todas'],
+                      onSelected: (especialidad) {
                         if (especialidad == 'ver_todas') {
                           Navigator.push(
                             context,
@@ -353,42 +411,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           );
                         }
                       },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
-                            _buildMenuItem('Cardiología'),
-                            _buildMenuItem('Dermatología'),
-                            _buildMenuItem('Ginecología y Obstetricia'),
-                            _buildMenuItem('Medicina General'),
-                            _buildMenuItem('Neumología'),
-                            _buildMenuItem('Neurología'),
-                            _buildMenuItem('Nutrición'),
-                            _buildMenuItem('Odontología (Dentista)'),
-                            _buildMenuItem('Oftalmología'),
-                            _buildMenuItem('Pediatría'),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'ver_todas',
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Ver todas las especialidades',
-                                    style: TextStyle(
-                                      color: AppConfig.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward,
-                                    color: AppConfig.primaryColor,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
                     ),
+
                     const SizedBox(width: 5),
                     TextButton(
                       onPressed: () => Navigator.push(
@@ -692,47 +716,64 @@ class _CustomAppBarState extends State<CustomAppBar> {
         snap.data!.data() != null;
   }
 
+  // 🔑 HELPER REUTILIZABLE PARA AMBOS DESPLEGABLES (CIUDAD Y ESPECIALIDAD)
   Widget _buildDropdownMenu({
     required BuildContext context,
     required String label,
     required TextStyle style,
     required List<String> items,
+    required Function(String) onSelected,
   }) {
     return PopupMenuButton<String>(
       color: Colors.white,
       surfaceTintColor: Colors.white,
-      elevation: 3,
+      elevation: 4,
+      offset: const Offset(0, 40),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(label, style: style),
             Icon(Icons.keyboard_arrow_down, color: style.color, size: 20),
           ],
         ),
       ),
-      onSelected: (String valorElegido) {
-        if (widget.onCiudadSeleccionada != null) {
-          widget.onCiudadSeleccionada!.call(valorElegido);
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ListaDoctoresScreen(especialidad: '', ciudad: valorElegido),
+      onSelected: onSelected,
+      itemBuilder: (context) {
+        return items.map((item) {
+          if (item == 'ver_todas') {
+            return PopupMenuItem<String>(
+              value: 'ver_todas',
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Ver todas las especialidades',
+                    style: TextStyle(
+                      color: AppConfig.primaryColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: AppConfig.primaryColor,
+                    size: 16,
+                  ),
+                ],
+              ),
+            );
+          }
+          return PopupMenuItem<String>(
+            value: item,
+            child: Text(
+              item,
+              style: const TextStyle(color: Color(0xFF334155), fontSize: 13),
             ),
           );
-        }
+        }).toList();
       },
-      itemBuilder: (context) =>
-          items.map((item) => _buildMenuItem(item)).toList(),
-    );
-  }
-
-  PopupMenuItem<String> _buildMenuItem(String texto) {
-    return PopupMenuItem(
-      value: texto,
-      child: Text(texto, style: const TextStyle(color: Color(0xFF334155))),
     );
   }
 }

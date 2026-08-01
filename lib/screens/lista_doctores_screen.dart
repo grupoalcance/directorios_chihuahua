@@ -49,7 +49,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Detectamos si la pantalla se abrió buscando una Ciudad en general
     bool esBusquedaPorCiudad =
         widget.ciudad.isNotEmpty && widget.especialidad.isEmpty;
 
@@ -60,7 +59,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
       textoFiltro += ' en ${widget.ciudad}';
     }
 
-    // --- CONSTRUCCIÓN DE LA QUERY BASE DE FIREBASE ---
     Query queryMedicos = FirebaseFirestore.instance
         .collection('usuarios')
         .where('rol', isEqualTo: 'medico')
@@ -91,9 +89,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
               ),
               const SizedBox(height: 20),
 
-              // =========================================================================
-              // 🔍 BARRA DE BÚSQUEDA HÍBRIDA E INTELIGENTE (CIUDAD VS ESPECIALIDAD)
-              // =========================================================================
+              // BARRA DE BÚSQUEDA HÍBRIDA
               Container(
                 margin: const EdgeInsets.only(bottom: 25),
                 decoration: BoxDecoration(
@@ -115,7 +111,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                     });
                   },
                   decoration: InputDecoration(
-                    // 👇 MÁGICO: Si buscó por ciudad, el hint le pide buscar especialidad. Si buscó por especialidad, le pide municipio.
                     hintText: esBusquedaPorCiudad
                         ? 'Filtrar por especialidad (Ej. Dentista, Cardiólogo, Pediatra...)'
                         : 'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
@@ -180,7 +175,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       return _buildNoResults();
                     }
 
-                    // --- FILTRADO INTERNO DINÁMICO ---
                     var docsFiltrados = snapshot.data!.docs.where((doc) {
                       Map<String, dynamic> data =
                           doc.data() as Map<String, dynamic>;
@@ -199,20 +193,14 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                           .toLowerCase()
                           .trim();
 
-                      // =========================================================================
-                      // ESCENARIO 1: EL USUARIO FILTRÓ POR CIUDAD DESDE LA NAVBAR
-                      // =========================================================================
                       if (esBusquedaPorCiudad) {
-                        // 1. Forzar que el doctor pertenezca a la ciudad seleccionada en el menú
                         String ciudadBusqueda = widget.ciudad
                             .toLowerCase()
                             .trim();
                         bool matchCiudadBase =
                             ciudadDoc == ciudadBusqueda ||
-                            (ciudadBusqueda.contains('Durango') &&
-                                ciudadDoc.contains('durango')) ||
                             (ciudadBusqueda.contains('durango') &&
-                                ciudadDoc.contains('Durango')) ||
+                                ciudadDoc.contains('durango')) ||
                             (ciudadBusqueda.contains('gómez') &&
                                 ciudadDoc.contains('gomez')) ||
                             (ciudadBusqueda.contains('gomez') &&
@@ -220,16 +208,10 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
 
                         if (!matchCiudadBase) return false;
 
-                        // 2. Aplicar la barra de texto sobre la ESPECIALIDAD
                         if (_textoFiltrado.isNotEmpty) {
                           if (!espDoctor.contains(_textoFiltrado)) return false;
                         }
-                      }
-                      // =========================================================================
-                      // ESCENARIO 2: EL USUARIO FILTRÓ POR ESPECIALIDAD DESDE LA NAVBAR
-                      // =========================================================================
-                      else {
-                        // 1. Filtrar por la barra de entrada de texto (MUNICIPIO)
+                      } else {
                         if (_textoFiltrado.isNotEmpty) {
                           String direccionDoc =
                               (primerConsultorio['direccion'] ?? '')
@@ -243,7 +225,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                           if (!matchBarra) return false;
                         }
 
-                        // 2. Filtrar por la especialidad base asignada
                         if (widget.especialidad.isNotEmpty) {
                           String espBusqueda = widget.especialidad
                               .toLowerCase()
@@ -252,31 +233,34 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                           if (espBusqueda.contains('uroginecología') ||
                               espBusqueda.contains('uroginecologia')) {
                             if (!(espDoctor.contains('uroginecología') ||
-                                espDoctor.contains('uroginecologia')))
+                                espDoctor.contains('uroginecologia'))) {
                               return false;
+                            }
                           } else if (espBusqueda.contains('odontología') ||
                               espBusqueda.contains('dentista')) {
                             if (!(espDoctor.contains('odontología') ||
                                 espDoctor.contains('dentista') ||
-                                espDoctor.contains('odontologia')))
+                                espDoctor.contains('odontologia'))) {
                               return false;
+                            }
                           } else if (espBusqueda.contains('ginecología') ||
                               espBusqueda.contains('ginecologia')) {
                             if (!(espDoctor.contains('ginecología') ||
-                                espDoctor.contains('ginecologia')))
+                                espDoctor.contains('ginecologia'))) {
                               return false;
+                            }
                           } else if (espBusqueda.contains('traumatología') ||
                               espBusqueda.contains('traumatologia')) {
                             if (!(espDoctor.contains('traumatología') ||
                                 espDoctor.contains('traumatologia') ||
-                                espDoctor.contains('ortopedia')))
+                                espDoctor.contains('ortopedia'))) {
                               return false;
+                            }
                           } else {
                             if (espDoctor != espBusqueda) return false;
                           }
                         }
 
-                        // 3. Filtrar por ciudad complementaria (si se inyectara desde TodasEspecialidades)
                         if (widget.ciudad.isNotEmpty) {
                           String ciudadBusqueda = widget.ciudad
                               .toLowerCase()
@@ -292,7 +276,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       return _buildNoResults();
                     }
 
-                    // --- ORDENAR PERFILES (PRO ARRIBA) ---
                     docsFiltrados.sort((a, b) {
                       Map<String, dynamic> dataA =
                           a.data() as Map<String, dynamic>;
@@ -312,7 +295,8 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                             : 1,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
-                        mainAxisExtent: 310,
+                        // 🔑 CORREGIDO: Incrementado a 380 para evitar el aviso de desbordamiento (bottom overflow)
+                        mainAxisExtent: 380,
                       ),
                       itemCount: docsFiltrados.length,
                       itemBuilder: (context, index) {
@@ -452,7 +436,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
   ) {
     String? fotoUrl = doctorData['foto_url'];
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -484,7 +468,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       )
                     : null,
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -492,7 +476,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                     Text(
                       name,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1F36),
                       ),
@@ -503,7 +487,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                     Text(
                       specialty,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         color: Colors.lightBlue,
                         fontWeight: FontWeight.bold,
                       ),
@@ -513,7 +497,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       'Cédula: $cedula',
                       style: const TextStyle(
                         color: Colors.blueGrey,
-                        fontSize: 13,
+                        fontSize: 12,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -523,9 +507,9 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 12),
           _contactRow(Icons.location_on, Colors.blue, address),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           _contactRow(Icons.phone, Colors.blue, phone),
           const Spacer(),
           SizedBox(
@@ -540,6 +524,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
               ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.blue),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -558,6 +543,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
     );
   }
 
+  // 🔑 TARJETA PRO REDISEÑADA PARA EVITAR BOTTOM OVERFLOW
   Widget _buildTarjetaPro(
     BuildContext context,
     Map<String, dynamic> doctorData,
@@ -571,8 +557,9 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
   ) {
     String? fotoUrl = doctorData['foto_url'];
     int totalResenas = doctorData['reseñas_count'] ?? 0;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -605,7 +592,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       )
                     : null,
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,18 +600,18 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                     Text(
                       name,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1F36),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 4,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981),
@@ -639,41 +626,43 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                             'DESTACADO',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       specialty,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         color: Colors.lightBlue,
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Cédula: $cedula',
-                      style: const TextStyle(
-                        color: Colors.blueGrey,
-                        fontSize: 13,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Cédula: $cedula',
+                      style: const TextStyle(
+                        color: Colors.blueGrey,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const SizedBox(width: 5),
+                        const Icon(Icons.star, color: Colors.amber, size: 13),
+                        const Icon(Icons.star, color: Colors.amber, size: 13),
+                        const Icon(Icons.star, color: Colors.amber, size: 13),
+                        const Icon(Icons.star, color: Colors.amber, size: 13),
+                        const Icon(Icons.star, color: Colors.amber, size: 13),
+                        const SizedBox(width: 4),
                         Text(
                           totalResenas == 0
                               ? '(Nuevo)'
@@ -690,9 +679,9 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 12),
           _contactRow(Icons.location_on, Colors.blue, address),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           _contactRow(Icons.phone, Colors.blue, phone),
           const Spacer(),
           Column(
@@ -706,25 +695,26 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                   icon: const FaIcon(
                     FontAwesomeIcons.whatsapp,
                     color: Colors.white,
-                    size: 18,
+                    size: 16,
                   ),
                   label: const Text(
                     'WhatsApp',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
@@ -738,7 +728,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.blue, width: 1),
                     backgroundColor: Colors.blue.shade50,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -748,6 +738,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                     style: TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
+                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -763,17 +754,17 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: iconColor, size: 18),
-        const SizedBox(width: 15),
+        Icon(icon, color: iconColor, size: 16),
+        const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
-            maxLines: 2,
+            maxLines: 1, // 👈 Limitado a 1 línea para evitar empujar elementos
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.blueGrey,
-              fontSize: 14,
-              height: 1.3,
+              fontSize: 13,
+              height: 1.2,
             ),
           ),
         ),

@@ -16,6 +16,7 @@ class AppConfig {
 
   // 4. Menú de Ciudades (Municipios de Durango)
   static const List<String> ciudadesActivas = [
+    'Durango',
     'Victoria de Durango',
     'Gómez Palacio',
     'Lerdo',
