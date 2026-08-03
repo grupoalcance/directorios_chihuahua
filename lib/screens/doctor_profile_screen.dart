@@ -114,7 +114,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     });
 
     return Container(
-      height: 150,
+      height: 180,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
@@ -138,9 +138,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       debugPrint('No se pudo abrir el enlace: $urlValida');
   }
 
-  // =========================================================================
-  // 💬 LÓGICA DE DIÁLOGOS DE RESEÑA ACTUALIZADA (NUEVA VENTANA EMERGENTE)
-  // =========================================================================
   void _mostrarDialogoResena(String doctorId) {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -179,7 +176,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // Cierra el diálogo emergente
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -363,9 +360,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    bool isMobile = screenWidth < 800;
     Map<String, dynamic> data = widget.doctorData;
 
-    String doctorId = data['uid'] ?? '';
+    String doctorId = data['uid'] ?? data['id'] ?? '';
     String nombreCompleto = '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'
         .trim();
     String honestyName = nombreCompleto.isNotEmpty
@@ -400,7 +398,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         currentClinic['direccion'] ?? 'Dirección por confirmar';
     String telefonoActivo = currentClinic['telefono'] ?? '';
     String whatsappActivo = currentClinic['whatsapp'] ?? '';
-    String ciudadActiva = currentClinic['ciudad'] ?? 'Durango, Coahuila';
+    String ciudadActiva = currentClinic['ciudad'] ?? 'Durango';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),
@@ -409,11 +407,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         child: Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 1200),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 12 : 20,
+              vertical: 20,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildBreadcrumbs(especialidad, honestyName, doctorId),
+                _buildBreadcrumbs(especialidad, honestyName, doctorId, isMobile),
                 const SizedBox(height: 20),
 
                 _buildDoctorMainCard(
@@ -426,48 +427,72 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   whatsappActivo,
                   fotoUrl,
                   ciudadActiva,
+                  isMobile,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 _buildClinicTabs(consultorios),
 
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: _buildLeftColumn(
-                        descripcion,
-                        currentClinic,
-                        metodos,
-                        aseguradoras,
-                        servicios,
+                // 🔑 SECCIÓN RESPONSIVE DE 2 COLUMNAS (ESCRITORIO) VS 1 COLUMNA (CELULAR)
+                if (isMobile) ...[
+                  _buildLeftColumn(
+                    descripcion,
+                    currentClinic,
+                    metodos,
+                    aseguradoras,
+                    servicios,
+                    isMobile,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildRightColumn(
+                    direccionActiva,
+                    costo,
+                    fb,
+                    ig,
+                    tk,
+                    xTw,
+                    web,
+                  ),
+                ] else ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 7,
+                        child: _buildLeftColumn(
+                          descripcion,
+                          currentClinic,
+                          metodos,
+                          aseguradoras,
+                          servicios,
+                          isMobile,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 30),
-                    Expanded(
-                      flex: 4,
-                      child: _buildRightColumn(
-                        direccionActiva,
-                        costo,
-                        fb,
-                        ig,
-                        tk,
-                        xTw,
-                        web,
+                      const SizedBox(width: 30),
+                      Expanded(
+                        flex: 4,
+                        child: _buildRightColumn(
+                          direccionActiva,
+                          costo,
+                          fb,
+                          ig,
+                          tk,
+                          xTw,
+                          web,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 _buildReviewsCardReal(doctorId),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
 
                 _buildDoctorBlogSection(screenWidth, honestyName, doctorId),
 
-                _buildBottomCTA(honestyName, whatsappActivo, telefonoActivo),
-                const SizedBox(height: 40),
-                _buildFooterBadges(),
+                _buildBottomCTA(honestyName, whatsappActivo, telefonoActivo, isMobile),
+                const SizedBox(height: 30),
+                _buildFooterBadges(isMobile),
               ],
             ),
           ),
@@ -493,14 +518,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               onTap: () => setState(() => _selectedClinicIndex = index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(right: 15),
+                margin: const EdgeInsets.only(right: 12),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 25,
-                  vertical: 12,
+                  horizontal: 20,
+                  vertical: 10,
                 ),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.blue : Colors.white,
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(25),
                   border: Border.all(
                     color: isSelected ? Colors.blue : Colors.grey.shade300,
                   ),
@@ -518,7 +543,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                       style: TextStyle(
                         color: isSelected ? Colors.white : Colors.grey.shade700,
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -535,9 +560,84 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String especialidad,
     String nombre,
     String doctorId,
+    bool isMobile,
   ) {
     String dominio = "https://medicosdurango.com";
     String urlPerfil = "$dominio/#/perfil?id=$doctorId";
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Directorio > $especialidad',
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text(
+                'Compartir: ',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () async {
+                  String mensaje = Uri.encodeComponent(
+                    'Te recomiendo a este especialista en Médicos Durango: $urlPerfil',
+                  );
+                  final Uri url = Uri.parse('https://wa.me/?text=$mensaje');
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                },
+                child: _iconButton(
+                  const FaIcon(
+                    FontAwesomeIcons.whatsapp,
+                    size: 14,
+                    color: Colors.green,
+                  ),
+                  Colors.green,
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () async {
+                  final Uri url = Uri.parse(
+                    'https://www.facebook.com/sharer/sharer.php?u=${Uri.encodeComponent(urlPerfil)}',
+                  );
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                },
+                child: _iconButton(
+                  const FaIcon(
+                    FontAwesomeIcons.facebook,
+                    size: 14,
+                    color: Colors.blue,
+                  ),
+                  Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: urlPerfil));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('¡Enlace copiado al portapapeles!'),
+                        backgroundColor: Colors.blue,
+                      ),
+                    );
+                  }
+                },
+                child: _iconButton(
+                  Icon(Icons.link, size: 14, color: Colors.grey.shade600),
+                  Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -556,7 +656,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             InkWell(
               onTap: () async {
                 String mensaje = Uri.encodeComponent(
-                  'Te recomiendo a este especialista en Médicos durango: $urlPerfil',
+                  'Te recomiendo a este especialista en Médicos Durango: $urlPerfil',
                 );
                 final Uri url = Uri.parse('https://wa.me/?text=$mensaje');
                 await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -594,9 +694,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        '¡Enlace del perfil copiado al portapapeles!',
-                      ),
+                      content: Text('¡Enlace del perfil copiado al portapapeles!'),
                       backgroundColor: Colors.blue,
                     ),
                   );
@@ -621,6 +719,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     );
   }
 
+  // 🔑 TARJETA PRINCIPAL REESTRUCTURADA PARA MÓVIL
   Widget _buildDoctorMainCard(
     String doctorId,
     String nombre,
@@ -631,9 +730,337 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String waActivo,
     String? fotoUrl,
     String ciudad,
+    bool isMobile,
   ) {
+    Widget avatarBloque = Column(
+      children: [
+        WidgetAvatar(fotoUrl: fotoUrl),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade600,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.verified, color: Colors.white, size: 13),
+              SizedBox(width: 5),
+              Text(
+                'Verificado',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    Widget datosDoctor = Column(
+      crossAxisAlignment:
+          isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment:
+              isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+          children: [
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseAuth.instance.currentUser != null
+                  ? FirebaseFirestore.instance
+                        .collection('usuarios')
+                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                        .get()
+                  : null,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done &&
+                    snapshot.hasData &&
+                    snapshot.data!.exists) {
+                  final mapData =
+                      snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                  String rol = mapData.containsKey('rol')
+                      ? mapData['rol'].toString()
+                      : '';
+
+                  if (rol == 'paciente') {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: InkWell(
+                        onTap: () async {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user != null) {
+                            await FirebaseFirestore.instance
+                                .collection('usuarios')
+                                .doc(user.uid)
+                                .collection('favoritos')
+                                .doc(doctorId)
+                                .set({
+                                  'nombre': nombre,
+                                  'especialidad': especialidad,
+                                  'fecha_guardado': FieldValue.serverTimestamp(),
+                                });
+
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('¡Guardado en tus favoritos!'),
+                                  backgroundColor: Colors.pink,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: const Icon(
+                          Icons.favorite_border,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    );
+                  }
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            Flexible(
+              child: Text(
+                nombre,
+                textAlign: isMobile ? TextAlign.center : TextAlign.start,
+                style: TextStyle(
+                  fontSize: isMobile ? 22 : 28,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1A1F36),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Text(
+          especialidad,
+          textAlign: isMobile ? TextAlign.center : TextAlign.start,
+          style: const TextStyle(
+            fontSize: 16,
+            color: Colors.blue,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Alta especialidad y trato humanitario.',
+          textAlign: isMobile ? TextAlign.center : TextAlign.start,
+          style: const TextStyle(color: Colors.grey, fontSize: 13),
+        ),
+        const SizedBox(height: 12),
+
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(doctorId)
+              .collection('resenas')
+              .snapshots(),
+          builder: (context, snapshot) {
+            double promedio = 0.0;
+            int total = snapshot.data?.docs.length ?? 0;
+
+            if (total > 0) {
+              double suma = 0;
+              for (var doc in snapshot.data!.docs) {
+                final resData = doc.data() as Map<String, dynamic>? ?? {};
+                suma += (resData.containsKey('calificacion')
+                    ? resData['calificacion']
+                    : 5);
+              }
+              promedio = suma / total;
+            }
+
+            return Row(
+              mainAxisAlignment:
+                  isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  total == 0 ? 'Nuevo' : promedio.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  ' ($total opiniones) • ',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const Icon(
+                  Icons.location_on_outlined,
+                  color: Colors.grey,
+                  size: 16,
+                ),
+                Text(
+                  ' $ciudad',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            );
+          },
+        ),
+
+        const SizedBox(height: 20),
+        // BOTONES DE WHATSAPP Y LLAMADA REESTRUCTURADOS
+        if (isMobile) ...[
+          SizedBox(
+            width: double.infinity,
+            child: _actionButton(
+              'Enviar WhatsApp',
+              const FaIcon(
+                FontAwesomeIcons.whatsapp,
+                color: Colors.white,
+                size: 16,
+              ),
+              Colors.green,
+              () {
+                if (doctorId.isNotEmpty) {
+                  String fechaHoy =
+                      "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
+                  FirebaseFirestore.instance
+                      .collection('usuarios')
+                      .doc(doctorId)
+                      .update({
+                        'clics_wa': FieldValue.increment(1),
+                        'ultimo_contacto': fechaHoy,
+                      })
+                      .catchError((e) => debugPrint("Error en sensor WA: $e"));
+                }
+                _abrirWhatsApp(waActivo);
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _llamarTelefono(telActivo),
+              icon: const Icon(Icons.phone, color: Colors.blue, size: 18),
+              label: const Text(
+                'Llamar',
+                style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: Colors.blue),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ] else ...[
+          Row(
+            children: [
+              Expanded(
+                child: _actionButton(
+                  'Enviar mensaje',
+                  const FaIcon(
+                    FontAwesomeIcons.whatsapp,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  Colors.green,
+                  () {
+                    if (doctorId.isNotEmpty) {
+                      String fechaHoy =
+                          "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
+                      FirebaseFirestore.instance
+                          .collection('usuarios')
+                          .doc(doctorId)
+                          .update({
+                            'clics_wa': FieldValue.increment(1),
+                            'ultimo_contacto': fechaHoy,
+                          })
+                          .catchError((e) => debugPrint("Error en sensor WA: $e"));
+                    }
+                    _abrirWhatsApp(waActivo);
+                  },
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _llamarTelefono(telActivo),
+                  icon: const Icon(Icons.phone, color: Colors.blue),
+                  label: const Text(
+                    'Llamar',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.blue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+
+        const SizedBox(height: 20),
+        const Divider(color: Colors.black12),
+        const SizedBox(height: 12),
+        
+        // ESTADÍSTICAS RESPONSIVAS
+        if (isMobile)
+          Column(
+            children: [
+              _statItem(
+                Icons.calendar_month,
+                experiencia,
+                'Años de experiencia',
+              ),
+              const SizedBox(height: 10),
+              _statItem(
+                Icons.medical_information,
+                'Cédula / Permiso',
+                cedula,
+              ),
+              const SizedBox(height: 10),
+              _statItem(
+                Icons.people_outline,
+                '500+',
+                'Pacientes atendidos',
+              ),
+            ],
+          )
+        else
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _statItem(
+                Icons.calendar_month,
+                experiencia,
+                'Años de experiencia',
+              ),
+              _statItem(
+                Icons.medical_information,
+                'Cédula / Permiso',
+                cedula,
+              ),
+              _statItem(
+                Icons.people_outline,
+                '500+',
+                'Pacientes atendidos',
+              ),
+            ],
+          ),
+      ],
+    );
+
     return Container(
-      padding: const EdgeInsets.all(25),
+      padding: EdgeInsets.all(isMobile ? 16 : 25),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -641,261 +1068,22 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            children: [
-              WidgetAvatar(fotoUrl: fotoUrl),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade600,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.verified, color: Colors.white, size: 14),
-                    SizedBox(width: 5),
-                    Text(
-                      'Verificado',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 30),
-          Expanded(
-            child: Column(
+      child: isMobile
+          ? Column(
+              children: [
+                avatarBloque,
+                const SizedBox(height: 16),
+                datosDoctor,
+              ],
+            )
+          : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    FutureBuilder<DocumentSnapshot>(
-                      future: FirebaseAuth.instance.currentUser != null
-                          ? FirebaseFirestore.instance
-                                .collection('usuarios')
-                                .doc(FirebaseAuth.instance.currentUser!.uid)
-                                .get()
-                          : null,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done &&
-                            snapshot.hasData &&
-                            snapshot.data!.exists) {
-                          final mapData =
-                              snapshot.data!.data() as Map<String, dynamic>? ??
-                              {};
-                          String rol = mapData.containsKey('rol')
-                              ? mapData['rol'].toString()
-                              : '';
-
-                          if (rol == 'paciente') {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 10),
-                              child: InkWell(
-                                onTap: () async {
-                                  final user =
-                                      FirebaseAuth.instance.currentUser;
-                                  if (user != null) {
-                                    await FirebaseFirestore.instance
-                                        .collection('usuarios')
-                                        .doc(user.uid)
-                                        .collection('favoritos')
-                                        .doc(doctorId)
-                                        .set({
-                                          'nombre': nombre,
-                                          'especialidad': especialidad,
-                                          'fecha_guardado':
-                                              FieldValue.serverTimestamp(),
-                                        });
-
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            '¡Guardado en tus favoritos!',
-                                          ),
-                                          backgroundColor: Colors.pink,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                                child: const Icon(
-                                  Icons.favorite_border,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                    Expanded(
-                      child: Text(
-                        nombre,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1F36),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  especialidad,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Alta especialidad y trato humanitario.',
-                  style: TextStyle(color: Colors.grey, fontSize: 15),
-                ),
-                const SizedBox(height: 15),
-
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('usuarios')
-                      .doc(doctorId)
-                      .collection('resenas')
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    double promedio = 0.0;
-                    int total = snapshot.data?.docs.length ?? 0;
-
-                    if (total > 0) {
-                      double suma = 0;
-                      for (var doc in snapshot.data!.docs) {
-                        final resData =
-                            doc.data() as Map<String, dynamic>? ?? {};
-                        suma += (resData.containsKey('calificacion')
-                            ? resData['calificacion']
-                            : 5);
-                      }
-                      promedio = suma / total;
-                    }
-
-                    return Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 18),
-                        const SizedBox(width: 5),
-                        Text(
-                          total == 0 ? 'Nuevo' : promedio.toStringAsFixed(1),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          ' ($total opiniones)   •   ',
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                        const Icon(
-                          Icons.location_on_outlined,
-                          color: Colors.grey,
-                          size: 18,
-                        ),
-                        Text(
-                          ' $ciudad',
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 25),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _actionButton(
-                        'Enviar mensaje',
-                        const FaIcon(
-                          FontAwesomeIcons.whatsapp,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        Colors.green,
-                        () {
-                          if (doctorId.isNotEmpty) {
-                            String fechaHoy =
-                                "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
-                            FirebaseFirestore.instance
-                                .collection('usuarios')
-                                .doc(doctorId)
-                                .update({
-                                  'clics_wa': FieldValue.increment(1),
-                                  'ultimo_contacto': fechaHoy,
-                                })
-                                .catchError(
-                                  (e) => debugPrint("Error en sensor WA: $e"),
-                                );
-                          }
-                          _abrirWhatsApp(waActivo);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _llamarTelefono(telActivo),
-                        icon: const Icon(Icons.phone, color: Colors.blue),
-                        label: const Text(
-                          'Llamar',
-                          style: TextStyle(color: Colors.blue),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: Colors.blue),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                const Divider(color: Colors.black12),
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _statItem(
-                      Icons.calendar_month,
-                      experiencia,
-                      'Años de experiencia',
-                    ),
-                    _statItem(
-                      Icons.medical_information,
-                      'Cédula / Permiso',
-                      cedula,
-                    ),
-                    _statItem(
-                      Icons.people_outline,
-                      '500+',
-                      'Pacientes atendidos',
-                    ),
-                  ],
-                ),
+                avatarBloque,
+                const SizedBox(width: 30),
+                Expanded(child: datosDoctor),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -913,11 +1101,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
+          fontSize: 14,
         ),
       ),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 0,
       ),
@@ -926,19 +1115,20 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   Widget _statItem(IconData icon, String value, String subtitle) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.blue.shade200, size: 30),
+        Icon(icon, color: Colors.blue.shade200, size: 26),
         const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             Text(
               subtitle,
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
             ),
           ],
         ),
@@ -952,6 +1142,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     List<dynamic> metodos,
     List<dynamic> aseguradoras,
     List<dynamic> servicios,
+    bool isMobile,
   ) {
     String horarioFormateado = clinic.isNotEmpty
         ? _formatearHorario(clinic['horario'])
@@ -964,6 +1155,88 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         clinic.isNotEmpty && clinic['whatsapp']?.toString().isNotEmpty == true
         ? clinic['whatsapp']
         : '';
+
+    Widget infoSucursal = _contentCard(
+      'Información de la sucursal',
+      Column(
+        children: [
+          _infoRow(
+            const Icon(Icons.access_time, color: Colors.blue, size: 20),
+            'Horarios de atención',
+            horarioFormateado,
+          ),
+          const SizedBox(height: 15),
+          _infoRow(
+            const Icon(Icons.phone, color: Colors.blue, size: 20),
+            'Teléfono',
+            telefono,
+          ),
+          if (whatsapp.isNotEmpty) ...[
+            const SizedBox(height: 15),
+            _infoRow(
+              const FaIcon(
+                FontAwesomeIcons.whatsapp,
+                color: Colors.green,
+                size: 20,
+              ),
+              'WhatsApp',
+              whatsapp,
+            ),
+          ],
+        ],
+      ),
+    );
+
+    Widget metodosYSeguros = _contentCard(
+      'Métodos de pago y Seguros',
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (metodos.isEmpty)
+            const Text(
+              'Pago en sucursal',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ...metodos
+              .map((m) => _paymentRow(Icons.check_circle, m.toString()))
+              .toList(),
+          const SizedBox(height: 20),
+          const Text(
+            'Aseguradoras o Convenios',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          const SizedBox(height: 10),
+          if (aseguradoras.isEmpty)
+            const Text(
+              'Sin convenios registrados',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: aseguradoras
+                .map(
+                  (a) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    color: Colors.blue.shade900,
+                    child: Text(
+                      a.toString(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -986,120 +1259,35 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 8,
+                runSpacing: 8,
                 children: servicios.map((s) => _tag(s.toString())).toList(),
               ),
             ],
           ),
         ),
         const SizedBox(height: 20),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _contentCard(
-                'Información de la sucursal',
-                Column(
-                  children: [
-                    _infoRow(
-                      const Icon(
-                        Icons.access_time,
-                        color: Colors.blue,
-                        size: 20,
-                      ),
-                      'Horarios de atención',
-                      horarioFormateado,
-                    ),
-                    const SizedBox(height: 15),
-                    _infoRow(
-                      const Icon(Icons.phone, color: Colors.blue, size: 20),
-                      'Teléfono',
-                      telefono,
-                    ),
-                    if (whatsapp.isNotEmpty) ...[
-                      const SizedBox(height: 15),
-                      _infoRow(
-                        const FaIcon(
-                          FontAwesomeIcons.whatsapp,
-                          color: Colors.green,
-                          size: 20,
-                        ),
-                        'WhatsApp',
-                        whatsapp,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: _contentCard(
-                'Métodos de pago y Seguros',
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (metodos.isEmpty)
-                      const Text(
-                        'Pago en sucursal',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ...metodos
-                        .map(
-                          (m) => _paymentRow(Icons.check_circle, m.toString()),
-                        )
-                        .toList(),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Aseguradoras o Convenios',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    if (aseguradoras.isEmpty)
-                      const Text(
-                        'Sin convenios registrados',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: aseguradoras
-                          .map(
-                            (a) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              color: Colors.blue.shade900,
-                              child: Text(
-                                a.toString(),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        if (isMobile) ...[
+          infoSucursal,
+          const SizedBox(height: 20),
+          metodosYSeguros,
+        ] else ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: infoSucursal),
+              const SizedBox(width: 20),
+              Expanded(child: metodosYSeguros),
+            ],
+          ),
+        ],
       ],
     );
   }
 
   Widget _tag(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.green.shade50,
         borderRadius: BorderRadius.circular(20),
@@ -1109,9 +1297,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         children: [
           Icon(Icons.check, color: Colors.green.shade700, size: 14),
           const SizedBox(width: 5),
-          Text(
-            text,
-            style: TextStyle(color: Colors.green.shade800, fontSize: 12),
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(color: Colors.green.shade800, fontSize: 12),
+            ),
           ),
         ],
       ),
@@ -1153,12 +1343,17 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
   Widget _paymentRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.green.shade700, size: 18),
+          Icon(icon, color: Colors.green.shade700, size: 16),
           const SizedBox(width: 10),
-          Text(text, style: const TextStyle(color: Colors.black87)),
+          Flexible(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.black87, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
@@ -1197,7 +1392,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(35),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
@@ -1214,7 +1409,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   const Text(
                     'Opiniones de clientes',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1F36),
                     ),
@@ -1224,18 +1419,25 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.blue,
                       side: BorderSide(color: Colors.blue.shade200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                     child: const Text(
                       'Escribir opinión',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               if (total == 0)
                 const Padding(
@@ -1253,7 +1455,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                            width: 320,
+                            width: 280,
                             child: _buildResumenEstrellas(
                               promedio,
                               total,
@@ -1262,9 +1464,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                           ),
                           Container(
                             width: 1,
-                            height: 200,
+                            height: 180,
                             color: Colors.grey.shade200,
-                            margin: const EdgeInsets.symmetric(horizontal: 40),
+                            margin: const EdgeInsets.symmetric(horizontal: 30),
                           ),
                           Expanded(child: _buildListaComentarios(docs)),
                         ],
@@ -1277,9 +1479,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             total,
                             conteoEstrellas,
                           ),
-                          const SizedBox(height: 40),
-                          const Divider(),
                           const SizedBox(height: 20),
+                          const Divider(),
+                          const SizedBox(height: 15),
                           _buildListaComentarios(docs),
                         ],
                       );
@@ -1303,13 +1505,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             Text(
               promedio.toStringAsFixed(1),
               style: const TextStyle(
-                fontSize: 54,
+                fontSize: 48,
                 fontWeight: FontWeight.bold,
                 height: 1,
                 color: Color(0xFF1A1F36),
               ),
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1319,20 +1521,20 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     (index) => Icon(
                       index < promedio.round() ? Icons.star : Icons.star_border,
                       color: Colors.amber,
-                      size: 22,
+                      size: 18,
                     ),
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 Text(
                   'Basado en $total opiniones',
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
             ),
           ],
         ),
-        const SizedBox(height: 25),
+        const SizedBox(height: 20),
         _ratingBar('5', conteo[5] / total, conteo[5].toString()),
         _ratingBar('4', conteo[4] / total, conteo[4].toString()),
         _ratingBar('3', conteo[3] / total, conteo[3].toString()),
@@ -1348,7 +1550,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: docs.length,
       separatorBuilder: (context, index) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 15),
+        padding: EdgeInsets.symmetric(vertical: 12),
         child: Divider(color: Colors.black12),
       ),
       itemBuilder: (context, index) {
@@ -1382,35 +1584,35 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   Widget _ratingBar(String star, double percent, String count) {
     if (percent.isNaN) percent = 0.0;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
           Text(
             star,
             style: const TextStyle(
               color: Colors.grey,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           const Icon(Icons.star, color: Colors.amber, size: 12),
-          const SizedBox(width: 15),
+          const SizedBox(width: 10),
           Expanded(
             child: LinearProgressIndicator(
               value: percent,
               backgroundColor: Colors.grey.shade200,
               color: Colors.amber,
-              minHeight: 8,
+              minHeight: 6,
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 10),
           SizedBox(
-            width: 25,
+            width: 20,
             child: Text(
               count,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
               textAlign: TextAlign.right,
             ),
           ),
@@ -1433,18 +1635,18 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         Row(
           children: [
             CircleAvatar(
-              radius: 18,
+              radius: 16,
               backgroundColor: color,
               child: Text(
                 initials,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue.shade900,
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1453,7 +1655,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                     name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1467,16 +1669,16 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                 ? Icons.star
                                 : Icons.star_border,
                             color: Colors.amber,
-                            size: 12,
+                            size: 11,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Text(
                         '•  $date',
                         style: const TextStyle(
                           color: Colors.grey,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -1487,13 +1689,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           ],
         ),
         if (comment.isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             comment,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.black87,
-              height: 1.5,
+              height: 1.4,
             ),
           ),
         ],
@@ -1520,27 +1722,31 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.location_on, color: Colors.blue),
-                  const SizedBox(width: 10),
+                  const Icon(Icons.location_on, color: Colors.blue, size: 20),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       direccion,
-                      style: const TextStyle(color: Colors.grey, height: 1.5),
+                      style: const TextStyle(color: Colors.grey, height: 1.4),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 15),
-              OutlinedButton.icon(
-                onPressed: () => _abrirGoogleMaps(direccion),
-                icon: const Icon(Icons.map, size: 16),
-                label: const Text('Ver en Google Maps'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                  side: const BorderSide(color: Colors.blue),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _abrirGoogleMaps(direccion),
+                  icon: const Icon(Icons.map, size: 16),
+                  label: const Text('Ver en Google Maps'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    side: const BorderSide(color: Colors.blue),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
               _buildMapIframe(direccion),
             ],
           ),
@@ -1548,31 +1754,27 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         const SizedBox(height: 20),
         _contentCard(
           '',
-          Column(
+          Row(
             children: [
-              Row(
+              CircleAvatar(
+                backgroundColor: Colors.blue.shade600,
+                child: const Icon(Icons.attach_money, color: Colors.white),
+              ),
+              const SizedBox(width: 15),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.blue.shade600,
-                    child: const Icon(Icons.attach_money, color: Colors.white),
+                  const Text(
+                    'Costo de atención',
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
                   ),
-                  const SizedBox(width: 15),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Costo de atención',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      Text(
-                        costo.isNotEmpty ? costo : 'Consultar',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    costo.isNotEmpty ? costo : 'Consultar',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
                   ),
                 ],
               ),
@@ -1598,7 +1800,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   const FaIcon(
                     FontAwesomeIcons.facebook,
                     color: Colors.blue,
-                    size: 18,
+                    size: 16,
                   ),
                   Colors.blue,
                   'Facebook',
@@ -1609,7 +1811,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   const FaIcon(
                     FontAwesomeIcons.instagram,
                     color: Colors.pink,
-                    size: 18,
+                    size: 16,
                   ),
                   Colors.pink,
                   'Instagram',
@@ -1620,7 +1822,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   const FaIcon(
                     FontAwesomeIcons.tiktok,
                     color: Colors.black,
-                    size: 18,
+                    size: 16,
                   ),
                   Colors.black,
                   'TikTok',
@@ -1631,7 +1833,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   const FaIcon(
                     FontAwesomeIcons.xTwitter,
                     color: Colors.black,
-                    size: 18,
+                    size: 16,
                   ),
                   Colors.black,
                   'X (Twitter)',
@@ -1642,7 +1844,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   const FaIcon(
                     FontAwesomeIcons.globe,
                     color: Colors.blueGrey,
-                    size: 18,
+                    size: 16,
                   ),
                   Colors.blueGrey,
                   'Sitio Web',
@@ -1662,28 +1864,29 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     VoidCallback onTap,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: onTap,
         child: Row(
           children: [
             CircleAvatar(
-              radius: 18,
+              radius: 16,
               backgroundColor: color.withOpacity(0.1),
               child: iconWidget,
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 12),
             Text(
               text,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
+                fontSize: 13,
               ),
             ),
             const Spacer(),
             Icon(
               Icons.arrow_forward_ios,
-              size: 12,
+              size: 11,
               color: Colors.grey.shade400,
             ),
           ],
@@ -1695,7 +1898,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   Widget _contentCard(String title, Widget content) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(25),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -1710,12 +1913,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1A1F36),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
           ],
           content,
         ],
@@ -1742,32 +1945,32 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             .toList();
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 40),
+          padding: const EdgeInsets.only(bottom: 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Novedades y Artículos de $nombre',
                 style: const TextStyle(
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A1F36),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               SizedBox(
-                height: 350,
+                height: 320,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: blogsFirebase.length,
                   separatorBuilder: (context, index) =>
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 15),
                   itemBuilder: (context, index) {
                     var post = blogsFirebase[index];
                     String? imgData = post['img'];
 
                     return Container(
-                      width: 300,
+                      width: 280,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(15),
@@ -1808,7 +2011,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1816,12 +2019,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                   post['title'] ?? 'Sin título',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: 15,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 6),
                                 Text(
                                   post['desc'] ?? '',
                                   style: const TextStyle(
@@ -1831,7 +2034,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 15),
+                                const SizedBox(height: 10),
                                 SizedBox(
                                   width: double.infinity,
                                   child: OutlinedButton(
@@ -1883,154 +2086,185 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String nombre,
     String whatsappActivo,
     String telefonoActivo,
+    bool isMobile,
   ) {
-    String doctorId = widget.doctorData['uid'] ?? '';
+    String doctorId = widget.doctorData['uid'] ?? widget.doctorData['id'] ?? '';
+
+    Widget textoInfo = Column(
+      crossAxisAlignment:
+          isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      children: [
+        Text(
+          '¿Listo para agendar tu cita?',
+          textAlign: isMobile ? TextAlign.center : TextAlign.start,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isMobile ? 18 : 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          'Contacta a $nombre de manera rápida y segura.',
+          textAlign: isMobile ? TextAlign.center : TextAlign.start,
+          style: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: isMobile ? 12 : 14,
+          ),
+        ),
+      ],
+    );
+
+    Widget botonesCTA = Column(
+      children: [
+        SizedBox(
+          width: isMobile ? double.infinity : null,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if (doctorId.isNotEmpty) {
+                String fechaHoy =
+                    "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
+                FirebaseFirestore.instance
+                    .collection('usuarios')
+                    .doc(doctorId)
+                    .update({
+                      'clics_wa': FieldValue.increment(1),
+                      'ultimo_contacto': fechaHoy,
+                    })
+                    .catchError((e) => debugPrint("Error en sensor WA: $e"));
+              }
+              _abrirWhatsApp(whatsappActivo);
+            },
+            icon: const FaIcon(
+              FontAwesomeIcons.whatsapp,
+              color: Colors.white,
+              size: 16,
+            ),
+            label: const Text(
+              'Enviar WhatsApp',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: isMobile ? double.infinity : null,
+          child: ElevatedButton(
+            onPressed: () => _llamarTelefono(telefonoActivo),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.blue,
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Llamar',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+    );
 
     return Container(
-      padding: const EdgeInsets.all(30),
+      padding: EdgeInsets.all(isMobile ? 20 : 30),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.calendar_month, color: Colors.white, size: 50),
-              const SizedBox(width: 20),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '¿Listo para agendar tu cita?',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    'Contacta a $nombre de\nmanera rápida y segura.',
-                    style: TextStyle(color: Colors.grey.shade400),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  if (doctorId.isNotEmpty) {
-                    String fechaHoy =
-                        "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}";
-                    FirebaseFirestore.instance
-                        .collection('usuarios')
-                        .doc(doctorId)
-                        .update({
-                          'clics_wa': FieldValue.increment(1),
-                          'ultimo_contacto': fechaHoy,
-                        })
-                        .catchError(
-                          (e) => debugPrint("Error en sensor WA: $e"),
-                        );
-                  }
-                  _abrirWhatsApp(whatsappActivo);
-                },
-                icon: const FaIcon(
-                  FontAwesomeIcons.whatsapp,
-                  color: Colors.white,
-                  size: 18,
+      child: isMobile
+          ? Column(
+              children: [
+                const Icon(Icons.calendar_month, color: Colors.white, size: 40),
+                const SizedBox(height: 12),
+                textoInfo,
+                const SizedBox(height: 20),
+                botonesCTA,
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_month, color: Colors.white, size: 45),
+                    const SizedBox(width: 20),
+                    textoInfo,
+                  ],
                 ),
-                label: const Text(
-                  'Enviar WhatsApp',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 15),
-              ElevatedButton(
-                onPressed: () => _llamarTelefono(telefonoActivo),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 18,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Llamar',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+                botonesCTA,
+              ],
+            ),
     );
   }
 
-  Widget _buildFooterBadges() {
+  Widget _buildFooterBadges(bool isMobile) {
+    List<Widget> badges = [
+      _footerBadge(
+        Icons.verified_user_outlined,
+        'Perfiles verificados',
+        'Especialistas certificados',
+      ),
+      _footerBadge(
+        Icons.check_circle_outline,
+        'Información confiable',
+        'Datos actualizados',
+      ),
+      _footerBadge(
+        Icons.star_border,
+        'Opiniones reales',
+        'Pacientes como tú',
+      ),
+      _footerBadge(
+        Icons.support_agent,
+        'Atención personalizada',
+        'Estamos para ayudarte',
+      ),
+    ];
+
+    if (isMobile) {
+      return Wrap(
+        spacing: 15,
+        runSpacing: 15,
+        alignment: WrapAlignment.center,
+        children: badges,
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _footerBadge(
-          Icons.verified_user_outlined,
-          'Perfiles verificados',
-          'Especialistas certificados',
-        ),
-        _footerBadge(
-          Icons.check_circle_outline,
-          'Información confiable',
-          'Datos actualizados',
-        ),
-        _footerBadge(
-          Icons.star_border,
-          'Opiniones reales',
-          'Pacientes como tú',
-        ),
-        _footerBadge(
-          Icons.support_agent,
-          'Atención personalizada',
-          'Estamos para ayudarte',
-        ),
-      ],
+      children: badges,
     );
   }
 
   Widget _footerBadge(IconData icon, String title, String subtitle) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.blue, size: 30),
-        const SizedBox(width: 10),
+        Icon(icon, color: Colors.blue, size: 26),
+        const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
             Text(
               subtitle,
-              style: const TextStyle(color: Colors.grey, fontSize: 11),
+              style: const TextStyle(color: Colors.grey, fontSize: 10),
             ),
           ],
         ),
@@ -2045,30 +2279,43 @@ class WidgetAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double size = MediaQuery.of(context).size.width < 800 ? 140 : 180;
+
     if (fotoUrl != null && fotoUrl!.isNotEmpty) {
       if (fotoUrl!.startsWith('http')) {
-        return Image.network(
-          fotoUrl!,
-          width: 180,
-          height: 180,
-          fit: BoxFit.cover,
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.network(
+            fotoUrl!,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+          ),
         );
       } else {
-        return Image.memory(
-          base64Decode(fotoUrl!),
-          width: 180,
-          height: 180,
-          fit: BoxFit.cover,
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.memory(
+            base64Decode(fotoUrl!),
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+          ),
         );
       }
     }
     return Container(
-      width: 180,
-      height: 180,
-      color: Colors.grey.shade200,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: const Icon(
         Icons.person_outline_rounded,
-        size: 65,
+        size: 55,
         color: Color(0xFF64748B),
       ),
     );
