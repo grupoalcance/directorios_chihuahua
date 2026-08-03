@@ -25,11 +25,9 @@ jobs:
         with:
           channel: "stable"
 
-      # 🔑 4. Compila Flutter desactivando el Service Worker para evitar caché vieja
       - name: 4. Compilar la aplicación para Web
         run: flutter build web --release --pwa-strategy=none
 
-      # 🚀 5. Subida estable por FTP (Cero bloqueos de SSH / Cero Timeouts)
       - name: 5. Subir archivos mediante FTP
         uses: SamKirsch/ftp-deploy@v4.3.5
         with:
