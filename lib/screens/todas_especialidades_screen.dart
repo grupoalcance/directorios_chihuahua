@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../screens/lista_doctores_screen.dart';
@@ -15,6 +16,7 @@ class TodasEspecialidadesScreen extends StatefulWidget {
 class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
   final TextEditingController _searchMunicipioController =
       TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _municipioFiltrado = "";
 
   // 📝 CATÁLOGO BASE DE ESPECIALIDADES CON SUS ESTILOS
@@ -130,6 +132,11 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
       'color': Colors.orangeAccent,
     },
     {
+      'nombre': 'Periodoncia (Implantes Dentales)',
+      'icono': Icons.health_and_safety_rounded,
+      'color': const Color(0xFF0D9488),
+    },
+    {
       'nombre': 'Proctología',
       'icono': Icons.airline_seat_recline_extra_rounded,
       'color': Colors.grey,
@@ -169,6 +176,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
   @override
   void dispose() {
     _searchMunicipioController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -187,180 +195,211 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(),
       drawer: width < 1100 ? const PhoneMenuDrawer() : null,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('usuarios')
-            .where('rol', isEqualTo: 'medico')
-            .where('activo', isEqualTo: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          // Creamos un mapa base con las especialidades predeterminadas
-          List<Map<String, dynamic>> listaDinamica = List.from(
-            _especialidadesBase,
-          );
-          Set<String> nombresExistentes = _especialidadesBase
-              .map((e) => (e['nombre'] as String).toLowerCase().trim())
-              .toSet();
+      body: WebSmoothScroll(
+        controller: _scrollController,
+        scrollSpeed: 130,
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('usuarios')
+              .where('rol', isEqualTo: 'medico')
+              .where('activo', isEqualTo: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            List<Map<String, dynamic>> listaDinamica = List.from(
+              _especialidadesBase,
+            );
+            Set<String> nombresExistentes = _especialidadesBase
+                .map((e) => (e['nombre'] as String).toLowerCase().trim())
+                .toSet();
 
-          // Si hay doctores registrados con nuevas especialidades, las agregamos dinámicamente
-          if (snapshot.hasData && snapshot.data != null) {
-            for (var doc in snapshot.data!.docs) {
-              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-              String esp = (data['especialidad'] ?? '').toString().trim();
+            if (snapshot.hasData && snapshot.data != null) {
+              for (var doc in snapshot.data!.docs) {
+                Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                String esp = (data['especialidad'] ?? '').toString().trim();
 
-              if (esp.isNotEmpty) {
-                // Normalizaciones estándar
-                if (esp.toLowerCase() == 'dentista' ||
-                    esp.toLowerCase() == 'odontología') {
-                  esp = 'Odontología (Dentista)';
-                } else if (esp.toLowerCase() == 'ginecología') {
-                  esp = 'Ginecología y Obstetricia';
-                } else if (esp.toLowerCase() == 'traumatología') {
-                  esp = 'Traumatología y Ortopedia';
-                }
+                if (esp.isNotEmpty) {
+                  String espLower = esp.toLowerCase();
 
-                if (!nombresExistentes.contains(esp.toLowerCase())) {
-                  nombresExistentes.add(esp.toLowerCase());
-                  listaDinamica.add({
-                    'nombre': esp,
-                    'icono': Icons
-                        .medical_services_rounded, // Icono por defecto para nuevas especialidades
-                    'color': Colors.blueGrey, // Color por defecto
-                  });
+                  // Normalizaciones de nombres para coincidir con la lista maestro
+                  if (espLower == 'dentista' ||
+                      espLower == 'odontología' ||
+                      espLower == 'odontologia') {
+                    esp = 'Odontología (Dentista)';
+                  } else if (espLower.contains('periodoncia')) {
+                    esp = 'Periodoncia (Implantes Dentales)';
+                  } else if (espLower == 'ginecología' ||
+                      espLower == 'ginecologia') {
+                    esp = 'Ginecología y Obstetricia';
+                  } else if (espLower.contains('traumatología') ||
+                      espLower.contains('traumatologia')) {
+                    esp = 'Traumatología y Ortopedia';
+                  } else if (espLower.contains('uroginecología') ||
+                      espLower.contains('uroginecologia')) {
+                    esp = 'Uroginecología';
+                  }
+
+                  if (!nombresExistentes.contains(esp.toLowerCase())) {
+                    nombresExistentes.add(esp.toLowerCase());
+
+                    // Asignación de íconos personalizados para especialidades emergentes
+                    IconData iconoDinamico = Icons.medical_services_rounded;
+                    Color colorDinamico = Colors.blueGrey;
+
+                    if (espLower.contains('periodoncia')) {
+                      iconoDinamico = Icons.health_and_safety_rounded;
+                      colorDinamico = const Color(0xFF0D9488);
+                    }
+
+                    listaDinamica.add({
+                      'nombre': esp,
+                      'icono': iconoDinamico,
+                      'color': colorDinamico,
+                    });
+                  }
                 }
               }
             }
-          }
 
-          // Ordenamos alfabéticamente todas las especialidades
-          listaDinamica.sort(
-            (a, b) => (a['nombre'] as String).compareTo(b['nombre'] as String),
-          );
+            listaDinamica.sort(
+              (a, b) =>
+                  (a['nombre'] as String).compareTo(b['nombre'] as String),
+            );
 
-          return SingleChildScrollView(
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                padding: EdgeInsets.symmetric(
-                  horizontal: width < 600 ? 16.0 : 24.0,
-                  vertical: 32.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Catálogo Completo de Especialidades',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B),
-                        letterSpacing: -0.5,
+            return SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: width < 600 ? 16.0 : 24.0,
+                    vertical: 32.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Catálogo Completo de Especialidades',
+                        style: TextStyle(
+                          fontSize: width < 600 ? 22 : 28,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1E293B),
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Explora todas las ramas médicas disponibles en la región para encontrar a tu médico.',
-                      style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // Barra de filtrado de municipios
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 32),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Explora todas las ramas médicas disponibles en la región para encontrar a tu médico.',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
-                      child: TextField(
-                        controller: _searchMunicipioController,
-                        onChanged: (value) {
-                          setState(() {
-                            _municipioFiltrado = value.trim();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText:
-                              'Filtrar por municipio (Ej. Victoria de Durango, Gómez Palacio...)',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 14,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.location_on,
-                            color: Colors.blue,
-                          ),
-                          suffixIcon: _municipioFiltrado.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.clear,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: () {
-                                    _searchMunicipioController.clear();
-                                    setState(() {
-                                      _municipioFiltrado = "";
-                                    });
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16.0,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: const BorderSide(
+                      const SizedBox(height: 25),
+
+                      // Barra de filtrado de municipios
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 28),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchMunicipioController,
+                          onChanged: (value) {
+                            setState(() {
+                              _municipioFiltrado = value.trim();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText:
+                                'Filtrar por municipio (Ej. Durango, Gómez Palacio...)',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.location_on_outlined,
                               color: Colors.blue,
-                              width: 1.5,
+                              size: 20,
+                            ),
+                            suffixIcon: _municipioFiltrado.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      _searchMunicipioController.clear();
+                                      setState(() {
+                                        _municipioFiltrado = "";
+                                      });
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16.0,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: const BorderSide(
+                                color: Colors.blue,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Grid de tarjetas de especialidades dinámicas
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: width < 600 ? 1.05 : 1.2,
+                      // Grid adaptativo de tarjetas de especialidades
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: width < 600 ? 1.15 : 1.3,
+                        ),
+                        itemCount: listaDinamica.length,
+                        itemBuilder: (context, index) {
+                          final item = listaDinamica[index];
+                          return _buildEspecialidadCard(
+                            context,
+                            item['nombre'] as String,
+                            item['icono'] as IconData,
+                            item['color'] as Color,
+                          );
+                        },
                       ),
-                      itemCount: listaDinamica.length,
-                      itemBuilder: (context, index) {
-                        final item = listaDinamica[index];
-                        return _buildEspecialidadCard(
-                          context,
-                          item['nombre'] as String,
-                          item['icono'] as IconData,
-                          item['color'] as Color,
-                        );
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -391,26 +430,26 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
           border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.01),
+              color: Colors.black.withOpacity(0.02),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: colorEspecialidad.withOpacity(0.09),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icono, color: colorEspecialidad, size: 28),
+                child: Icon(icono, color: colorEspecialidad, size: 26),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(
                 nombre,
                 textAlign: TextAlign.center,
@@ -419,7 +458,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                 style: const TextStyle(
                   color: Color(0xFF334155),
                   fontWeight: FontWeight.w600,
-                  fontSize: 13.5,
+                  fontSize: 13,
                 ),
               ),
             ],

@@ -12,8 +12,82 @@ import '../screens/lista_hospitales_screen.dart';
 import '../screens/lista_farmacias_screen.dart';
 import '../services/auth_service.dart';
 
-class PhoneMenuDrawer extends StatelessWidget {
+class PhoneMenuDrawer extends StatefulWidget {
   const PhoneMenuDrawer({Key? key}) : super(key: key);
+
+  @override
+  State<PhoneMenuDrawer> createState() => _PhoneMenuDrawerState();
+}
+
+class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
+  final List<String> _especialidadesBaseDrawer = [
+    'Cardiología',
+    'Dermatología',
+    'Ginecología y Obstetricia',
+    'Medicina General',
+    'Neumología',
+    'Neurología',
+    'Nutrición',
+    'Odontología (Dentista)',
+    'Oftalmología',
+    'Pediatría',
+    'Periodoncia (Implantes Dentales)',
+  ];
+
+  List<String> _especialidadesDinamicas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _especialidadesDinamicas = List.from(_especialidadesBaseDrawer);
+    _cargarEspecialidadesDinamicas();
+  }
+
+  // 🔑 CARGA Y NORMALIZACIÓN DINÁMICA DE ESPECIALIDADES EN MÓVIL
+  Future<void> _cargarEspecialidadesDinamicas() async {
+    try {
+      var query = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .where('rol', isEqualTo: 'medico')
+          .where('activo', isEqualTo: true)
+          .get();
+
+      Set<String> setEsp = _especialidadesBaseDrawer.map((e) => e).toSet();
+      for (var doc in query.docs) {
+        String esp = (doc.data()['especialidad'] ?? '').toString().trim();
+        if (esp.isNotEmpty) {
+          String espLower = esp.toLowerCase();
+
+          // Normalización
+          if (espLower == 'dentista' ||
+              espLower == 'odontología' ||
+              espLower == 'odontologia') {
+            esp = 'Odontología (Dentista)';
+          } else if (espLower.contains('periodoncia')) {
+            esp = 'Periodoncia (Implantes Dentales)';
+          } else if (espLower == 'ginecología' || espLower == 'ginecologia') {
+            esp = 'Ginecología y Obstetricia';
+          } else if (espLower.contains('traumatología') ||
+              espLower.contains('traumatologia')) {
+            esp = 'Traumatología y Ortopedia';
+          } else if (espLower.contains('uroginecología') ||
+              espLower.contains('uroginecologia')) {
+            esp = 'Uroginecología';
+          }
+
+          setEsp.add(esp);
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _especialidadesDinamicas = setEsp.toList()..sort();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cargando especialidades en PhoneMenuDrawer: $e');
+    }
+  }
 
   // AUXILIAR SEGURO PARA LEER EL ROL EN MÓVIL
   Future<String> _obtenerRolUsuario() async {
@@ -43,13 +117,11 @@ class PhoneMenuDrawer extends StatelessWidget {
         children: [
           // Encabezado del menú lateral
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: AppConfig.primaryColor,
-            ), // 🔑 COLOR DINÁMICO
+            decoration: BoxDecoration(color: AppConfig.primaryColor),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Text(
-                AppConfig.appName, // 🔑 NOMBRE DE LA APP DINÁMICO
+                AppConfig.appName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -83,13 +155,12 @@ class PhoneMenuDrawer extends StatelessWidget {
           ExpansionTile(
             leading: Icon(Icons.location_city, color: AppConfig.primaryColor),
             title: const Text('Ciudad'),
-            // 🔑 LISTA DINÁMICA DE CIUDADES
             children: AppConfig.ciudadesActivas.map((ciudad) {
               return _buildSubItemCiudad(context, ciudad);
             }).toList(),
           ),
 
-          // 3. Desplegable Especialidad
+          // 3. Desplegable Especialidad (DINÁMICO CON PERIODONCIA Y NUEVA LISTA)
           ExpansionTile(
             leading: Icon(
               Icons.medical_services_outlined,
@@ -97,17 +168,9 @@ class PhoneMenuDrawer extends StatelessWidget {
             ),
             title: const Text('Especialidad'),
             children: [
-              _buildSubItemEspecialidad(context, 'Cardiología'),
-              _buildSubItemEspecialidad(context, 'Dermatología'),
-              _buildSubItemEspecialidad(context, 'Ginecología y Obstetricia'),
-              _buildSubItemEspecialidad(context, 'Medicina General'),
-              _buildSubItemEspecialidad(context, 'Neumología'),
-              _buildSubItemEspecialidad(context, 'Neurología'),
-              _buildSubItemEspecialidad(context, 'Nutrición'),
-              _buildSubItemEspecialidad(context, 'Odontología (Dentista)'),
-              _buildSubItemEspecialidad(context, 'Oftalmología'),
-              _buildSubItemEspecialidad(context, 'Pediatría'),
-
+              ..._especialidadesDinamicas.map((esp) {
+                return _buildSubItemEspecialidad(context, esp);
+              }).toList(),
               ListTile(
                 title: Padding(
                   padding: const EdgeInsets.only(left: 16.0),

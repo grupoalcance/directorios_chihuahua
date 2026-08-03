@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
-import 'farmacia_profile_screen.dart'; // 👈 CORREGIDO: Perfil correcto
+import 'farmacia_profile_screen.dart';
 import 'suscribirse_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../widgets/seccion_enlaces_cruzados.dart';
+import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
 class ListaFarmaciasScreen extends StatefulWidget {
   const ListaFarmaciasScreen({super.key});
@@ -29,173 +30,181 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
+    bool isMobile = width < 750;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(),
       drawer: width < 1100 ? const PhoneMenuDrawer() : null,
-      body: SingleChildScrollView(
+      body: WebSmoothScroll(
         controller: _scrollController,
-        child: Column(
-          children: [
-            Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 1200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 40,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // =========================================================================
-                    // 🏢 ENCABEZADO PREMIUM DE FARMACIAS
-                    // =========================================================================
-                    const Text(
-                      'Farmacias en la durango',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
-                        letterSpacing: -0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Encuentra farmacias de confianza, sucursales 24 horas y localización de medicamentos.',
-                      style: TextStyle(
-                        color: Color(0xFF475569),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 35),
-
-                    // =========================================================================
-                    // 🔍 BUSCADOR ESTILIZADO CON CONTRASTE
-                    // =========================================================================
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 15,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          setState(() {
-                            _busquedaCiudad = value.trim().toLowerCase();
-                          });
-                        },
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: Color(0xFF1E293B),
-                        ),
-                        decoration: const InputDecoration(
-                          hintText:
-                              'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
-                          hintStyle: TextStyle(
-                            color: Color(0xFF94A3B8),
-                            fontSize: 14.5,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.location_on_rounded,
-                            color: Color(0xFF0061E0),
-                            size: 22,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 16),
+        scrollSpeed: 130,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 24,
+                    vertical: 32,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- ENCABEZADO ---
+                      Text(
+                        'Farmacias en Durango',
+                        style: TextStyle(
+                          fontSize: isMobile ? 24 : 32,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0F172A),
+                          letterSpacing: -0.8,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 40),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Encuentra farmacias de confianza, sucursales 24 horas y localización de medicamentos.',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
 
-                    // =========================================================================
-                    // 📡 FLUJO DE DATOS DESDE LA COLECCIÓN DE FARMACIAS
-                    // =========================================================================
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection(
-                            'farmacias',
-                          ) // 👈 CORREGIDO: Apunta a farmacias
-                          .where('activo', isEqualTo: true)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(50),
-                              child: CircularProgressIndicator(strokeWidth: 3),
+                      // --- BUSCADOR ESTILIZADO ---
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0F172A).withOpacity(0.03),
+                              blurRadius: 15,
+                              offset: const Offset(0, 4),
                             ),
-                          );
-                        }
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return _buildEmptyState(
-                            'No hay farmacias registradas de forma activa actualmente.',
-                          );
-                        }
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _busquedaCiudad = value.trim().toLowerCase();
+                            });
+                          },
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            color: Color(0xFF1E293B),
+                          ),
+                          decoration: InputDecoration(
+                            hintText:
+                                'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.location_on_rounded,
+                              color: Color(0xFF0061E0),
+                              size: 20,
+                            ),
+                            suffixIcon: _busquedaCiudad.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _busquedaCiudad = "";
+                                      });
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
 
-                        // Filtrado local reactivo por ciudad o municipio escrito
-                        final farmacias = snapshot.data!.docs.where((doc) {
-                          final data = doc.data() as Map<String, dynamic>;
-                          final ciudad = (data['ciudad'] ?? '')
-                              .toString()
-                              .toLowerCase();
-                          final nombre = (data['nombre'] ?? '')
-                              .toString()
-                              .toLowerCase();
-                          return ciudad.contains(_busquedaCiudad) ||
-                              nombre.contains(_busquedaCiudad);
-                        }).toList();
-
-                        if (farmacias.isEmpty) {
-                          return _buildEmptyState(
-                            'No se encontraron farmacias asociadas a "$_busquedaCiudad".',
-                          );
-                        }
-
-                        // =========================================================================
-                        // 📐 GRID ADAPTATIVO
-                        // =========================================================================
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: farmacias.length,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: width > 1100
-                                    ? 3
-                                    : (width > 700 ? 2 : 1),
-                                mainAxisExtent: 380,
-                                crossAxisSpacing: 24,
-                                mainAxisSpacing: 24,
-                              ),
-                          itemBuilder: (context, index) {
-                            var data =
-                                farmacias[index].data() as Map<String, dynamic>;
-                            String? fotoUrl = data['foto_url'];
-                            String nombre = data['nombre'] ?? 'Farmacia';
-                            String ciudadDoc =
-                                data['ciudad'] ?? 'Comarca Lagunera';
-                            String score = data['score'] ?? '5.0';
-
-                            return Center(
-                              child: Container(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 370,
+                      // --- FLUJO DE DATOS DESDE FIRESTORE ---
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('farmacias')
+                            .where('activo', isEqualTo: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(50),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
                                 ),
+                              ),
+                            );
+                          }
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return _buildEmptyState(
+                              'No hay farmacias registradas de forma activa actualmente.',
+                            );
+                          }
+
+                          final farmacias = snapshot.data!.docs.where((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final ciudad = (data['ciudad'] ?? '')
+                                .toString()
+                                .toLowerCase();
+                            final nombre = (data['nombre'] ?? '')
+                                .toString()
+                                .toLowerCase();
+                            return ciudad.contains(_busquedaCiudad) ||
+                                nombre.contains(_busquedaCiudad);
+                          }).toList();
+
+                          if (farmacias.isEmpty) {
+                            return _buildEmptyState(
+                              'No se encontraron farmacias asociadas a "$_busquedaCiudad".',
+                            );
+                          }
+
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: farmacias.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: width > 1100
+                                      ? 3
+                                      : (width > 700 ? 2 : 1),
+                                  mainAxisExtent: 310,
+                                  crossAxisSpacing: 20,
+                                  mainAxisSpacing: 20,
+                                ),
+                            itemBuilder: (context, index) {
+                              var data =
+                                  farmacias[index].data()
+                                      as Map<String, dynamic>;
+                              String? fotoUrl = data['foto_url'];
+                              String nombre = data['nombre'] ?? 'Farmacia';
+                              String ciudadDoc = data['ciudad'] ?? 'Durango';
+                              String score = data['score'] ?? '5.0';
+
+                              return Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: const Color(0xFFE2E8F0),
                                   ),
@@ -203,9 +212,9 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                     BoxShadow(
                                       color: const Color(
                                         0xFF0F172A,
-                                      ).withOpacity(0.04),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 8),
+                                      ).withOpacity(0.03),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
@@ -219,60 +228,60 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                           ),
                                     ),
                                   ),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // --- IMAGEN / CONTENEDOR SUPERIOR ---
-                                      Stack(
-                                        children: [
-                                          Container(
-                                            height: 170,
-                                            width: double.infinity,
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFFF1F5F9),
-                                              borderRadius:
-                                                  BorderRadius.vertical(
-                                                    top: Radius.circular(20),
-                                                  ),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  const BorderRadius.vertical(
-                                                    top: Radius.circular(20),
-                                                  ),
-                                              child:
-                                                  (fotoUrl != null &&
-                                                      fotoUrl.isNotEmpty)
-                                                  ? (fotoUrl.startsWith(
-                                                          'data:image',
-                                                        )
-                                                        ? Image.memory(
-                                                            base64Decode(
-                                                              fotoUrl
-                                                                  .split(',')
-                                                                  .last,
-                                                            ),
-                                                            fit: BoxFit.cover,
-                                                          )
-                                                        : Image.network(
-                                                            fotoUrl,
-                                                            fit: BoxFit.cover,
-                                                          ))
-                                                  : const Icon(
-                                                      Icons
-                                                          .storefront_rounded, // Icono de tienda/farmacia
-                                                      size: 55,
-                                                      color: Color(0xFF94A3B8),
-                                                    ),
-                                            ),
+                                      // --- IMAGEN SUPERIOR ---
+                                      Container(
+                                        height: 140,
+                                        width: double.infinity,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(16),
                                           ),
-                                        ],
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              const BorderRadius.vertical(
+                                                top: Radius.circular(16),
+                                              ),
+                                          child:
+                                              (fotoUrl != null &&
+                                                  fotoUrl.isNotEmpty)
+                                              ? (fotoUrl.startsWith(
+                                                      'data:image',
+                                                    )
+                                                    ? Image.memory(
+                                                        base64Decode(
+                                                          fotoUrl
+                                                              .split(',')
+                                                              .last,
+                                                        ),
+                                                        fit: BoxFit.cover,
+                                                        alignment:
+                                                            Alignment.center,
+                                                      )
+                                                    : Image.network(
+                                                        fotoUrl,
+                                                        fit: BoxFit.cover,
+                                                        alignment:
+                                                            Alignment.center,
+                                                      ))
+                                              : const Center(
+                                                  child: Icon(
+                                                    Icons.storefront_rounded,
+                                                    size: 48,
+                                                    color: Color(0xFF94A3B8),
+                                                  ),
+                                                ),
+                                        ),
                                       ),
                                       Expanded(
                                         child: Padding(
-                                          padding: const EdgeInsets.all(20),
+                                          padding: const EdgeInsets.all(16),
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -290,12 +299,11 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                                           TextOverflow.ellipsis,
                                                       style: const TextStyle(
                                                         fontWeight:
-                                                            FontWeight.w800,
-                                                        fontSize: 17,
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
                                                         color: Color(
                                                           0xFF0F172A,
                                                         ),
-                                                        letterSpacing: -0.3,
                                                       ),
                                                     ),
                                                   ),
@@ -319,7 +327,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                                         const Icon(
                                                           Icons.star_rounded,
                                                           color: Colors.amber,
-                                                          size: 15,
+                                                          size: 14,
                                                         ),
                                                         const SizedBox(
                                                           width: 2,
@@ -331,7 +339,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .bold,
-                                                                fontSize: 11.5,
+                                                                fontSize: 11,
                                                                 color: Color(
                                                                   0xFF92400E,
                                                                 ),
@@ -342,13 +350,13 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                                   ),
                                                 ],
                                               ),
-                                              const SizedBox(height: 8),
+                                              const SizedBox(height: 6),
                                               Row(
                                                 children: [
                                                   const Icon(
                                                     Icons.location_on_outlined,
                                                     color: Color(0xFF64748B),
-                                                    size: 15,
+                                                    size: 14,
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Expanded(
@@ -361,7 +369,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                                         color: Color(
                                                           0xFF64748B,
                                                         ),
-                                                        fontSize: 13,
+                                                        fontSize: 12,
                                                         fontWeight:
                                                             FontWeight.w500,
                                                       ),
@@ -372,13 +380,13 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                               const Spacer(),
                                               Container(
                                                 width: double.infinity,
-                                                height: 44,
+                                                height: 40,
                                                 decoration: BoxDecoration(
                                                   color: const Color(
                                                     0xFFF1F5F9,
                                                   ),
                                                   borderRadius:
-                                                      BorderRadius.circular(10),
+                                                      BorderRadius.circular(8),
                                                 ),
                                                 child: const Center(
                                                   child: Row(
@@ -394,7 +402,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                                           ),
                                                           fontWeight:
                                                               FontWeight.bold,
-                                                          fontSize: 13,
+                                                          fontSize: 12.5,
                                                         ),
                                                       ),
                                                       SizedBox(width: 6),
@@ -417,69 +425,67 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                     ],
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // =========================================================================
-            // 📊 SECCIÓN EXCLUSIVA DE ENLACES CRUZADOS MÓDULO DE FARMACIAS
-            // =========================================================================
-            SeccionEnlacesCruzados(
-              tituloSeccion: "Farmacias por categoría y ciudad",
-              columnasCiudades: const ['Durango', 'Gómez Palacio', 'Lerdo'],
-              enlacesPorCiudad: const {
-                'Durango': [
-                  'Farmacias 24 Horas en Durango',
-                  'Farmacias con Consultorio en Durango',
-                  'Medicamentos de Especialidad en Durango',
-                  'Farmacias Dermatológicas en Durango',
-                  'Servicio a Domicilio en Durango',
-                ],
-                'Gómez Palacio': [
-                  'Farmacias 24 Horas en Gómez Palacio',
-                  'Farmacias con Consultorio en Gómez Palacio',
-                  'Medicamentos de Especialidad en Gómez Palacio',
-                  'Farmacias de Genéricos en Gómez Palacio',
-                  'Servicio a Domicilio en Gómez Palacio',
-                ],
-                'Lerdo': [
-                  'Farmacias 24 Horas en Lerdo',
-                  'Farmacias con Consultorio en Lerdo',
-                  'Medicamentos de Especialidad en Lerdo',
-                  'Farmacias Locales en Lerdo',
-                  'Servicio a Domicilio en Lerdo',
-                ],
-              },
-              ctaTitulo: "¿Surtas recetas?",
-              ctaSubtitulo:
-                  "Une tu farmacia al directorio y ayuda a miles de laguneros a localizar sus medicamentos rápido.",
-              ctaBotonTexto: "Registrar Farmacia",
-              onCtaPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SuscribirseScreen(),
+              // --- SECCIÓN DE ENLACES CRUZADOS MÓDULO DE FARMACIAS ---
+              SeccionEnlacesCruzados(
+                tituloSeccion: "Farmacias por categoría y ciudad",
+                columnasCiudades: const ['Durango', 'Gómez Palacio', 'Lerdo'],
+                enlacesPorCiudad: const {
+                  'Durango': [
+                    'Farmacias 24 Horas en Durango',
+                    'Farmacias con Consultorio en Durango',
+                    'Medicamentos de Especialidad en Durango',
+                    'Farmacias Dermatológicas en Durango',
+                    'Servicio a Domicilio en Durango',
+                  ],
+                  'Gómez Palacio': [
+                    'Farmacias 24 Horas en Gómez Palacio',
+                    'Farmacias con Consultorio en Gómez Palacio',
+                    'Medicamentos de Especialidad en Gómez Palacio',
+                    'Farmacias de Genéricos en Gómez Palacio',
+                    'Servicio a Domicilio en Gómez Palacio',
+                  ],
+                  'Lerdo': [
+                    'Farmacias 24 Horas en Lerdo',
+                    'Farmacias con Consultorio en Lerdo',
+                    'Medicamentos de Especialidad en Lerdo',
+                    'Farmacias Locales en Lerdo',
+                    'Servicio a Domicilio en Lerdo',
+                  ],
+                },
+                ctaTitulo: "¿Surtas recetas?",
+                ctaSubtitulo:
+                    "Une tu farmacia al directorio y ayuda a miles de familias a localizar sus medicamentos rápido.",
+                ctaBotonTexto: "Registrar Farmacia",
+                onCtaPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SuscribirseScreen(),
+                  ),
                 ),
+                onEnlacePressed: (ciudad, enlace) {
+                  _searchController.text = ciudad;
+                  setState(() {
+                    _busquedaCiudad = ciudad.toLowerCase();
+                  });
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
               ),
-              onEnlacePressed: (ciudad, enlace) {
-                _searchController.text = ciudad;
-                setState(() {
-                  _busquedaCiudad = ciudad.toLowerCase();
-                });
-                _scrollController.animateTo(
-                  0,
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                );
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

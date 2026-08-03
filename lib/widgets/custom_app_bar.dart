@@ -66,6 +66,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     'Odontología (Dentista)',
     'Oftalmología',
     'Pediatría',
+    'Periodoncia (Implantes Dentales)',
   ];
 
   List<String> _especialidadesDinamicas = [];
@@ -87,7 +88,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     _iniciarTemporizadorBanners();
   }
 
-  // 🔑 CARGA SEGURA Y ESTABLE DE ESPECIALIDADES DESDE FIRESTORE
+  // 🔑 CARGA Y CLASIFICACIÓN SEGURA DE ESPECIALIDADES DESDE FIRESTORE
   Future<void> _cargarEspecialidadesDinamicas() async {
     try {
       var query = await FirebaseFirestore.instance
@@ -100,14 +101,25 @@ class _CustomAppBarState extends State<CustomAppBar> {
       for (var doc in query.docs) {
         String esp = (doc.data()['especialidad'] ?? '').toString().trim();
         if (esp.isNotEmpty) {
-          if (esp.toLowerCase() == 'dentista' ||
-              esp.toLowerCase() == 'odontología') {
+          String espLower = esp.toLowerCase();
+
+          // 🎯 NORMALIZACIÓN Y CLASIFICACIÓN
+          if (espLower == 'dentista' ||
+              espLower == 'odontología' ||
+              espLower == 'odontologia') {
             esp = 'Odontología (Dentista)';
-          } else if (esp.toLowerCase() == 'ginecología') {
+          } else if (espLower.contains('periodoncia')) {
+            esp = 'Periodoncia (Implantes Dentales)';
+          } else if (espLower == 'ginecología' || espLower == 'ginecologia') {
             esp = 'Ginecología y Obstetricia';
-          } else if (esp.toLowerCase() == 'traumatología') {
+          } else if (espLower.contains('traumatología') ||
+              espLower.contains('traumatologia')) {
             esp = 'Traumatología y Ortopedia';
+          } else if (espLower.contains('uroginecología') ||
+              espLower.contains('uroginecologia')) {
+            esp = 'Uroginecología';
           }
+
           setEsp.add(esp);
         }
       }
@@ -382,7 +394,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ),
                     const SizedBox(width: 5),
 
-                    // 🔑 MENÚ DESPLEGABLE DE ESPECIALIDAD HOMOLOGADO AL DE CIUDAD (100% FUNCIONAL EN WEB)
+                    // 🔑 MENÚ DESPLEGABLE DE ESPECIALIDAD CON SOPORTE COMPLETO PARA PERIODONCIA
                     _buildDropdownMenu(
                       context: context,
                       label: 'Especialidad',
@@ -716,7 +728,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
         snap.data!.data() != null;
   }
 
-  // 🔑 HELPER REUTILIZABLE PARA AMBOS DESPLEGABLES (CIUDAD Y ESPECIALIDAD)
   Widget _buildDropdownMenu({
     required BuildContext context,
     required String label,
