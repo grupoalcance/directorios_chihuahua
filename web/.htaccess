@@ -1,3 +1,13 @@
+# 1. REGLAS ANTI-CACHÉ (Obliga a descargar los JS, HTML y CSS nuevos)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|json|css)$">
+    Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+  </FilesMatch>
+</IfModule>
+
+# 2. ENRUTAMIENTO DE FLUTTER WEB (Tu código actual para evitar errores 404)
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /

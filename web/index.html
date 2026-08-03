@@ -71,18 +71,31 @@
     </script>
   </head>
   <body>
-    <!-- 🚀 DESACTIVACIÓN LIMPIA DEL SERVICE WORKER -->
+    <!-- 🚀 DESACTIVACIÓN FORZADA DE CACHÉ DE SERVICE WORKERS Y CACHE STORAGE -->
     <script>
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .getRegistrations()
-          .then(function (registrations) {
-            for (let registration of registrations) {
-              registration.unregister();
-            }
-          });
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+      // Limpia memorias en caché anteriores del navegador
+      if (window.caches) {
+        caches.keys().then(function (names) {
+          for (let name of names) {
+            caches.delete(name);
+          }
+        });
       }
     </script>
-    <script src="flutter_bootstrap.js" async></script>
+
+    <!-- 🔑 CARGA EL SCRIPT DE BOOTSTRAP FORZANDO UN PARÁMETRO DE VERSIÓN ÚNICO -->
+    <script>
+      var script = document.createElement('script');
+      script.src = 'flutter_bootstrap.js?v=' + new Date().getTime();
+      script.async = true;
+      document.body.appendChild(script);
+    </script>
   </body>
 </html>
