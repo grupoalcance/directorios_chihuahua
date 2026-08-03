@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert'; // 👈 Importación integrada para decodificar Base64 multimedia
+import 'dart:convert';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
@@ -36,7 +36,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
 
   Future<void> _abrirMapa(String direccion, String ciudad) async {
     final String query = Uri.encodeComponent(
-      '$direccion, $ciudad, Coahuila, Mexico',
+      '$direccion, $ciudad, Durango, Mexico',
     );
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$query',
@@ -51,15 +51,29 @@ class FarmaciaProfileScreen extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     bool esPC = screenWidth > 900;
 
-    // Extracción de datos desde Firebase
+    // Extracción dinámica de datos desde Firebase
     String nombre = farmaciaData['nombre'] ?? 'Farmacia';
     String direccion = farmaciaData['direccion'] ?? 'Dirección no especificada';
-    String ciudad = farmaciaData['ciudad'] ?? 'Comarca Lagunera';
+    String ciudad = farmaciaData['ciudad'] ?? 'Durango';
     String telefono = farmaciaData['telefono'] ?? '';
+    String whatsapp = farmaciaData['whatsapp']?.toString().isNotEmpty == true
+        ? farmaciaData['whatsapp']
+        : telefono;
+    String horario = farmaciaData['horario']?.toString().isNotEmpty == true
+        ? farmaciaData['horario']
+        : 'Abierto de 8:00 AM a 10:00 PM';
     String score = farmaciaData['score'] ?? '5.0';
     String descripcion =
-        farmaciaData['descripcion'] ??
-        'Farmacia comprometida con la salud de la Comarca Lagunera. Contamos con un amplio catálogo de patente, genéricos, cuidado personal y servicio a domicilio rápido.';
+        farmaciaData['descripcion']?.toString().isNotEmpty == true
+        ? farmaciaData['descripcion']
+        : 'Farmacia comprometida con la salud y el bienestar. Contamos con un amplio catálogo de medicamentos de patente, genéricos, cuidado personal y servicio a domicilio rápido.';
+
+    // Extracción dinámica de servicios desde Firebase
+    List<String> servicios = [];
+    if (farmaciaData['servicios'] != null &&
+        farmaciaData['servicios'] is List) {
+      servicios = List<String>.from(farmaciaData['servicios']);
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -73,20 +87,16 @@ class FarmaciaProfileScreen extends StatelessWidget {
             // =========================================================================
             Container(
               width: double.infinity,
-              height: 260,
+              constraints: const BoxConstraints(minHeight: 220),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF0F766E),
-                    Color(0xFF0D9488),
-                  ], // Tonos Teal/Farmacia médicos corporativos
+                  colors: [Color(0xFF0F766E), Color(0xFF0D9488)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
               child: Stack(
                 children: [
-                  // 🖼️ CAPA DE IMAGEN DINÁMICA: Si existe una foto en Firebase, la renderiza de fondo
                   if (farmaciaData['foto_url'] != null &&
                       farmaciaData['foto_url'].toString().isNotEmpty)
                     Positioned.fill(
@@ -109,23 +119,23 @@ class FarmaciaProfileScreen extends StatelessWidget {
                             ),
                     ),
 
-                  // 🖤 FILTRO OSCURO (OVERLAY): Garantiza el contraste y legibilidad de los textos blancos
                   Positioned.fill(
                     child: Container(color: Colors.black.withOpacity(0.45)),
                   ),
 
-                  // Contenido principal del Header
                   Center(
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 1200),
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 28,
+                      ),
                       alignment: Alignment.centerLeft,
                       child: Row(
                         children: [
                           CircleAvatar(
-                            radius: 45,
+                            radius: esPC ? 45 : 35,
                             backgroundColor: Colors.white,
-                            // Muestra la foto pequeña como avatar/logotipo circular si existe
                             backgroundImage:
                                 (farmaciaData['foto_url'] != null &&
                                     farmaciaData['foto_url']
@@ -153,11 +163,11 @@ class FarmaciaProfileScreen extends StatelessWidget {
                                 ? null
                                 : const Icon(
                                     Icons.local_pharmacy_rounded,
-                                    size: 50,
+                                    size: 40,
                                     color: Color(0xFF0F766E),
                                   ),
                           ),
-                          const SizedBox(width: 24),
+                          const SizedBox(width: 20),
                           Expanded(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -165,14 +175,14 @@ class FarmaciaProfileScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   nombre,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 32,
+                                    fontSize: esPC ? 30 : 22,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: -0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 6),
                                 Row(
                                   children: [
                                     const Icon(
@@ -180,15 +190,15 @@ class FarmaciaProfileScreen extends StatelessWidget {
                                       color: Colors.white70,
                                       size: 16,
                                     ),
-                                    const SizedBox(width: 6),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      '$ciudad, Comarca Lagunera',
+                                      ciudad,
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 15,
+                                        fontSize: 14,
                                       ),
                                     ),
-                                    const SizedBox(width: 20),
+                                    const SizedBox(width: 15),
                                     const Icon(
                                       Icons.star_rounded,
                                       color: Colors.amber,
@@ -200,7 +210,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 15,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ],
@@ -232,13 +242,18 @@ class FarmaciaProfileScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             flex: 3,
-                            child: _buildInformacionPrincipal(descripcion),
+                            child: _buildInformacionPrincipal(
+                              descripcion,
+                              servicios,
+                            ),
                           ),
                           const SizedBox(width: 32),
                           Expanded(
                             flex: 2,
                             child: _buildTarjetaContacto(
                               telefono,
+                              whatsapp,
+                              horario,
                               direccion,
                               ciudad,
                               nombre,
@@ -248,10 +263,12 @@ class FarmaciaProfileScreen extends StatelessWidget {
                       )
                     : Column(
                         children: [
-                          _buildInformacionPrincipal(descripcion),
+                          _buildInformacionPrincipal(descripcion, servicios),
                           const SizedBox(height: 24),
                           _buildTarjetaContacto(
                             telefono,
+                            whatsapp,
+                            horario,
                             direccion,
                             ciudad,
                             nombre,
@@ -267,12 +284,16 @@ class FarmaciaProfileScreen extends StatelessWidget {
   }
 
   // --- BLOQUE IZQUIERDO: DETALLES DE SERVICIOS ---
-  Widget _buildInformacionPrincipal(String descripcion) {
+  Widget _buildInformacionPrincipal(
+    String descripcion,
+    List<String> serviciosDinamicos,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Reseña comercial
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -304,8 +325,9 @@ class FarmaciaProfileScreen extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // Atributos y Beneficios clave de la farmacia
+        // Atributos y Beneficios clave
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -324,29 +346,68 @@ class FarmaciaProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              _buildIconServiceItem(
-                Icons.delivery_dining_rounded,
-                'Servicio a Domicilio Express',
-                'Llevamos tus medicamentos directo a tu casa en la durango.',
-              ),
-              const Divider(height: 24),
-              _buildIconServiceItem(
-                Icons.medical_information_rounded,
-                'Consultorio Médico Adyacente',
-                'Consulta básica rápida y toma de presión al momento.',
-              ),
-              const Divider(height: 24),
-              _buildIconServiceItem(
-                Icons.credit_card_rounded,
-                'Aceptamos Tarjetas de Crédito/Débito',
-                'Terminal móvil disponible para pagos a domicilio.',
-              ),
-              const Divider(height: 24),
-              _buildIconServiceItem(
-                Icons.verified_user_rounded,
-                'Medicamentos de Patente y Genéricos',
-                'Surtido completo de recetas de forma segura.',
-              ),
+              if (serviciosDinamicos.isNotEmpty)
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: serviciosDinamicos.length,
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 20),
+                  itemBuilder: (context, index) {
+                    return Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE6F7F0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check_rounded,
+                            color: Color(0xFF10B981),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            serviciosDinamicos[index],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF334155),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                )
+              else ...[
+                _buildIconServiceItem(
+                  Icons.delivery_dining_rounded,
+                  'Servicio a Domicilio Express',
+                  'Llevamos tus medicamentos directo a tu casa en la región.',
+                ),
+                const Divider(height: 24),
+                _buildIconServiceItem(
+                  Icons.medical_information_rounded,
+                  'Consultorio Médico Adyacente',
+                  'Consulta básica rápida y toma de presión al momento.',
+                ),
+                const Divider(height: 24),
+                _buildIconServiceItem(
+                  Icons.credit_card_rounded,
+                  'Aceptamos Tarjetas de Crédito/Débito',
+                  'Terminal móvil disponible para pagos a domicilio.',
+                ),
+                const Divider(height: 24),
+                _buildIconServiceItem(
+                  Icons.verified_user_rounded,
+                  'Medicamentos de Patente y Genéricos',
+                  'Surtido completo de recetas de forma segura.',
+                ),
+              ],
             ],
           ),
         ),
@@ -397,12 +458,14 @@ class FarmaciaProfileScreen extends StatelessWidget {
   // --- BLOQUE DERECHO: COMPRA Y CONTACTO DIRECTO ---
   Widget _buildTarjetaContacto(
     String telefono,
+    String whatsapp,
+    String horario,
     String direccion,
     String ciudad,
     String nombreFarmacia,
   ) {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -428,11 +491,11 @@ class FarmaciaProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // 🟢 BOTÓN ENVIAR RECETA POR WHATSAPP
+          // 💬 BOTÓN ENVIAR RECETA POR WHATSAPP
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () => _abrirWhatsApp(telefono, nombreFarmacia),
+              onPressed: () => _abrirWhatsApp(whatsapp, nombreFarmacia),
               icon: const FaIcon(
                 FontAwesomeIcons.whatsapp,
                 color: Colors.white,
@@ -448,7 +511,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF22C55E),
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -476,7 +539,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 side: const BorderSide(color: Color(0xFF0F766E), width: 1.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -484,33 +547,42 @@ class FarmaciaProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(height: 40, color: Color(0xFFF1F5F9)),
+          const Divider(height: 32, color: Color(0xFFF1F5F9)),
 
           // Horario Comercial Farmacias
-          const Row(
+          Row(
             children: [
-              Icon(Icons.access_time_rounded, color: Colors.grey, size: 20),
+              const Icon(
+                Icons.access_time_rounded,
+                color: Colors.grey,
+                size: 20,
+              ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Horario de Sucursal',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: Color(0xFF1E293B),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Horario de Sucursal',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Color(0xFF1E293B),
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Abierto de 8:00 AM a 10:00 PM',
-                    style: TextStyle(fontSize: 12.5, color: Color(0xFF475569)),
-                  ),
-                ],
+                    Text(
+                      horario,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
           // Ubicación
           Row(
@@ -547,7 +619,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Botón GPS
           SizedBox(
@@ -557,7 +629,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
               icon: const FaIcon(
                 FontAwesomeIcons.mapLocationDot,
                 color: Colors.white,
-                size: 16,
+                size: 15,
               ),
               label: const Text(
                 '¿Cómo llegar a la sucursal?',
@@ -569,7 +641,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF334155),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

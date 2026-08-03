@@ -14,168 +14,194 @@ class TodasEspecialidadesScreen extends StatefulWidget {
 }
 
 class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
-  final TextEditingController _searchMunicipioController =
-      TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  String _municipioFiltrado = "";
+  String _filtroTexto = "";
 
-  // 📝 CATÁLOGO BASE DE ESPECIALIDADES CON SUS ESTILOS
-  final List<Map<String, dynamic>> _especialidadesBase = [
-    {
-      'nombre': 'Alergología',
-      'icono': Icons.biotech_rounded,
-      'color': Colors.amber,
-    },
-    {
-      'nombre': 'Anestesiología',
-      'icono': Icons.airline_seat_flat_angled_rounded,
-      'color': Colors.blueGrey,
-    },
-    {
-      'nombre': 'Angiología / Cirugía Vascular',
-      'icono': Icons.navigation_rounded,
-      'color': Colors.indigo,
-    },
-    {
-      'nombre': 'Cardiología',
-      'icono': Icons.favorite_rounded,
-      'color': Colors.red,
-    },
-    {
-      'nombre': 'Cirugía General',
-      'icono': Icons.architecture_rounded,
-      'color': Colors.deepOrange,
-    },
-    {
-      'nombre': 'Cirugía Plástica y Reconstructiva',
-      'icono': Icons.face_rounded,
-      'color': Colors.pinkAccent,
-    },
-    {
-      'nombre': 'Dermatología',
-      'icono': Icons.clean_hands_rounded,
-      'color': Colors.pink,
-    },
-    {
-      'nombre': 'Endocrinología',
-      'icono': Icons.opacity_rounded,
-      'color': Colors.purple,
-    },
-    {
-      'nombre': 'Gastroenterología',
-      'icono': Icons.restaurant_rounded,
-      'color': Colors.brown,
-    },
-    {
-      'nombre': 'Geriatría',
-      'icono': Icons.elderly_rounded,
-      'color': Colors.blueGrey,
-    },
-    {
-      'nombre': 'Ginecología y Obstetricia',
-      'icono': Icons.pregnant_woman_rounded,
-      'color': Colors.pink,
-    },
-    {
-      'nombre': 'Hematología',
-      'icono': Icons.bloodtype_rounded,
-      'color': Colors.redAccent,
-    },
-    {
-      'nombre': 'Medicina General',
-      'icono': Icons.medical_services_rounded,
-      'color': Colors.teal,
-    },
-    {
-      'nombre': 'Medicina Interna',
-      'icono': Icons.assignment_ind_rounded,
-      'color': Colors.blue,
-    },
-    {
-      'nombre': 'Neumología',
-      'icono': Icons.air_rounded,
-      'color': Colors.lightBlue,
-    },
-    {
-      'nombre': 'Neurología',
-      'icono': Icons.psychology_rounded,
-      'color': Colors.deepPurple,
-    },
-    {
-      'nombre': 'Nutrición',
-      'icono': Icons.apple_rounded,
-      'color': Colors.green,
-    },
-    {
-      'nombre': 'Odontología (Dentista)',
-      'icono': Icons.badge_rounded,
-      'color': Colors.cyan,
-    },
-    {
-      'nombre': 'Oftalmología',
-      'icono': Icons.visibility_rounded,
-      'color': Colors.tealAccent,
-    },
-    {
-      'nombre': 'Oncología',
-      'icono': Icons.health_and_safety_rounded,
-      'color': Colors.orange,
-    },
-    {
-      'nombre': 'Otorrinolaringología',
-      'icono': Icons.hearing_rounded,
-      'color': Colors.blueAccent,
-    },
-    {
-      'nombre': 'Pediatría',
-      'icono': Icons.child_care_rounded,
-      'color': Colors.orangeAccent,
-    },
-    {
-      'nombre': 'Periodoncia (Implantes Dentales)',
-      'icono': Icons.health_and_safety_rounded,
-      'color': const Color(0xFF0D9488),
-    },
-    {
-      'nombre': 'Proctología',
-      'icono': Icons.airline_seat_recline_extra_rounded,
-      'color': Colors.grey,
-    },
-    {
-      'nombre': 'Psicología',
-      'icono': Icons.forum_rounded,
-      'color': Colors.greenAccent,
-    },
-    {
-      'nombre': 'Psiquiatría',
-      'icono': Icons.healing_rounded,
-      'color': Colors.purpleAccent,
-    },
-    {
-      'nombre': 'Reumatología',
-      'icono': Icons.accessibility_new_rounded,
-      'color': Colors.blueGrey,
-    },
-    {
-      'nombre': 'Traumatología y Ortopedia',
-      'icono': Icons.accessible_forward_rounded,
-      'color': Colors.indigoAccent,
-    },
-    {
-      'nombre': 'Uroginecología',
-      'icono': Icons.wc_rounded,
-      'color': Colors.purpleAccent,
-    },
-    {
-      'nombre': 'Urología',
-      'icono': Icons.water_drop_rounded,
-      'color': Colors.blue,
-    },
-  ];
+  // 📝 ESTRUCTURA DE CATEGORÍAS PADRE Y SUS SUBESPECIALIDADES BASE
+  final Map<String, List<Map<String, dynamic>>> _categoriasPadreConEstilos = {
+    'Odontología / Salud Dental': [
+      {
+        'nombre': 'Odontología (Dentista)',
+        'icono': Icons.badge_rounded,
+        'color': Colors.cyan,
+      },
+      {
+        'nombre': 'Ortodoncia',
+        'icono': Icons.cleaning_services_rounded,
+        'color': Colors.teal,
+      },
+      {
+        'nombre': 'Periodoncia (Implantes Dentales)',
+        'icono': Icons.health_and_safety_rounded,
+        'color': const Color(0xFF0D9488),
+      },
+      {
+        'nombre': 'Odontopediatría',
+        'icono': Icons.child_care_rounded,
+        'color': Colors.cyanAccent,
+      },
+      {
+        'nombre': 'Endodoncia',
+        'icono': Icons.medical_information_rounded,
+        'color': Colors.deepOrangeAccent,
+      },
+    ],
+    'Salud de la Mujer': [
+      {
+        'nombre': 'Ginecología y Obstetricia',
+        'icono': Icons.pregnant_woman_rounded,
+        'color': Colors.pink,
+      },
+      {
+        'nombre': 'Uroginecología',
+        'icono': Icons.wc_rounded,
+        'color': Colors.purpleAccent,
+      },
+    ],
+    'Pediatría': [
+      {
+        'nombre': 'Pediatría',
+        'icono': Icons.child_care_rounded,
+        'color': Colors.orangeAccent,
+      },
+    ],
+    'Cirugías': [
+      {
+        'nombre': 'Cirugía General',
+        'icono': Icons.architecture_rounded,
+        'color': Colors.deepOrange,
+      },
+      {
+        'nombre': 'Cirugía Plástica y Reconstructiva',
+        'icono': Icons.face_rounded,
+        'color': Colors.pinkAccent,
+      },
+      {
+        'nombre': 'Angiología / Cirugía Vascular',
+        'icono': Icons.navigation_rounded,
+        'color': Colors.indigo,
+      },
+    ],
+    'Neuro y Salud Mental': [
+      {
+        'nombre': 'Neurología',
+        'icono': Icons.psychology_rounded,
+        'color': Colors.deepPurple,
+      },
+      {
+        'nombre': 'Psicología',
+        'icono': Icons.forum_rounded,
+        'color': Colors.greenAccent,
+      },
+      {
+        'nombre': 'Psiquiatría',
+        'icono': Icons.healing_rounded,
+        'color': Colors.purpleAccent,
+      },
+    ],
+    'Otras Especialidades Médicas': [
+      {
+        'nombre': 'Alergología',
+        'icono': Icons.biotech_rounded,
+        'color': Colors.amber,
+      },
+      {
+        'nombre': 'Anestesiología',
+        'icono': Icons.airline_seat_flat_angled_rounded,
+        'color': Colors.blueGrey,
+      },
+      {
+        'nombre': 'Cardiología',
+        'icono': Icons.favorite_rounded,
+        'color': Colors.red,
+      },
+      {
+        'nombre': 'Dermatología',
+        'icono': Icons.clean_hands_rounded,
+        'color': Colors.pink,
+      },
+      {
+        'nombre': 'Endocrinología',
+        'icono': Icons.opacity_rounded,
+        'color': Colors.purple,
+      },
+      {
+        'nombre': 'Gastroenterología',
+        'icono': Icons.restaurant_rounded,
+        'color': Colors.brown,
+      },
+      {
+        'nombre': 'Geriatría',
+        'icono': Icons.elderly_rounded,
+        'color': Colors.blueGrey,
+      },
+      {
+        'nombre': 'Hematología',
+        'icono': Icons.bloodtype_rounded,
+        'color': Colors.redAccent,
+      },
+      {
+        'nombre': 'Medicina General',
+        'icono': Icons.medical_services_rounded,
+        'color': Colors.teal,
+      },
+      {
+        'nombre': 'Medicina Interna',
+        'icono': Icons.assignment_ind_rounded,
+        'color': Colors.blue,
+      },
+      {
+        'nombre': 'Neumología',
+        'icono': Icons.air_rounded,
+        'color': Colors.lightBlue,
+      },
+      {
+        'nombre': 'Nutrición',
+        'icono': Icons.apple_rounded,
+        'color': Colors.green,
+      },
+      {
+        'nombre': 'Oftalmología',
+        'icono': Icons.visibility_rounded,
+        'color': Colors.tealAccent,
+      },
+      {
+        'nombre': 'Oncología',
+        'icono': Icons.health_and_safety_rounded,
+        'color': Colors.orange,
+      },
+      {
+        'nombre': 'Otorrinolaringología',
+        'icono': Icons.hearing_rounded,
+        'color': Colors.blueAccent,
+      },
+      {
+        'nombre': 'Proctología',
+        'icono': Icons.airline_seat_recline_extra_rounded,
+        'color': Colors.grey,
+      },
+      {
+        'nombre': 'Reumatología',
+        'icono': Icons.accessibility_new_rounded,
+        'color': Colors.blueGrey,
+      },
+      {
+        'nombre': 'Traumatología y Ortopedia',
+        'icono': Icons.accessible_forward_rounded,
+        'color': Colors.indigoAccent,
+      },
+      {
+        'nombre': 'Urología',
+        'icono': Icons.water_drop_rounded,
+        'color': Colors.blue,
+      },
+    ],
+  };
 
   @override
   void dispose() {
-    _searchMunicipioController.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -205,13 +231,18 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
               .where('activo', isEqualTo: true)
               .snapshots(),
           builder: (context, snapshot) {
-            List<Map<String, dynamic>> listaDinamica = List.from(
-              _especialidadesBase,
-            );
-            Set<String> nombresExistentes = _especialidadesBase
-                .map((e) => (e['nombre'] as String).toLowerCase().trim())
-                .toSet();
+            Map<String, Map<String, Map<String, dynamic>>> mapaAgrupado = {};
 
+            // 1. Inicializar mapa con la estructura base
+            _categoriasPadreConEstilos.forEach((catPadre, lista) {
+              mapaAgrupado[catPadre] = {};
+              for (var item in lista) {
+                String nombre = item['nombre'];
+                mapaAgrupado[catPadre]![nombre.toLowerCase()] = item;
+              }
+            });
+
+            // 2. Procesar especialidades dinámicas desde Firebase
             if (snapshot.hasData && snapshot.data != null) {
               for (var doc in snapshot.data!.docs) {
                 Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -220,7 +251,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                 if (esp.isNotEmpty) {
                   String espLower = esp.toLowerCase();
 
-                  // Normalizaciones de nombres para coincidir con la lista maestro
+                  // Normalización
                   if (espLower == 'dentista' ||
                       espLower == 'odontología' ||
                       espLower == 'odontologia') {
@@ -238,32 +269,42 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                     esp = 'Uroginecología';
                   }
 
-                  if (!nombresExistentes.contains(esp.toLowerCase())) {
-                    nombresExistentes.add(esp.toLowerCase());
+                  String espKey = esp.toLowerCase();
 
-                    // Asignación de íconos personalizados para especialidades emergentes
-                    IconData iconoDinamico = Icons.medical_services_rounded;
-                    Color colorDinamico = Colors.blueGrey;
+                  // Clasificación en Categoría Padre correspondiente
+                  String categoriaDestino = 'Otras Especialidades Médicas';
+                  if (espKey.contains('odontolog') ||
+                      espKey.contains('dentista') ||
+                      espKey.contains('periodoncia') ||
+                      espKey.contains('ortodoncia') ||
+                      espKey.contains('endodoncia')) {
+                    categoriaDestino = 'Odontología / Salud Dental';
+                  } else if (espKey.contains('ginecolog') ||
+                      espKey.contains('obstetricia') ||
+                      espKey.contains('uroginecolog')) {
+                    categoriaDestino = 'Salud de la Mujer';
+                  } else if (espKey.contains('pediatra') ||
+                      espKey.contains('pediatría') ||
+                      espKey.contains('pediatria')) {
+                    categoriaDestino = 'Pediatría';
+                  } else if (espKey.contains('cirug')) {
+                    categoriaDestino = 'Cirugías';
+                  } else if (espKey.contains('neuro') ||
+                      espKey.contains('psico') ||
+                      espKey.contains('psiquia')) {
+                    categoriaDestino = 'Neuro y Salud Mental';
+                  }
 
-                    if (espLower.contains('periodoncia')) {
-                      iconoDinamico = Icons.health_and_safety_rounded;
-                      colorDinamico = const Color(0xFF0D9488);
-                    }
-
-                    listaDinamica.add({
+                  if (!mapaAgrupado[categoriaDestino]!.containsKey(espKey)) {
+                    mapaAgrupado[categoriaDestino]![espKey] = {
                       'nombre': esp,
-                      'icono': iconoDinamico,
-                      'color': colorDinamico,
-                    });
+                      'icono': Icons.medical_services_rounded,
+                      'color': Colors.blueGrey,
+                    };
                   }
                 }
               }
             }
-
-            listaDinamica.sort(
-              (a, b) =>
-                  (a['nombre'] as String).compareTo(b['nombre'] as String),
-            );
 
             return SingleChildScrollView(
               controller: _scrollController,
@@ -289,7 +330,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Explora todas las ramas médicas disponibles en la región para encontrar a tu médico.',
+                        'Explora todas las ramas médicas organizadas por área para encontrar a tu especialista ideal.',
                         style: TextStyle(
                           fontSize: 14.5,
                           color: Color(0xFF64748B),
@@ -297,7 +338,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                       ),
                       const SizedBox(height: 25),
 
-                      // Barra de filtrado de municipios
+                      // 🔍 BUSCADOR EN VIVO DE ESPECIALIDADES
                       Container(
                         margin: const EdgeInsets.only(bottom: 28),
                         decoration: BoxDecoration(
@@ -312,34 +353,34 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                           ],
                         ),
                         child: TextField(
-                          controller: _searchMunicipioController,
+                          controller: _searchController,
                           onChanged: (value) {
                             setState(() {
-                              _municipioFiltrado = value.trim();
+                              _filtroTexto = value.trim().toLowerCase();
                             });
                           },
                           decoration: InputDecoration(
                             hintText:
-                                'Filtrar por municipio (Ej. Durango, Gómez Palacio...)',
+                                'Buscar especialidad (Ej. Periodoncia, Pediatría, Cardiología...)',
                             hintStyle: TextStyle(
                               color: Colors.grey.shade400,
                               fontSize: 14,
                             ),
                             prefixIcon: const Icon(
-                              Icons.location_on_outlined,
+                              Icons.search,
                               color: Colors.blue,
                               size: 20,
                             ),
-                            suffixIcon: _municipioFiltrado.isNotEmpty
+                            suffixIcon: _filtroTexto.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(
                                       Icons.clear,
                                       color: Colors.grey,
                                     ),
                                     onPressed: () {
-                                      _searchMunicipioController.clear();
+                                      _searchController.clear();
                                       setState(() {
-                                        _municipioFiltrado = "";
+                                        _filtroTexto = "";
                                       });
                                     },
                                   )
@@ -372,27 +413,90 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                         ),
                       ),
 
-                      // Grid adaptativo de tarjetas de especialidades
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: width < 600 ? 1.15 : 1.3,
-                        ),
-                        itemCount: listaDinamica.length,
-                        itemBuilder: (context, index) {
-                          final item = listaDinamica[index];
-                          return _buildEspecialidadCard(
-                            context,
-                            item['nombre'] as String,
-                            item['icono'] as IconData,
-                            item['color'] as Color,
-                          );
-                        },
-                      ),
+                      // 🧱 BLOQUES POR CATEGORÍA PADRE
+                      ...mapaAgrupado.entries.map((entry) {
+                        String categoriaPadre = entry.key;
+                        List<Map<String, dynamic>> itemsCategoria = entry
+                            .value
+                            .values
+                            .toList();
+
+                        // Aplicar filtro de búsqueda si el usuario escribió algo
+                        if (_filtroTexto.isNotEmpty) {
+                          itemsCategoria = itemsCategoria
+                              .where(
+                                (item) => (item['nombre'] as String)
+                                    .toLowerCase()
+                                    .contains(_filtroTexto),
+                              )
+                              .toList();
+                        }
+
+                        if (itemsCategoria.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        itemsCategoria.sort(
+                          (a, b) => (a['nombre'] as String).compareTo(
+                            b['nombre'] as String,
+                          ),
+                        );
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 12.0,
+                                bottom: 14.0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 4,
+                                    height: 18,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0284C7),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    categoriaPadre,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: width < 600 ? 1.15 : 1.3,
+                                  ),
+                              itemCount: itemsCategoria.length,
+                              itemBuilder: (context, index) {
+                                final item = itemsCategoria[index];
+                                return _buildEspecialidadCard(
+                                  context,
+                                  item['nombre'] as String,
+                                  item['icono'] as IconData,
+                                  item['color'] as Color,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        );
+                      }).toList(),
                     ],
                   ),
                 ),
@@ -415,10 +519,8 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ListaDoctoresScreen(
-              especialidad: nombre,
-              ciudad: _municipioFiltrado,
-            ),
+            builder: (context) =>
+                ListaDoctoresScreen(especialidad: nombre, ciudad: ''),
           ),
         );
       },

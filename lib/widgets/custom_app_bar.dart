@@ -54,22 +54,36 @@ class _CustomAppBarState extends State<CustomAppBar> {
     },
   ];
 
-  // 📝 ESPECIALIDADES BASE PARA EL MENÚ
-  final List<String> _especialidadesBaseAppBar = [
-    'Cardiología',
-    'Dermatología',
-    'Ginecología y Obstetricia',
-    'Medicina General',
-    'Neumología',
-    'Neurología',
-    'Nutrición',
-    'Odontología (Dentista)',
-    'Oftalmología',
-    'Pediatría',
-    'Periodoncia (Implantes Dentales)',
-  ];
+  // 📝 ESTRUCTURA DE CATEGORÍAS PADRE Y SUS SUBESPECIALIDADES BASE
+  final Map<String, List<String>> _categoriasPadreEspecialidades = {
+    'Odontología / Salud Dental': [
+      'Odontología (Dentista)',
+      'Ortodoncia',
+      'Periodoncia (Implantes Dentales)',
+      'Odontopediatría',
+      'Endodoncia',
+    ],
+    'Salud de la Mujer': ['Ginecología y Obstetricia', 'Uroginecología'],
+    'Pediatría': ['Pediatría'],
+    'Cirugías': [
+      'Cirugía General',
+      'Cirugía Plástica y Reconstructiva',
+      'Angiología / Cirugía Vascular',
+    ],
+    'Neuro y Salud Mental': ['Neurología', 'Psicología', 'Psiquiatría'],
+    'Otras Especialidades Médicas': [
+      'Cardiología',
+      'Dermatología',
+      'Medicina General',
+      'Neumología',
+      'Nutrición',
+      'Oftalmología',
+      'Traumatología y Ortopedia',
+      'Urología',
+    ],
+  };
 
-  List<String> _especialidadesDinamicas = [];
+  Map<String, List<String>> _mapaEspecialidadesDinamicas = {};
 
   // Variables para la rotación automática de Banners
   final PageController _bannerPageController = PageController();
@@ -79,7 +93,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
   @override
   void initState() {
     super.initState();
-    _especialidadesDinamicas = List.from(_especialidadesBaseAppBar);
+    _mapaEspecialidadesDinamicas = Map.from(_categoriasPadreEspecialidades);
     _cargarEspecialidadesDinamicas();
     _timeStream = Stream<DateTime>.periodic(
       const Duration(seconds: 1),
@@ -88,7 +102,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     _iniciarTemporizadorBanners();
   }
 
-  // 🔑 CARGA Y CLASIFICACIÓN SEGURA DE ESPECIALIDADES DESDE FIRESTORE
+  // 🔑 CARGA Y CLASIFICACIÓN DENTRO DE CATEGORÍAS PADRE DESDE FIRESTORE
   Future<void> _cargarEspecialidadesDinamicas() async {
     try {
       var query = await FirebaseFirestore.instance
@@ -97,13 +111,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
           .where('activo', isEqualTo: true)
           .get();
 
-      Set<String> setEsp = _especialidadesBaseAppBar.map((e) => e).toSet();
+      // Copiamos el mapa base
+      Map<String, Set<String>> mapaSet = {};
+      _categoriasPadreEspecialidades.forEach((cat, lista) {
+        mapaSet[cat] = Set.from(lista);
+      });
+
       for (var doc in query.docs) {
         String esp = (doc.data()['especialidad'] ?? '').toString().trim();
         if (esp.isNotEmpty) {
           String espLower = esp.toLowerCase();
 
-          // 🎯 NORMALIZACIÓN Y CLASIFICACIÓN
+          // Normalizaciones estándar
           if (espLower == 'dentista' ||
               espLower == 'odontología' ||
               espLower == 'odontologia') {
@@ -120,13 +139,42 @@ class _CustomAppBarState extends State<CustomAppBar> {
             esp = 'Uroginecología';
           }
 
-          setEsp.add(esp);
+          // Asignación inteligente a su Categoría Padre
+          if (espLower.contains('odontolog') ||
+              espLower.contains('dentista') ||
+              espLower.contains('periodoncia') ||
+              espLower.contains('ortodoncia') ||
+              espLower.contains('endodoncia')) {
+            mapaSet['Odontología / Salud Dental']?.add(esp);
+          } else if (espLower.contains('ginecolog') ||
+              espLower.contains('obstetricia') ||
+              espLower.contains('uroginecolog')) {
+            mapaSet['Salud de la Mujer']?.add(esp);
+          } else if (espLower.contains('pediatra') ||
+              espLower.contains('pediatría') ||
+              espLower.contains('pediatria')) {
+            mapaSet['Pediatría']?.add(esp);
+          } else if (espLower.contains('cirug')) {
+            mapaSet['Cirugías']?.add(esp);
+          } else if (espLower.contains('neuro') ||
+              espLower.contains('psico') ||
+              espLower.contains('psiquia')) {
+            mapaSet['Neuro y Salud Mental']?.add(esp);
+          } else {
+            mapaSet['Otras Especialidades Médicas']?.add(esp);
+          }
         }
       }
 
       if (mounted) {
+        Map<String, List<String>> mapaFinal = {};
+        mapaSet.forEach((cat, setEsp) {
+          List<String> listaOrdenada = setEsp.toList()..sort();
+          mapaFinal[cat] = listaOrdenada;
+        });
+
         setState(() {
-          _especialidadesDinamicas = setEsp.toList()..sort();
+          _mapaEspecialidadesDinamicas = mapaFinal;
         });
       }
     } catch (e) {
@@ -371,7 +419,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       child: Text('¿Quiénes somos?', style: menuStyle),
                     ),
                     const SizedBox(width: 5),
-                    _buildDropdownMenu(
+                    _buildDropdownMenuCiudad(
                       context: context,
                       label: 'Ciudad',
                       style: menuStyle,
@@ -394,35 +442,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ),
                     const SizedBox(width: 5),
 
-                    // 🔑 MENÚ DESPLEGABLE DE ESPECIALIDAD CON SOPORTE COMPLETO PARA PERIODONCIA
-                    _buildDropdownMenu(
+                    // 🔑 MENÚ DESPLEGABLE JERÁRQUICO CON SUBMENÚS PARA ESPECIALIDADES
+                    _buildEspecialidadesSubmenuBar(
                       context: context,
-                      label: 'Especialidad',
                       style: menuStyle,
-                      items: _especialidadesDinamicas.isNotEmpty
-                          ? [..._especialidadesDinamicas, 'ver_todas']
-                          : [..._especialidadesBaseAppBar, 'ver_todas'],
-                      onSelected: (especialidad) {
-                        if (especialidad == 'ver_todas') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const TodasEspecialidadesScreen(),
-                            ),
-                          );
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ListaDoctoresScreen(
-                                especialidad: especialidad,
-                                ciudad: '',
-                              ),
-                            ),
-                          );
-                        }
-                      },
                     ),
 
                     const SizedBox(width: 5),
@@ -728,7 +751,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
         snap.data!.data() != null;
   }
 
-  Widget _buildDropdownMenu({
+  // 🔑 HELPER PARA DESPLEGABLE DE CIUDAD
+  Widget _buildDropdownMenuCiudad({
     required BuildContext context,
     required String label,
     required TextStyle style,
@@ -753,29 +777,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
       onSelected: onSelected,
       itemBuilder: (context) {
         return items.map((item) {
-          if (item == 'ver_todas') {
-            return PopupMenuItem<String>(
-              value: 'ver_todas',
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Ver todas las especialidades',
-                    style: TextStyle(
-                      color: AppConfig.primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward,
-                    color: AppConfig.primaryColor,
-                    size: 16,
-                  ),
-                ],
-              ),
-            );
-          }
           return PopupMenuItem<String>(
             value: item,
             child: Text(
@@ -785,6 +786,120 @@ class _CustomAppBarState extends State<CustomAppBar> {
           );
         }).toList();
       },
+    );
+  }
+
+  // 🔑 CONSTRUCTOR DE MENÚ CON SUBMENÚS FLOTANTES PARA ESPECIALIDADES
+  Widget _buildEspecialidadesSubmenuBar({
+    required BuildContext context,
+    required TextStyle style,
+  }) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        menuBarTheme: MenuBarThemeData(
+          style: MenuStyle(
+            backgroundColor: MaterialStateProperty.all(Colors.transparent),
+            elevation: MaterialStateProperty.all(0),
+            padding: MaterialStateProperty.all(EdgeInsets.zero),
+          ),
+        ),
+        menuTheme: MenuThemeData(
+          style: MenuStyle(
+            backgroundColor: MaterialStateProperty.all(Colors.white),
+            surfaceTintColor: MaterialStateProperty.all(Colors.white),
+            elevation: MaterialStateProperty.all(4),
+          ),
+        ),
+      ),
+      child: MenuBar(
+        children: [
+          SubmenuButton(
+            menuChildren: [
+              ..._mapaEspecialidadesDinamicas.entries.map((entry) {
+                String categoriaPadre = entry.key;
+                List<String> subEspecialidades = entry.value;
+
+                return SubmenuButton(
+                  menuChildren: subEspecialidades.map((subEsp) {
+                    return MenuItemButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListaDoctoresScreen(
+                              especialidad: subEsp,
+                              ciudad: '',
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        subEsp,
+                        style: const TextStyle(
+                          color: Color(0xFF334155),
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  // 🔑 CORREGIDO: Se pasa únicamente el Text para que Flutter gestione una sola flecha derecha
+                  child: Text(
+                    categoriaPadre,
+                    style: const TextStyle(
+                      color: Color(0xFF1E293B),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                );
+              }).toList(),
+              const PopupMenuDivider(),
+              MenuItemButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TodasEspecialidadesScreen(),
+                    ),
+                  );
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ver todas las especialidades',
+                      style: TextStyle(
+                        color: AppConfig.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(
+                      Icons.arrow_forward,
+                      color: AppConfig.primaryColor,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10.0,
+                vertical: 6.0,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Especialidad', style: style),
+                  Icon(Icons.keyboard_arrow_down, color: style.color, size: 20),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

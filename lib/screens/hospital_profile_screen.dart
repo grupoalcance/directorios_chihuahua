@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert'; // 👈 1. SOLUCIÓN COMPLETA: Importación agregada para decodificar Base64 de forma multiplataforma
+import 'dart:convert';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
@@ -10,7 +10,6 @@ class HospitalProfileScreen extends StatelessWidget {
 
   const HospitalProfileScreen({super.key, required this.hospitalData});
 
-  // Métodos utilitarios para llamadas telefónicas y mapas
   Future<void> _hacerLlamada(String telefono) async {
     if (telefono.isEmpty) return;
     final Uri url = Uri.parse('tel:$telefono');
@@ -21,7 +20,7 @@ class HospitalProfileScreen extends StatelessWidget {
 
   Future<void> _abrirMapa(String direccion, String ciudad) async {
     final String query = Uri.encodeComponent(
-      '$direccion, $ciudad, Coahuila, Mexico',
+      '$direccion, $ciudad, Durango, Mexico',
     );
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$query',
@@ -39,41 +38,54 @@ class HospitalProfileScreen extends StatelessWidget {
     // Extracción segura de datos desde Firebase
     String nombre = hospitalData['nombre'] ?? 'Hospital General';
     String direccion = hospitalData['direccion'] ?? 'Dirección no especificada';
-    String ciudad = hospitalData['ciudad'] ?? 'Comarca Lagunera';
+    String ciudad = hospitalData['ciudad'] ?? 'Durango';
     String telefono = hospitalData['telefono'] ?? '';
     String urgencias =
-        hospitalData['telefono_urgencias'] ??
-        telefono; // Si no hay urgencias usa el general
+        hospitalData['telefono_urgencias']?.toString().isNotEmpty == true
+        ? hospitalData['telefono_urgencias']
+        : telefono;
+    String horario = hospitalData['horario']?.toString().isNotEmpty == true
+        ? hospitalData['horario']
+        : 'Abierto las 24 horas (Lunes a Domingo)';
     String score = hospitalData['score'] ?? '5.0';
     String descripcion =
-        hospitalData['descripcion'] ??
-        'Centro médico de alta especialidad comprometido con el cuidado de la salud y el bienestar de las familias en la Comarca Lagunera, ofreciendo atención médica de vanguardia.';
+        hospitalData['descripcion']?.toString().isNotEmpty == true
+        ? hospitalData['descripcion']
+        : '$nombre no solo es un espacio de atención médica, es el corazón de un grupo de profesionales comprometidos con la salud y el bienestar de nuestra gente.';
 
-    // Lista de servicios de ejemplo homologados (puedes traerlos de Firebase si los guardas en un array)
-    List<String> servicios = [
-      'Urgencias Médicas 24/7',
-      'Quirófanos de Alta Tecnología',
-      'Unidad de Cuidados Intensivos (UCI)',
-      'Especialidades Médicas Integrales',
-      'Laboratorio Clínico y de Análisis',
-      'Banco de Sangre',
-      'Radiología e Imagenología Avanzada',
-      'Maternidad y Neonatología',
-    ];
+    // Extracción dinámica de servicios desde Firebase
+    List<String> servicios = [];
+    if (hospitalData['servicios'] != null &&
+        hospitalData['servicios'] is List) {
+      servicios = List<String>.from(hospitalData['servicios']);
+    }
+
+    if (servicios.isEmpty) {
+      servicios = [
+        'Urgencias Médicas 24/7',
+        'Quirófanos de Alta Tecnología',
+        'Unidad de Cuidados Intensivos (UCI)',
+        'Especialidades Médicas Integrales',
+        'Laboratorio Clínico y de Análisis',
+        'Banco de Sangre',
+        'Radiología e Imagenología Avanzada',
+        'Maternidad y Neonatología',
+      ];
+    }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fondo Slate 50 premium
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: const CustomAppBar(),
       drawer: screenWidth < 1100 ? const PhoneMenuDrawer() : null,
       body: SingleChildScrollView(
         child: Column(
           children: [
             // =========================================================================
-            // 🏢 HEADER HERO SECTION (BANNER INTEGRADO CON IMAGEN DINÁMICA DE FIREBASE)
+            // 🏢 HEADER HERO SECTION (BANNER INTEGRADO CON OVERLAY DE CONTRASTE)
             // =========================================================================
             Container(
               width: double.infinity,
-              height: 260,
+              constraints: const BoxConstraints(minHeight: 220),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF1E3A8A), Color(0xFF0284C7)],
@@ -83,7 +95,6 @@ class HospitalProfileScreen extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // 🖼️ CAPA DE IMAGEN DINÁMICA: Si existe una foto en Firebase, la renderiza de fondo
                   if (hospitalData['foto_url'] != null &&
                       hospitalData['foto_url'].toString().isNotEmpty)
                     Positioned.fill(
@@ -106,27 +117,22 @@ class HospitalProfileScreen extends StatelessWidget {
                             ),
                     ),
 
-                  // 🖤 FILTRO OSCURO (OVERLAY): Garantiza que los textos blancos contrasten perfectamente
                   Positioned.fill(
-                    child: Container(
-                      color: Colors.black.withOpacity(
-                        0.45,
-                      ), // Ajusta el nivel de oscurecimiento (0.0 a 1.0)
-                    ),
+                    child: Container(color: Colors.black.withOpacity(0.45)),
                   ),
 
-                  // Contenido del Header (Textos y Logotipo)
                   Center(
                     child: Container(
                       constraints: const BoxConstraints(maxWidth: 1200),
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 30,
+                      ),
                       child: Row(
                         children: [
                           CircleAvatar(
-                            radius: 45,
+                            radius: esPC ? 45 : 35,
                             backgroundColor: Colors.white,
-                            // Muestra la misma foto pequeña como avatar/logo si no hay un icono dedicado
                             backgroundImage:
                                 (hospitalData['foto_url'] != null &&
                                     hospitalData['foto_url']
@@ -154,11 +160,11 @@ class HospitalProfileScreen extends StatelessWidget {
                                 ? null
                                 : Icon(
                                     Icons.local_hospital_rounded,
-                                    size: 50,
+                                    size: esPC ? 50 : 35,
                                     color: Colors.blue.shade700,
                                   ),
                           ),
-                          const SizedBox(width: 24),
+                          const SizedBox(width: 20),
                           Expanded(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -166,43 +172,54 @@ class HospitalProfileScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   nombre,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 32,
+                                    fontSize: esPC ? 32 : 22,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: -0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 12,
                                   children: [
-                                    const Icon(
-                                      Icons.location_on_rounded,
-                                      color: Colors.white70,
-                                      size: 16,
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on_rounded,
+                                          color: Colors.white70,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          ciudad,
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '$ciudad, Comarca Lagunera',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    const Icon(
-                                      Icons.star_rounded,
-                                      color: Colors.amber,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      score,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.star_rounded,
+                                          color: Colors.amber,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          score,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -218,7 +235,7 @@ class HospitalProfileScreen extends StatelessWidget {
             ),
 
             // =========================================================================
-            // 📊 CUERPO PRINCIPAL (Responsivo de 1 o 2 columnas)
+            // 📊 CUERPO PRINCIPAL RESPONSIVO
             // =========================================================================
             Center(
               child: Container(
@@ -244,6 +261,7 @@ class HospitalProfileScreen extends StatelessWidget {
                             child: _buildTarjetaContacto(
                               telefono,
                               urgencias,
+                              horario,
                               direccion,
                               ciudad,
                             ),
@@ -257,6 +275,7 @@ class HospitalProfileScreen extends StatelessWidget {
                           _buildTarjetaContacto(
                             telefono,
                             urgencias,
+                            horario,
                             direccion,
                             ciudad,
                           ),
@@ -270,7 +289,6 @@ class HospitalProfileScreen extends StatelessWidget {
     );
   }
 
-  // --- BLOQUE IZQUIERDO: DETALLES GENERALES ---
   Widget _buildInformacionPrincipal(
     String descripcion,
     List<String> servicios,
@@ -280,6 +298,7 @@ class HospitalProfileScreen extends StatelessWidget {
       children: [
         // Acerca de
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -313,6 +332,7 @@ class HospitalProfileScreen extends StatelessWidget {
 
         // Servicios y Especialidades
         Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -331,36 +351,43 @@ class HospitalProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: servicios.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisExtent: 40,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 0,
-                ),
-                itemBuilder: (context, index) {
-                  return Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: Color(0xFF0284C7),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          servicios[index],
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            color: Color(0xFF334155),
-                            fontWeight: FontWeight.w500,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  int columnas = constraints.maxWidth > 550 ? 2 : 1;
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: servicios.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columnas,
+                      mainAxisExtent: 36,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemBuilder: (context, index) {
+                      return Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle_outline_rounded,
+                            color: Color(0xFF0284C7),
+                            size: 18,
                           ),
-                        ),
-                      ),
-                    ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              servicios[index],
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                color: Color(0xFF334155),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -371,15 +398,15 @@ class HospitalProfileScreen extends StatelessWidget {
     );
   }
 
-  // --- BLOQUE DERECHO: TARJETA INTEGRAL DE CONTACTO ACCIONABLE ---
   Widget _buildTarjetaContacto(
     String telGeneral,
     String telUrgencias,
+    String horario,
     String direccion,
     String ciudad,
   ) {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -405,7 +432,7 @@ class HospitalProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // 🚨 BOTÓN DE URGENCIAS DESTACADO ROJO (Prioridad número 1 en Hospitales)
+          // Botón Urgencias 24h
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -424,8 +451,8 @@ class HospitalProfileScreen extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEF4444), // Rojo Alerta Médica
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                backgroundColor: const Color(0xFFEF4444),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -449,7 +476,7 @@ class HospitalProfileScreen extends StatelessWidget {
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 side: const BorderSide(color: Color(0xFF0284C7), width: 1.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -457,39 +484,45 @@ class HospitalProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(height: 40, color: Color(0xFFF1F5F9)),
+          const Divider(height: 32, color: Color(0xFFF1F5F9)),
 
-          // Bloque Horarios
-          const Row(
+          // Horarios Dinámicos
+          Row(
             children: [
-              Icon(Icons.access_time_rounded, color: Colors.grey, size: 20),
+              const Icon(
+                Icons.access_time_rounded,
+                color: Colors.grey,
+                size: 20,
+              ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Horario de Operación',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: Color(0xFF1E293B),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Horario de Operación',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Color(0xFF1E293B),
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Abierto las 24 horas (Lunes a Domingo)',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: Colors.green,
-                      fontWeight: FontWeight.w600,
+                    Text(
+                      horario,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
 
-          // Bloque Dirección Física
+          // Dirección Física
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -524,9 +557,9 @@ class HospitalProfileScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Botón de Google Maps "Cómo llegar"
+          // Botón Maps
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -534,7 +567,7 @@ class HospitalProfileScreen extends StatelessWidget {
               icon: const FaIcon(
                 FontAwesomeIcons.mapLocationDot,
                 color: Colors.white,
-                size: 16,
+                size: 15,
               ),
               label: const Text(
                 'Ver en Google Maps / Cómo llegar',
@@ -545,10 +578,8 @@ class HospitalProfileScreen extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(
-                  0xFF334155,
-                ), // Slate gris oscuro corporativo
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: const Color(0xFF334155),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

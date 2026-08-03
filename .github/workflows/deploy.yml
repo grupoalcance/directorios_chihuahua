@@ -26,14 +26,17 @@ jobs:
           channel: "stable"
 
       - name: 4. Compilar la aplicación para Web
-        run: flutter build web --release --pwa-strategy=none
+        run: flutter build web --release
 
-      - name: 5. Subir archivos mediante FTP
-        uses: SamKirsch/ftp-deploy@v4.3.5
+      - name: 5. Subir archivos mediante RSync/SSH Key
+        uses: easingthemes/ssh-deploy@main
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./build/web/
-          server-dir: ./public_html/
-          dangerous-clean-slate: false
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          ARGS: "-rlptgozr --delete"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USERNAME }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          SOURCE: "build/web/"
+          TARGET: "/home/u492244081/domains/medicosdurango.com/public_html/"
+          SCRIPT_AFTER: |
+            chmod -R 755 /home/u492244081/domains/medicosdurango.com/public_html/

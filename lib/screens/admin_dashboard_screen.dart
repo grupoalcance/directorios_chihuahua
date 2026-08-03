@@ -29,10 +29,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _apellidosController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
+  final TextEditingController _telefonoUrgenciasController =
+      TextEditingController();
   final TextEditingController _direccionController = TextEditingController();
   final TextEditingController _ciudadController = TextEditingController();
   final TextEditingController _especialidadController = TextEditingController();
   final TextEditingController _cedulaController = TextEditingController();
+  final TextEditingController _horarioController = TextEditingController();
+
+  // Catálogos de Servicios por tipo de establecimiento
+  final List<String> _serviciosHospitales = [
+    'Urgencias Médicas 24/7',
+    'Unidad de Cuidados Intensivos (UCI)',
+    'Laboratorio Clínico y de Análisis',
+    'Radiología e Imagenología Avanzada',
+    'Quirófanos de Alta Tecnología',
+    'Especialidades Médicas Integrales',
+    'Banco de Sangre',
+    'Maternidad y Neonatología',
+    'Ambulancia y Traslado de Urgencia',
+  ];
+
+  final List<String> _serviciosFarmacias = [
+    'Servicio a Domicilio Express',
+    'Consultorio Médico Adyacente',
+    'Aceptamos Tarjetas de Crédito/Débito',
+    'Medicamentos de Patente y Genéricos',
+    'Servicio 24 Horas',
+    'Programa Círculo de la Salud',
+    'Facturación Electrónica',
+    'Dermatología y Especialidad',
+  ];
+
+  final List<String> _serviciosSeleccionados = [];
+
   String _perfilParaRegistrar = 'Médico';
   bool _guardandoPerfil = false;
 
@@ -48,10 +78,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     _nombreController.dispose();
     _apellidosController.dispose();
     _telefonoController.dispose();
+    _telefonoUrgenciasController.dispose();
     _direccionController.dispose();
     _ciudadController.dispose();
     _especialidadController.dispose();
     _cedulaController.dispose();
+    _horarioController.dispose();
     super.dispose();
   }
 
@@ -98,7 +130,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           'cedula': _cedulaController.text.trim(),
           'rol': rol,
           'activo': true,
-          'tipo_perfil': 'basico', // 🔑 CORREGIDO: "basico" en español
+          'tipo_perfil': 'basico',
           'reseñas_count': 0,
           'clics_wa': 0,
           'visitas': 0,
@@ -106,17 +138,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           'consultorios': consultoriosEstructura,
           'fecha_registro': FieldValue.serverTimestamp(),
         });
-      } else {
-        String coleccion = _perfilParaRegistrar == 'Hospital'
-            ? 'hospitales'
-            : 'farmacias';
-        await FirebaseFirestore.instance.collection(coleccion).add({
+      } else if (_perfilParaRegistrar == 'Hospital') {
+        await FirebaseFirestore.instance.collection('hospitales').add({
           'nombre': nombre,
           'direccion': direccion,
           'ciudad': ciudad,
           'telefono': telefono,
+          'telefono_urgencias': _telefonoUrgenciasController.text.trim().isEmpty
+              ? telefono
+              : _telefonoUrgenciasController.text.trim(),
+          'horario': _horarioController.text.trim().isEmpty
+              ? 'Abierto las 24 horas (Lunes a Domingo)'
+              : _horarioController.text.trim(),
+          'servicios': _serviciosSeleccionados,
           'activo': true,
           'score': '5.0',
+          'foto_url': '',
+          'fecha_registro': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await FirebaseFirestore.instance.collection('farmacias').add({
+          'nombre': nombre,
+          'direccion': direccion,
+          'ciudad': ciudad,
+          'telefono': telefono,
+          'whatsapp': telefono,
+          'horario': _horarioController.text.trim().isEmpty
+              ? 'Abierto de 8:00 AM a 10:00 PM'
+              : _horarioController.text.trim(),
+          'servicios': _serviciosSeleccionados,
+          'activo': true,
+          'score': '5.0',
+          'foto_url': '',
           'fecha_registro': FieldValue.serverTimestamp(),
         });
       }
@@ -149,10 +202,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     _nombreController.clear();
     _apellidosController.clear();
     _telefonoController.clear();
+    _telefonoUrgenciasController.clear();
     _direccionController.clear();
     _ciudadController.clear();
     _especialidadController.clear();
     _cedulaController.clear();
+    _horarioController.clear();
+    _serviciosSeleccionados.clear();
   }
 
   void _mostrarModalAlta() {
@@ -163,6 +219,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           builder: (context, setModalState) {
             bool esMedico = _perfilParaRegistrar == 'Médico';
             bool esEnfermero = _perfilParaRegistrar == 'Enfermero';
+            bool esHospital = _perfilParaRegistrar == 'Hospital';
+            bool esFarmacia = _perfilParaRegistrar == 'Farmacias';
+
+            List<String> catalogoAmostrar = esHospital
+                ? _serviciosHospitales
+                : (esFarmacia ? _serviciosFarmacias : []);
 
             return AlertDialog(
               backgroundColor: Colors.white,
@@ -183,7 +245,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 ],
               ),
               content: SizedBox(
-                width: 500,
+                width: 550,
                 child: SingleChildScrollView(
                   child: Form(
                     key: _formKey,
@@ -222,6 +284,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           onChanged: (value) {
                             setModalState(() {
                               _perfilParaRegistrar = value!;
+                              _serviciosSeleccionados.clear();
                             });
                           },
                         ),
@@ -230,7 +293,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _nombreController,
                           decoration: _inputDecoration(
-                            'Ej. Dr. Armando Lozano o Farmacia Central',
+                            'Ej. AMCCI Hospital, Farmacia La Miniatura o Dr. Armando Lozano',
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
@@ -247,26 +310,52 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           ),
                         ],
                         const SizedBox(height: 16),
-                        _buildInputLabel('Teléfono / WhatsApp de Contacto'),
+                        _buildInputLabel('Teléfono Principal de Contacto'),
                         TextFormField(
                           controller: _telefonoController,
                           keyboardType: TextInputType.phone,
-                          decoration: _inputDecoration('Ej. 8711234567'),
+                          decoration: _inputDecoration('Ej. 61882272727'),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
                         ),
+
+                        if (esHospital) ...[
+                          const SizedBox(height: 16),
+                          _buildInputLabel('Teléfono de Urgencias 24h'),
+                          TextFormField(
+                            controller: _telefonoUrgenciasController,
+                            keyboardType: TextInputType.phone,
+                            decoration: _inputDecoration(
+                              'Ej. 61882272727 (Opcional si es el mismo)',
+                            ),
+                          ),
+                        ],
+
+                        if (esHospital || esFarmacia) ...[
+                          const SizedBox(height: 16),
+                          _buildInputLabel('Horario de Operación'),
+                          TextFormField(
+                            controller: _horarioController,
+                            decoration: _inputDecoration(
+                              esHospital
+                                  ? 'Ej. Abierto las 24 horas (Lunes a Domingo)'
+                                  : 'Ej. Abierto de 8:00 AM a 10:00 PM',
+                            ),
+                          ),
+                        ],
+
                         const SizedBox(height: 16),
                         _buildInputLabel('Dirección Física'),
                         TextFormField(
                           controller: _direccionController,
                           decoration: _inputDecoration(
-                            'Ej. Av. Juárez #123 Col. Centro',
+                            'Ej. Pereyra 404, Zona Centro',
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
                         ),
                         const SizedBox(height: 16),
-                        _buildInputLabel('Ciudad'),
+                        _buildInputLabel('Ciudad / Municipio'),
                         TextFormField(
                           controller: _ciudadController,
                           decoration: _inputDecoration(
@@ -275,6 +364,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
                         ),
+
                         if (esMedico) ...[
                           const SizedBox(height: 16),
                           _buildInputLabel('Especialidad Médica'),
@@ -297,6 +387,53 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             validator: (v) => v == null || v.isEmpty
                                 ? 'Campo requerido'
                                 : null,
+                          ),
+                        ],
+
+                        // 🔑 SECCIÓN DE CHIPS DE SERVICIOS ADAPTATIVO
+                        if (esHospital || esFarmacia) ...[
+                          const SizedBox(height: 20),
+                          _buildInputLabel('Servicios y Ventajas Clave'),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: catalogoAmostrar.map((servicio) {
+                              bool seleccionado = _serviciosSeleccionados
+                                  .contains(servicio);
+                              return FilterChip(
+                                label: Text(
+                                  servicio,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: seleccionado
+                                        ? Colors.white
+                                        : const Color(0xFF334155),
+                                    fontWeight: seleccionado
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                                selected: seleccionado,
+                                selectedColor: esHospital
+                                    ? AppConfig.primaryColor
+                                    : const Color(0xFF0D9488),
+                                backgroundColor: const Color(0xFFF1F5F9),
+                                checkmarkColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                onSelected: (bool selected) {
+                                  setModalState(() {
+                                    if (selected) {
+                                      _serviciosSeleccionados.add(servicio);
+                                    } else {
+                                      _serviciosSeleccionados.remove(servicio);
+                                    }
+                                  });
+                                },
+                              );
+                            }).toList(),
                           ),
                         ],
                       ],
@@ -820,7 +957,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                 bool isActive = data['activo'] ?? false;
                 String uid = doc.id;
 
-                // 🔑 CORREGIDO: Manejo seguro de nulos en nombre y apellidos
                 String nombreStr = (data['nombre'] ?? '').toString().trim();
                 String apellidosStr = (data['apellidos'] ?? '')
                     .toString()
@@ -830,7 +966,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
                 String subtituloFiltro = data['especialidad'] ?? 'General';
 
-                // 🔑 CORREGIDO: Manejo seguro de nulos en consultorios
                 String ubicacionVisual = 'Sin dirección configurada';
                 if (data['consultorios'] != null &&
                     (data['consultorios'] is List) &&

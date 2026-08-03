@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart'; // 👈 Requiere agregar image_picker en tu pubspec.yaml
-import 'dart:convert'; // Para codificar la imagen de manera segura si es entorno Web
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
@@ -27,10 +27,39 @@ class _EstablishmentDashboardScreenState
   final TextEditingController _direccionController = TextEditingController();
   final TextEditingController _ciudadController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
+  final TextEditingController _whatsappController =
+      TextEditingController(); // 👈 AGREGADO PARA FARMACIAS
   final TextEditingController _scoreController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
-  final TextEditingController _urgenciasController =
-      TextEditingController(); // Solo para hospitales
+  final TextEditingController _urgenciasController = TextEditingController();
+  final TextEditingController _horarioController = TextEditingController();
+
+  // 🏥 Catálogo de Servicios e Infraestructura para Hospitales
+  final List<String> _serviciosHospital = [
+    'Urgencias Médicas 24/7',
+    'Unidad de Cuidados Intensivos (UCI)',
+    'Laboratorio Clínico y de Análisis',
+    'Radiología e Imagenología Avanzada',
+    'Quirófanos de Alta Tecnología',
+    'Especialidades Médicas Integrales',
+    'Banco de Sangre',
+    'Maternidad y Neonatología',
+    'Ambulancia y Traslado de Urgencia',
+  ];
+
+  // 💊 Catálogo de Servicios y Ventajas para Farmacias
+  final List<String> _serviciosFarmacia = [
+    'Servicio a Domicilio Express',
+    'Consultorio Médico Adyacente',
+    'Aceptamos Tarjetas de Crédito/Débito',
+    'Medicamentos de Patente y Genéricos',
+    'Servicio 24 Horas',
+    'Programa Círculo de la Salud',
+    'Facturación Electrónica',
+    'Dermatología y Especialidad',
+  ];
+
+  List<String> _serviciosSeleccionados = [];
 
   bool _cargando = true;
   bool _actualizando = false;
@@ -39,8 +68,7 @@ class _EstablishmentDashboardScreenState
   // Variables para la gestión de imágenes
   String _fotoUrlActual = '';
   XFile? _imagenSeleccionada;
-  dynamic
-  _vistaPreviaWebBytes; // Guarda los bytes temporales para la previsualización en Web
+  dynamic _vistaPreviaWebBytes;
 
   @override
   void initState() {
@@ -54,9 +82,11 @@ class _EstablishmentDashboardScreenState
     _direccionController.dispose();
     _ciudadController.dispose();
     _telefonoController.dispose();
+    _whatsappController.dispose();
     _scoreController.dispose();
     _descripcionController.dispose();
     _urgenciasController.dispose();
+    _horarioController.dispose();
     super.dispose();
   }
 
@@ -76,14 +106,24 @@ class _EstablishmentDashboardScreenState
           _direccionController.text = data['direccion'] ?? '';
           _ciudadController.text = data['ciudad'] ?? '';
           _telefonoController.text = data['telefono'] ?? '';
+          _whatsappController.text = data['whatsapp'] ?? '';
           _scoreController.text = data['score'] ?? '5.0';
           _descripcionController.text = data['descripcion'] ?? '';
-          _fotoUrlActual =
-              data['foto_url'] ?? ''; // Recupera el campo de la foto
+          _horarioController.text =
+              data['horario'] ??
+              (widget.tipo == 'hospitales'
+                  ? 'Abierto las 24 horas (Lunes a Domingo)'
+                  : 'Abierto de 8:00 AM a 10:00 PM');
+          _fotoUrlActual = data['foto_url'] ?? '';
 
           if (widget.tipo == 'hospitales') {
             _urgenciasController.text = data['telefono_urgencias'] ?? '';
           }
+
+          if (data['servicios'] != null && data['servicios'] is List) {
+            _serviciosSeleccionados = List<String>.from(data['servicios']);
+          }
+
           _cargando = false;
         });
       }
@@ -92,25 +132,24 @@ class _EstablishmentDashboardScreenState
     }
   }
 
-  // 📸 LÓGICA DE SELECCIÓN DE IMAGEN (Compatible Web y Celular)
+  // 📸 LÓGICA DE SELECCIÓN DE IMAGEN
   Future<void> _seleccionarImagen() async {
     final ImagePicker picker = ImagePicker();
     final XFile? imagen = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 70, // Optimiza el peso de manera automática
+      imageQuality: 70,
     );
 
     if (imagen != null) {
       final bytes = await imagen.readAsBytes();
       setState(() {
         _imagenSeleccionada = imagen;
-        _vistaPreviaWebBytes =
-            bytes; // Asigna los bytes para renderizar la vista previa en caliente
+        _vistaPreviaWebBytes = bytes;
       });
     }
   }
 
-  // 🔥 LÓGICA DE FIREBASE: Actualizar datos y subir imagen si aplica
+  // 🔥 LÓGICA DE FIREBASE: Actualizar datos y servicios
   Future<void> _actualizarInformacion() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _actualizando = true);
@@ -118,9 +157,7 @@ class _EstablishmentDashboardScreenState
     try {
       String urlFinalImagen = _fotoUrlActual;
 
-      // Si el administrador seleccionó una nueva imagen, la procesamos
       if (_imagenSeleccionada != null && _vistaPreviaWebBytes != null) {
-        // Formato Base64 seguro para Cloud Firestore o Firebase Storage
         String base64Image = base64Encode(_vistaPreviaWebBytes);
         urlFinalImagen = 'data:image/png;base64,$base64Image';
       }
@@ -130,10 +167,13 @@ class _EstablishmentDashboardScreenState
         'direccion': _direccionController.text.trim(),
         'ciudad': _ciudadController.text.trim(),
         'telefono': _telefonoController.text.trim(),
+        'whatsapp': _whatsappController.text.trim(),
         'score': _scoreController.text.trim(),
         'descripcion': _descripcionController.text.trim(),
-        'foto_url':
-            urlFinalImagen, // Guardamos la nueva imagen o mantenemos la anterior
+        'horario': _horarioController.text.trim(),
+        'servicios':
+            _serviciosSeleccionados, // 👈 Se guarda en ambas colecciones
+        'foto_url': urlFinalImagen,
       };
 
       if (widget.tipo == 'hospitales') {
@@ -149,11 +189,11 @@ class _EstablishmentDashboardScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('¡Información y fotografía actualizadas con éxito!'),
+            content: Text('¡Información y servicios actualizados con éxito!'),
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context); // Regresa al panel administrador
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -172,12 +212,17 @@ class _EstablishmentDashboardScreenState
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
-    String tituloPagina = widget.tipo == 'hospitales'
+    bool esHospital = widget.tipo == 'hospitales';
+
+    String tituloPagina = esHospital
         ? 'Panel de Hospital'
         : 'Panel de Farmacia';
-    IconData iconoPagina = widget.tipo == 'hospitales'
+    IconData iconoPagina = esHospital
         ? Icons.local_hospital_rounded
         : Icons.local_pharmacy_rounded;
+    List<String> catalogoActual = esHospital
+        ? _serviciosHospital
+        : _serviciosFarmacia;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -193,7 +238,7 @@ class _EstablishmentDashboardScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Encabezado de la pantalla privada
+                      // Encabezado
                       Row(
                         children: [
                           Icon(iconoPagina, color: Colors.blueGrey, size: 28),
@@ -224,7 +269,7 @@ class _EstablishmentDashboardScreenState
                       ),
                       const SizedBox(height: 30),
 
-                      // Sección de "Editar Perfil" con Formulario e Imagen Integrada
+                      // Formulario
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(32),
@@ -254,7 +299,7 @@ class _EstablishmentDashboardScreenState
                               ),
                               const SizedBox(height: 24),
 
-                              // 🖼️ SECCIÓN DINÁMICA DE FOTOGRAFÍA / LOGOTIPO
+                              // Fotografía
                               _buildFieldLabel('Logotipo o Imagen de Fachada'),
                               const SizedBox(height: 8),
                               Row(
@@ -275,22 +320,33 @@ class _EstablishmentDashboardScreenState
                                           ? Image.memory(
                                               _vistaPreviaWebBytes!,
                                               fit: BoxFit.cover,
-                                            ) // Previsualización local
+                                            )
                                           : _fotoUrlActual.isNotEmpty
-                                          ? Image.network(
-                                              _fotoUrlActual,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (c, e, s) =>
-                                                  const Icon(
-                                                    Icons.broken_image,
-                                                    color: Colors.grey,
-                                                  ),
-                                            ) // Imagen de Firebase
+                                          ? (_fotoUrlActual.startsWith(
+                                                  'data:image',
+                                                )
+                                                ? Image.memory(
+                                                    base64Decode(
+                                                      _fotoUrlActual
+                                                          .split(',')
+                                                          .last,
+                                                    ),
+                                                    fit: BoxFit.cover,
+                                                  )
+                                                : Image.network(
+                                                    _fotoUrlActual,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (c, e, s) =>
+                                                        const Icon(
+                                                          Icons.broken_image,
+                                                          color: Colors.grey,
+                                                        ),
+                                                  ))
                                           : Icon(
                                               iconoPagina,
                                               size: 40,
                                               color: const Color(0xFF94A3B8),
-                                            ), // Icono por defecto
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(width: 20),
@@ -345,7 +401,9 @@ class _EstablishmentDashboardScreenState
                               TextFormField(
                                 controller: _nombreController,
                                 decoration: _inputStyle(
-                                  'Ej. Sanatorio Español, Klyns Jardín',
+                                  esHospital
+                                      ? 'Ej. AMCCI Hospital de Especialidades'
+                                      : 'Ej. Farmacia La Miniatura',
                                   Icons.business,
                                 ),
                                 validator: (v) => v == null || v.isEmpty
@@ -379,7 +437,7 @@ class _EstablishmentDashboardScreenState
                                         TextFormField(
                                           controller: _direccionController,
                                           decoration: _inputStyle(
-                                            'Ej. Av. Allende 755',
+                                            'Ej. Pereyra 404, Zona Centro',
                                             Icons.location_on_outlined,
                                           ),
                                           validator: (v) =>
@@ -422,18 +480,66 @@ class _EstablishmentDashboardScreenState
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        _buildFieldLabel('Teléfono General'),
+                                        _buildFieldLabel(
+                                          'Teléfono General (Llamadas)',
+                                        ),
                                         TextFormField(
                                           controller: _telefonoController,
                                           keyboardType: TextInputType.phone,
                                           decoration: _inputStyle(
-                                            'Ej. 8717123456',
+                                            'Ej. 61882272727',
                                             Icons.phone,
                                           ),
                                           validator: (v) =>
                                               v == null || v.isEmpty
                                               ? 'Campo requerido'
                                               : null,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildFieldLabel(
+                                          'WhatsApp (Cotizaciones)',
+                                        ),
+                                        TextFormField(
+                                          controller: _whatsappController,
+                                          keyboardType: TextInputType.phone,
+                                          decoration: _inputStyle(
+                                            'Ej. 6181234567',
+                                            Icons.chat_bubble_outline_rounded,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildFieldLabel(
+                                          'Horario de Operación',
+                                        ),
+                                        TextFormField(
+                                          controller: _horarioController,
+                                          decoration: _inputStyle(
+                                            esHospital
+                                                ? 'Ej. Abierto las 24 horas (Lunes a Domingo)'
+                                                : 'Ej. Abierto de 8:00 AM a 10:00 PM',
+                                            Icons.access_time_rounded,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -465,21 +571,65 @@ class _EstablishmentDashboardScreenState
                                 ],
                               ),
 
-                              if (widget.tipo == 'hospitales') ...[
+                              if (esHospital) ...[
                                 const SizedBox(height: 20),
                                 _buildFieldLabel('Teléfono de Urgencias 24h'),
                                 TextFormField(
                                   controller: _urgenciasController,
                                   keyboardType: TextInputType.phone,
                                   decoration: _inputStyle(
-                                    'Ej. 8717654321',
+                                    'Ej. 61882272727',
                                     Icons.phone_android_rounded,
                                   ),
-                                  validator: (v) => v == null || v.isEmpty
-                                      ? 'Campo requerido'
-                                      : null,
                                 ),
                               ],
+
+                              // 🔑 SERVICIOS E INFRAESTRUCTURA (CHIPS PARA HOSPITALES Y FARMACIAS)
+                              const SizedBox(height: 24),
+                              _buildFieldLabel('Servicios y Ventajas Clave'),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: catalogoActual.map((servicio) {
+                                  bool seleccionado = _serviciosSeleccionados
+                                      .contains(servicio);
+                                  return FilterChip(
+                                    label: Text(
+                                      servicio,
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: seleccionado
+                                            ? Colors.white
+                                            : const Color(0xFF334155),
+                                        fontWeight: seleccionado
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                    selected: seleccionado,
+                                    selectedColor: esHospital
+                                        ? const Color(0xFF0061E0)
+                                        : const Color(0xFF0D9488),
+                                    backgroundColor: const Color(0xFFF1F5F9),
+                                    checkmarkColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    onSelected: (bool selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          _serviciosSeleccionados.add(servicio);
+                                        } else {
+                                          _serviciosSeleccionados.remove(
+                                            servicio,
+                                          );
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
 
                               const Divider(
                                 height: 48,
@@ -514,7 +664,9 @@ class _EstablishmentDashboardScreenState
                                     ),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0061E0),
+                                    backgroundColor: esHospital
+                                        ? const Color(0xFF0061E0)
+                                        : const Color(0xFF0D9488),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 24,
                                       vertical: 16,
@@ -570,7 +722,12 @@ class _EstablishmentDashboardScreenState
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF0061E0), width: 1.5),
+        borderSide: BorderSide(
+          color: widget.tipo == 'hospitales'
+              ? const Color(0xFF0061E0)
+              : const Color(0xFF0D9488),
+          width: 1.5,
+        ),
       ),
     );
   }

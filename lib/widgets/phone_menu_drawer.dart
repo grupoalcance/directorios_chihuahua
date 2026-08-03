@@ -20,30 +20,45 @@ class PhoneMenuDrawer extends StatefulWidget {
 }
 
 class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
-  final List<String> _especialidadesBaseDrawer = [
-    'Cardiología',
-    'Dermatología',
-    'Ginecología y Obstetricia',
-    'Medicina General',
-    'Neumología',
-    'Neurología',
-    'Nutrición',
-    'Odontología (Dentista)',
-    'Oftalmología',
-    'Pediatría',
-    'Periodoncia (Implantes Dentales)',
-  ];
+  // 📝 ESTRUCTURA DE CATEGORÍAS PADRE Y SUS SUBESPECIALIDADES BASE
+  final Map<String, List<String>> _categoriasPadreEspecialidades = {
+    'Odontología / Salud Dental': [
+      'Odontología (Dentista)',
+      'Ortodoncia',
+      'Periodoncia (Implantes Dentales)',
+      'Odontopediatría',
+      'Endodoncia',
+    ],
+    'Salud de la Mujer': ['Ginecología y Obstetricia', 'Uroginecología'],
+    'Pediatría': ['Pediatría'],
+    'Cirugías': [
+      'Cirugía General',
+      'Cirugía Plástica y Reconstructiva',
+      'Angiología / Cirugía Vascular',
+    ],
+    'Neuro y Salud Mental': ['Neurología', 'Psicología', 'Psiquiatría'],
+    'Otras Especialidades Médicas': [
+      'Cardiología',
+      'Dermatología',
+      'Medicina General',
+      'Neumología',
+      'Nutrición',
+      'Oftalmología',
+      'Traumatología y Ortopedia',
+      'Urología',
+    ],
+  };
 
-  List<String> _especialidadesDinamicas = [];
+  Map<String, List<String>> _mapaEspecialidadesDinamicas = {};
 
   @override
   void initState() {
     super.initState();
-    _especialidadesDinamicas = List.from(_especialidadesBaseDrawer);
+    _mapaEspecialidadesDinamicas = Map.from(_categoriasPadreEspecialidades);
     _cargarEspecialidadesDinamicas();
   }
 
-  // 🔑 CARGA Y NORMALIZACIÓN DINÁMICA DE ESPECIALIDADES EN MÓVIL
+  // 🔑 CARGA Y CLASIFICACIÓN DENTRO DE CATEGORÍAS PADRE DESDE FIRESTORE
   Future<void> _cargarEspecialidadesDinamicas() async {
     try {
       var query = await FirebaseFirestore.instance
@@ -52,13 +67,17 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
           .where('activo', isEqualTo: true)
           .get();
 
-      Set<String> setEsp = _especialidadesBaseDrawer.map((e) => e).toSet();
+      Map<String, Set<String>> mapaSet = {};
+      _categoriasPadreEspecialidades.forEach((cat, lista) {
+        mapaSet[cat] = Set.from(lista);
+      });
+
       for (var doc in query.docs) {
         String esp = (doc.data()['especialidad'] ?? '').toString().trim();
         if (esp.isNotEmpty) {
           String espLower = esp.toLowerCase();
 
-          // Normalización
+          // Normalización inteligente
           if (espLower == 'dentista' ||
               espLower == 'odontología' ||
               espLower == 'odontologia') {
@@ -75,13 +94,42 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
             esp = 'Uroginecología';
           }
 
-          setEsp.add(esp);
+          // Clasificación automática dentro de Categorías Padre
+          if (espLower.contains('odontolog') ||
+              espLower.contains('dentista') ||
+              espLower.contains('periodoncia') ||
+              espLower.contains('ortodoncia') ||
+              espLower.contains('endodoncia')) {
+            mapaSet['Odontología / Salud Dental']?.add(esp);
+          } else if (espLower.contains('ginecolog') ||
+              espLower.contains('obstetricia') ||
+              espLower.contains('uroginecolog')) {
+            mapaSet['Salud de la Mujer']?.add(esp);
+          } else if (espLower.contains('pediatra') ||
+              espLower.contains('pediatría') ||
+              espLower.contains('pediatria')) {
+            mapaSet['Pediatría']?.add(esp);
+          } else if (espLower.contains('cirug')) {
+            mapaSet['Cirugías']?.add(esp);
+          } else if (espLower.contains('neuro') ||
+              espLower.contains('psico') ||
+              espLower.contains('psiquia')) {
+            mapaSet['Neuro y Salud Mental']?.add(esp);
+          } else {
+            mapaSet['Otras Especialidades Médicas']?.add(esp);
+          }
         }
       }
 
       if (mounted) {
+        Map<String, List<String>> mapaFinal = {};
+        mapaSet.forEach((cat, setEsp) {
+          List<String> listaOrdenada = setEsp.toList()..sort();
+          mapaFinal[cat] = listaOrdenada;
+        });
+
         setState(() {
-          _especialidadesDinamicas = setEsp.toList()..sort();
+          _mapaEspecialidadesDinamicas = mapaFinal;
         });
       }
     } catch (e) {
@@ -160,7 +208,7 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
             }).toList(),
           ),
 
-          // 3. Desplegable Especialidad (DINÁMICO CON PERIODONCIA Y NUEVA LISTA)
+          // 3. Desplegable Especialidad Jerárquico por Categorías Padre
           ExpansionTile(
             leading: Icon(
               Icons.medical_services_outlined,
@@ -168,9 +216,28 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
             ),
             title: const Text('Especialidad'),
             children: [
-              ..._especialidadesDinamicas.map((esp) {
-                return _buildSubItemEspecialidad(context, esp);
+              ..._mapaEspecialidadesDinamicas.entries.map((entry) {
+                String categoriaPadre = entry.key;
+                List<String> subEspecialidades = entry.value;
+
+                return ExpansionTile(
+                  title: Padding(
+                    padding: const EdgeInsets.only(left: 12.0),
+                    child: Text(
+                      categoriaPadre,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                  ),
+                  children: subEspecialidades.map((subEsp) {
+                    return _buildSubItemEspecialidad(context, subEsp);
+                  }).toList(),
+                );
               }).toList(),
+
               ListTile(
                 title: Padding(
                   padding: const EdgeInsets.only(left: 16.0),
@@ -451,10 +518,10 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
   Widget _buildSubItemCiudad(BuildContext context, String nombreCiudad) {
     return ListTile(
       title: Padding(
-        padding: const EdgeInsets.only(left: 16.0),
+        padding: const EdgeInsets.only(left: 24.0),
         child: Text(
           nombreCiudad,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF334155)),
+          style: const TextStyle(fontSize: 13.5, color: Color(0xFF334155)),
         ),
       ),
       onTap: () {
@@ -476,10 +543,10 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
   ) {
     return ListTile(
       title: Padding(
-        padding: const EdgeInsets.only(left: 16.0),
+        padding: const EdgeInsets.only(left: 28.0),
         child: Text(
           nombreEspecialidad,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF334155)),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF475569)),
         ),
       ),
       onTap: () {
