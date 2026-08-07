@@ -5,9 +5,9 @@ class AppConfig {
   static const String appName = 'Médicos Durango';
   static const String appDomain = 'medicosdurango.com';
 
-  // 2. Colores Corporativos
+ // 2. Colores Corporativos
   static const Color primaryColor = Colors.blue;
-  static const Color secondaryColor = Color(0xFF1E3A8A);
+  static const Color secondaryColor = Color(0xFF0061E0);
 
   // 3. Rutas y CRM
   static const String logoPath = 'assets/images/logo-durango.png';
