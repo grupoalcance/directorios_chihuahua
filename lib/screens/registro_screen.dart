@@ -4,6 +4,9 @@ import 'medicos_page_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import 'textos_legales_screen.dart';
 
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
 
@@ -209,7 +212,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                         width: 24,
                         child: Checkbox(
                           value: _aceptaTerminos,
-                          activeColor: Colors.blue,
+                          activeColor: AppConfig.primaryColor,
                           onChanged: (value) {
                             setState(() {
                               _aceptaTerminos = value ?? false;
@@ -236,17 +239,17 @@ class _RegistroScreenState extends State<RegistroScreen> {
                                 color: Colors.grey.shade700,
                                 fontSize: 12,
                               ),
-                              children: const [
+                              children: [
                                 TextSpan(
                                   text:
                                       'Términos, Condiciones y el Aviso de Privacidad',
                                   style: TextStyle(
-                                    color: Colors.blue,
+                                    color: AppConfig.primaryColor,
                                     fontWeight: FontWeight.bold,
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
-                                TextSpan(text: ' de la plataforma.'),
+                                const TextSpan(text: ' de la plataforma.'),
                               ],
                             ),
                           ),
@@ -262,7 +265,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _ejecutarRegistro,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppConfig.primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
@@ -299,9 +302,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text(
+                        child: Text(
                           'Inicia sesión',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppConfig.primaryColor,
+                          ),
                         ),
                       ),
                     ],

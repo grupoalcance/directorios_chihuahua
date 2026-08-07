@@ -3,6 +3,9 @@ import 'package:url_launcher/url_launcher.dart'; // Para detonar el mensaje de W
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 class SuscribirseScreen extends StatefulWidget {
   const SuscribirseScreen({Key? key}) : super(key: key);
 
@@ -19,7 +22,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
   // Opción por defecto para el tipo de contacto
   String _tipoContacto = 'Deseo que me contacten por llamada/WhatsApp';
 
-  // 📞 TU NÚMERO DE WHATSAPP DONDE RECIBIRÁS LAS SOLICITUDES DE LOS MÉDICOS (Con LADA 52)
+  // 📞 NÚMERO COMERCIAL CENTRAL PARA RECIBIR SOLICITUDES DE REGISTRO
   final String _numeroComercial = '528714758857';
 
   @override
@@ -33,9 +36,8 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
   // 🚀 FUNCIÓN PARA PROCESAR EL FORMULARIO Y ENVIARLO A WHATSAPP
   Future<void> _enviarSolicitudSuscripcion() async {
     if (_formKey.currentState!.validate()) {
-      // 🛠️ CORREGIDO: Interpolación de variables estructurada correctamente para compatibilidad con WhatsApp
       final String plantillaMensaje =
-          '🩺 *Nueva Solicitud de Registro - Médicos durango*\n\n'
+          '🩺 *Nueva Solicitud de Registro - ${AppConfig.appName}*\n\n'
           '👤 *Médico:* ${_nombreController.text.trim()}\n'
           '📞 *Teléfono:* ${_telefonoController.text.trim()}\n'
           '🩻 *Especialidad:* ${_especialidadController.text.trim()}\n\n'
@@ -59,7 +61,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
         }
       }
 
-      // Limpiamos los campos después de despachar la información
+      // Limpiamos los campos después de enviar
       _nombreController.clear();
       _telefonoController.clear();
       _especialidadController.clear();
@@ -72,11 +74,9 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
     bool esPC = width > 850;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Fondo Slate 50 premium
-      appBar: const CustomAppBar(), // Barra premium integrada
-      drawer: width < 1100
-          ? const PhoneMenuDrawer()
-          : null, // Menú móvil integrado
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: const CustomAppBar(),
+      drawer: width < 1100 ? const PhoneMenuDrawer() : null,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -87,16 +87,16 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
                 vertical: width < 600 ? 45 : 65,
                 horizontal: 20,
               ),
-              color: const Color(0xFF1E3A8A), // Azul institucional
+              color: const Color(0xFF1E3A8A),
               child: Center(
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 800),
                   child: Column(
                     children: [
-                      const Text(
-                        'Únete a Médicos durango',
+                      Text(
+                        'Únete a ${AppConfig.appName}',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -105,7 +105,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Forma parte del directorio médico más moderno y consultado de la Comarca Lagunera. Incrementa tus pacientes de manera directa y digital.',
+                        'Forma parte del directorio médico más moderno y consultado en ${AppConfig.ciudadesActivas.join(", ")}. Incrementa tus pacientes de manera directa y digital.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
@@ -159,6 +159,8 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
 
   // --- BLOQUE IZQUIERDO: BENEFICIOS DE SUSCRIBIRSE ---
   Widget _buildBeneficiosSuscripcion() {
+    String ciudadesTexto = AppConfig.ciudadesActivas.join(", ");
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -179,7 +181,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
         _itemBeneficio(
           Icons.ads_click_rounded,
           'Mayor Visibilidad',
-          'Aparece ante miles de pacientes de Durango, Gómez y Lerdo que buscan tu especialidad a diario.',
+          'Aparece ante miles de pacientes en $ciudadesTexto que buscan tu especialidad a diario.',
         ),
         const SizedBox(height: 20),
         _itemBeneficio(
@@ -297,9 +299,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
             _buildInputLabel('Especialidad Médica'),
             TextFormField(
               controller: _especialidadController,
-              decoration: _inputDecoration(
-                '',
-              ),
+              decoration: _inputDecoration(''),
               validator: (v) => v == null || v.isEmpty
                   ? 'Por favor escribe tu especialidad'
                   : null,
@@ -325,7 +325,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
                     ),
                     value: 'Deseo que me contacten por llamada/WhatsApp',
                     groupValue: _tipoContacto,
-                    activeColor: const Color(0xFF0061E0),
+                    activeColor: AppConfig.primaryColor,
                     onChanged: (value) {
                       setState(() {
                         _tipoContacto = value!;
@@ -341,7 +341,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
                     value:
                         'Quiero agendar cita para que me visiten en mi consultorio',
                     groupValue: _tipoContacto,
-                    activeColor: const Color(0xFF0061E0),
+                    activeColor: AppConfig.primaryColor,
                     onChanged: (value) {
                       setState(() {
                         _tipoContacto = value!;
@@ -359,7 +359,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
               child: ElevatedButton(
                 onPressed: _enviarSolicitudSuscripcion,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0061E0),
+                  backgroundColor: AppConfig.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -413,7 +413,7 @@ class _SuscribirseScreenState extends State<SuscribirseScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF0061E0), width: 1.5),
+        borderSide: BorderSide(color: AppConfig.primaryColor, width: 1.5),
       ),
     );
   }

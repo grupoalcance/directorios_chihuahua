@@ -5,10 +5,12 @@ import 'medicos_page_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import 'admin_dashboard_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  final bool vieneDesdeOpinio; // 🔑 VARIABLE DINÁMICA AÑADIDA
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
-  // 🔑 CONSTRUCTOR ADAPTADO CON VALOR POR DEFECTO EN FALSE
+class LoginScreen extends StatefulWidget {
+  final bool vieneDesdeOpinio;
+
   const LoginScreen({super.key, this.vieneDesdeOpinio = false});
 
   @override
@@ -125,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: AppConfig.primaryColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -191,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔑 TÍTULO DINÁMICO SEGÚN FLUJO DE PACIENTE
+                  // TÍTULO DINÁMICO SEGÚN FLUJO
                   Text(
                     widget.vieneDesdeOpinio
                         ? 'Inicia Sesión para Opinar'
@@ -203,11 +205,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // 🔑 PÁRRAFO CONTEXTUALIZADO PARA RESEÑAS
+                  // PÁRRAFO CONTEXTUALIZADO Y DESACOPLADO CON AppConfig.appName
                   Text(
                     widget.vieneDesdeOpinio
                         ? 'Para garantizar la autenticidad y seguridad del directorio, inicia sesión con tu cuenta de paciente antes de calificar tu experiencia.'
-                        : 'Ingresa tus credenciales autorizadas de acceso para pacientes o administradores del directorio médico regional.',
+                        : 'Ingresa tus credenciales autorizadas de acceso para pacientes o administradores de ${AppConfig.appName}.',
                     style: const TextStyle(
                       color: Colors.blueGrey,
                       fontSize: 14,
@@ -280,9 +282,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _mostrarDialogoRecuperarPassword,
-                      child: const Text(
+                      child: Text(
                         '¿Olvidaste tu contraseña?',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppConfig.primaryColor,
+                        ),
                       ),
                     ),
                   ),
@@ -408,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppConfig.primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
@@ -452,9 +457,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text(
+                        child: Text(
                           'Regístrate aquí',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppConfig.primaryColor,
+                          ),
                         ),
                       ),
                     ],

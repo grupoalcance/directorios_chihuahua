@@ -5,6 +5,9 @@ import 'dart:convert';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 class FarmaciaProfileScreen extends StatelessWidget {
   final Map<String, dynamic> farmaciaData;
 
@@ -26,7 +29,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
       cleanPhone = '52$cleanPhone';
     }
     String mensaje = Uri.encodeComponent(
-      'Hola, vi su sucursal de $nombreFarmacia en médicosdurango.com y me gustaría cotizar un medicamento.',
+      'Hola, vi su sucursal de $nombreFarmacia en ${AppConfig.appName} y me gustaría cotizar un medicamento.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -35,9 +38,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
   }
 
   Future<void> _abrirMapa(String direccion, String ciudad) async {
-    final String query = Uri.encodeComponent(
-      '$direccion, $ciudad, Durango, Mexico',
-    );
+    final String query = Uri.encodeComponent('$direccion, $ciudad, Mexico');
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$query',
     );
@@ -54,7 +55,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
     // Extracción dinámica de datos desde Firebase
     String nombre = farmaciaData['nombre'] ?? 'Farmacia';
     String direccion = farmaciaData['direccion'] ?? 'Dirección no especificada';
-    String ciudad = farmaciaData['ciudad'] ?? 'Durango';
+    String ciudad = farmaciaData['ciudad'] ?? AppConfig.ciudadesActivas[0];
     String telefono = farmaciaData['telefono'] ?? '';
     String whatsapp = farmaciaData['whatsapp']?.toString().isNotEmpty == true
         ? farmaciaData['whatsapp']
@@ -66,7 +67,7 @@ class FarmaciaProfileScreen extends StatelessWidget {
     String descripcion =
         farmaciaData['descripcion']?.toString().isNotEmpty == true
         ? farmaciaData['descripcion']
-        : 'Farmacia comprometida con la salud y el bienestar. Contamos con un amplio catálogo de medicamentos de patente, genéricos, cuidado personal y servicio a domicilio rápido.';
+        : 'Farmacia comprometida con la salud y el bienestar en nuestra región. Contamos con un amplio catálogo de medicamentos de patente, genéricos, cuidado personal y servicio a domicilio rápido.';
 
     // Extracción dinámica de servicios desde Firebase
     List<String> servicios = [];

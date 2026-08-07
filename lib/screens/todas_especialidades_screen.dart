@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
+
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
-import '../screens/lista_doctores_screen.dart';
 
 class TodasEspecialidadesScreen extends StatefulWidget {
   const TodasEspecialidadesScreen({Key? key}) : super(key: key);
@@ -251,7 +254,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                 if (esp.isNotEmpty) {
                   String espLower = esp.toLowerCase();
 
-                  // Normalización
+                  // Normalización inteligente
                   if (espLower == 'dentista' ||
                       espLower == 'odontología' ||
                       espLower == 'odontologia') {
@@ -329,9 +332,9 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Explora todas las ramas médicas organizadas por área para encontrar a tu especialista ideal.',
-                        style: TextStyle(
+                      Text(
+                        'Explora todas las ramas médicas organizadas por área para encontrar a tu especialista ideal en ${AppConfig.appName}.',
+                        style: const TextStyle(
                           fontSize: 14.5,
                           color: Color(0xFF64748B),
                         ),
@@ -366,9 +369,9 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                               color: Colors.grey.shade400,
                               fontSize: 14,
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search,
-                              color: Colors.blue,
+                              color: AppConfig.primaryColor,
                               size: 20,
                             ),
                             suffixIcon: _filtroTexto.isNotEmpty
@@ -404,8 +407,8 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: Colors.blue,
+                              borderSide: BorderSide(
+                                color: AppConfig.primaryColor,
                                 width: 1.5,
                               ),
                             ),
@@ -421,7 +424,6 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                             .values
                             .toList();
 
-                        // Aplicar filtro de búsqueda si el usuario escribió algo
                         if (_filtroTexto.isNotEmpty) {
                           itemsCategoria = itemsCategoria
                               .where(
@@ -456,7 +458,7 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
                                     width: 4,
                                     height: 18,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF0284C7),
+                                      color: AppConfig.primaryColor,
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
@@ -516,12 +518,10 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
   ) {
     return InkWell(
       onTap: () {
-        Navigator.push(
+        // 🔑 NAVEGACIÓN NOMBRADA LIMPIA CON PARÁMETROS EN LA URL
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ListaDoctoresScreen(especialidad: nombre, ciudad: ''),
-          ),
+          '/doctores?especialidad=${Uri.encodeComponent(nombre)}',
         );
       },
       borderRadius: BorderRadius.circular(16),
@@ -541,7 +541,9 @@ class _TodasEspecialidadesScreenState extends State<TodasEspecialidadesScreen> {
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: Color(0xFF334155) == Colors.white
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.center,
             children: [
               Container(
                 padding: const EdgeInsets.all(10),

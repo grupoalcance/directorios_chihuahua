@@ -5,8 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_durango/config/app_config.dart';
+// 🔑 IMPORTACIÓN RELATIVA Y DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
 import 'doctor_dashboard_screen.dart';
 import 'medicos_page_screen.dart';
@@ -293,7 +293,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _nombreController,
                           decoration: _inputDecoration(
-                            'Ej. AMCCI Hospital, Farmacia La Miniatura o Dr. Armando Lozano',
+                            'Ej. Hospital de Especialidades, Farmacia Central o Dr. Armando Lozano',
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
@@ -314,7 +314,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _telefonoController,
                           keyboardType: TextInputType.phone,
-                          decoration: _inputDecoration('Ej. 61882272727'),
+                          decoration: _inputDecoration('Ej. 8711234567'),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
                         ),
@@ -326,7 +326,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                             controller: _telefonoUrgenciasController,
                             keyboardType: TextInputType.phone,
                             decoration: _inputDecoration(
-                              'Ej. 61882272727 (Opcional si es el mismo)',
+                              'Ej. 8711234567 (Opcional si es el mismo)',
                             ),
                           ),
                         ],
@@ -349,7 +349,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _direccionController,
                           decoration: _inputDecoration(
-                            'Ej. Pereyra 404, Zona Centro',
+                            'Ej. Av. Principal #404, Zona Centro',
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
@@ -359,7 +359,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                         TextFormField(
                           controller: _ciudadController,
                           decoration: _inputDecoration(
-                            'Ej. Durango, Gómez Palacio, Lerdo',
+                            'Ej. ${AppConfig.ciudadesActivas.join(", ")}',
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Campo requerido' : null,
@@ -390,7 +390,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           ),
                         ],
 
-                        // 🔑 SECCIÓN DE CHIPS DE SERVICIOS ADAPTATIVO
                         if (esHospital || esFarmacia) ...[
                           const SizedBox(height: 20),
                           _buildInputLabel('Servicios y Ventajas Clave'),
@@ -631,7 +630,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                           borderRadius: BorderRadius.circular(15),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),

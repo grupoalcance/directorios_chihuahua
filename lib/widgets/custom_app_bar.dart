@@ -6,15 +6,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_durango/config/app_config.dart';
+// 🔑 IMPORTACIÓN RELATIVA Y DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
-import '../screens/todas_especialidades_screen.dart';
-import '../screens/lista_doctores_screen.dart';
-import '../screens/lista_farmacias_screen.dart';
-import '../screens/lista_hospitales_screen.dart';
 import '../services/auth_service.dart';
-import '../screens/contacto_screen.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final Function(String)? onCiudadSeleccionada;
@@ -41,18 +36,8 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _CustomAppBarState extends State<CustomAppBar> {
   late Stream<DateTime> _timeStream;
 
-  // 🎯 BANNERS ESTÁTICOS CON URLS ABSOLUTAS
-  final List<Map<String, String>> misBannersEstaticos = [
-    {
-      'imagen':
-          'https://medicosdurango.com/assets/assets/banners/sanjorgebanner.png',
-      'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
-    },
-    {
-      'imagen': 'https://medicosdurango.com/assets/assets/banners/alcance.gif',
-      'url': 'https://agenciaalcance.com/',
-    },
-  ];
+  // 🎯 BANNERS LOCALES / DINÁMICOS VINCULADOS A ASSETS
+  late final List<Map<String, String>> misBannersEstaticos;
 
   // 📝 ESTRUCTURA DE CATEGORÍAS PADRE Y SUS SUBESPECIALIDADES BASE
   final Map<String, List<String>> _categoriasPadreEspecialidades = {
@@ -93,6 +78,17 @@ class _CustomAppBarState extends State<CustomAppBar> {
   @override
   void initState() {
     super.initState();
+    // 🛠️ RUTAS DE BANNERS CORREGIDAS A ASSETS LOCALES
+    misBannersEstaticos = [
+      {
+        'imagen': 'assets/banners/sanjorgebanner.png',
+        'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
+      },
+      {
+        'imagen': 'assets/banners/alcance.gif',
+        'url': 'https://agenciaalcance.com/',
+      },
+    ];
     _mapaEspecialidadesDinamicas = Map.from(_categoriasPadreEspecialidades);
     _cargarEspecialidadesDinamicas();
     _timeStream = Stream<DateTime>.periodic(
@@ -111,7 +107,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
           .where('activo', isEqualTo: true)
           .get();
 
-      // Copiamos el mapa base
       Map<String, Set<String>> mapaSet = {};
       _categoriasPadreEspecialidades.forEach((cat, lista) {
         mapaSet[cat] = Set.from(lista);
@@ -282,7 +277,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     ),
 
-                    // 🎯 PUBLICIDAD MASTER
+                    // 🎯 PUBLICIDAD MASTER CON CARGADOR ROBUSTO
                     misBannersEstaticos.isEmpty
                         ? Container(
                             width: 500,
@@ -328,22 +323,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     child: GestureDetector(
                                       onTap: () =>
                                           _abrirEnlaceAnuncio(destinoUrl),
-                                      child:
-                                          fotoRuta.toLowerCase().startsWith(
-                                            'http',
-                                          )
-                                          ? Image.network(
-                                              fotoRuta,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (c, e, s) =>
-                                                  _buildErrorPlaceholder(),
-                                            )
-                                          : Image.asset(
-                                              fotoRuta,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (c, e, s) =>
-                                                  _buildErrorPlaceholder(),
-                                            ),
+                                      child: _buildBannerImageWidget(fotoRuta),
                                     ),
                                   );
                                 },
@@ -419,6 +399,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       child: Text('¿Quiénes somos?', style: menuStyle),
                     ),
                     const SizedBox(width: 5),
+
                     _buildDropdownMenuCiudad(
                       context: context,
                       label: 'Ciudad',
@@ -428,66 +409,46 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         if (widget.onCiudadSeleccionada != null) {
                           widget.onCiudadSeleccionada!.call(ciudad);
                         } else {
-                          Navigator.push(
+                          Navigator.pushNamed(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => ListaDoctoresScreen(
-                                especialidad: '',
-                                ciudad: ciudad,
-                              ),
-                            ),
+                            '/doctores?ciudad=${Uri.encodeComponent(ciudad)}',
                           );
                         }
                       },
                     ),
                     const SizedBox(width: 5),
 
-                    // 🔑 MENÚ DESPLEGABLE JERÁRQUICO CON SUBMENÚS PARA ESPECIALIDADES
                     _buildEspecialidadesSubmenuBar(
                       context: context,
                       style: menuStyle,
                     ),
 
                     const SizedBox(width: 5),
+
                     TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ListaHospitalesScreen(),
-                        ),
-                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/hospitales'),
                       child: Text('Hospitales', style: menuStyle),
                     ),
+
                     TextButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ListaFarmaciasScreen(),
-                        ),
-                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/farmacias'),
                       child: Text('Farmacias', style: menuStyle),
                     ),
+
                     TextButton(
-                      onPressed: () => Navigator.push(
+                      onPressed: () => Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const ListaDoctoresScreen(
-                            especialidad: 'Enfermería General',
-                            ciudad: '',
-                          ),
-                        ),
+                        '/doctores?especialidad=${Uri.encodeComponent('Enfermería General')}',
                       ),
                       child: Text('Enfermería', style: menuStyle),
                     ),
+
                     TextButton(
-                      onPressed: () => Navigator.push(
+                      onPressed: () => Navigator.pushNamed(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const ListaDoctoresScreen(
-                            especialidad: 'Urgencias Médicas 24/7',
-                            ciudad: '',
-                          ),
-                        ),
+                        '/doctores?especialidad=${Uri.encodeComponent('Urgencias Médicas 24/7')}',
                       ),
                       child: const Text(
                         'Urgencias 24/hrs',
@@ -498,15 +459,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         ),
                       ),
                     ),
+
                     TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ContactoScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/contacto'),
                       child: const Text(
                         'Contacto',
                         style: TextStyle(
@@ -677,12 +633,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     value: 'cerrar_sesion',
                                     child: Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.logout_rounded,
                                           color: Colors.red,
                                           size: 18,
                                         ),
-                                        const SizedBox(width: 10),
+                                        SizedBox(width: 10),
                                         Text(
                                           'Cerrar Sesión',
                                           style: TextStyle(
@@ -732,6 +688,34 @@ class _CustomAppBarState extends State<CustomAppBar> {
     );
   }
 
+  // 🖼️ CARGADOR DE BANNER MULTI-RUTA (LOCAL/WEB) A PRUEBA DE ERRORES
+  Widget _buildBannerImageWidget(String fotoRuta) {
+    if (fotoRuta.toLowerCase().startsWith('http')) {
+      return Image.network(
+        fotoRuta,
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) => _buildErrorPlaceholder(),
+      );
+    }
+
+    return Image.asset(
+      fotoRuta,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        // Intento 2 con prefijo alternativo
+        String fallbackRuta = fotoRuta.startsWith('assets/')
+            ? fotoRuta.replaceFirst('assets/', '')
+            : 'assets/$fotoRuta';
+
+        return Image.asset(
+          fallbackRuta,
+          fit: BoxFit.cover,
+          errorBuilder: (c, e, s) => _buildErrorPlaceholder(),
+        );
+      },
+    );
+  }
+
   Widget _buildErrorPlaceholder() {
     return Container(
       color: Colors.grey.shade100,
@@ -751,7 +735,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
         snap.data!.data() != null;
   }
 
-  // 🔑 HELPER PARA DESPLEGABLE DE CIUDAD
   Widget _buildDropdownMenuCiudad({
     required BuildContext context,
     required String label,
@@ -789,7 +772,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
     );
   }
 
-  // 🔑 CONSTRUCTOR DE MENÚ CON SUBMENÚS FLOTANTES PARA ESPECIALIDADES
   Widget _buildEspecialidadesSubmenuBar({
     required BuildContext context,
     required TextStyle style,
@@ -798,16 +780,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
       data: Theme.of(context).copyWith(
         menuBarTheme: MenuBarThemeData(
           style: MenuStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.transparent),
-            elevation: MaterialStateProperty.all(0),
-            padding: MaterialStateProperty.all(EdgeInsets.zero),
+            backgroundColor: WidgetStateProperty.all(Colors.transparent),
+            elevation: WidgetStateProperty.all(0),
+            padding: WidgetStateProperty.all(EdgeInsets.zero),
           ),
         ),
         menuTheme: MenuThemeData(
           style: MenuStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.white),
-            surfaceTintColor: MaterialStateProperty.all(Colors.white),
-            elevation: MaterialStateProperty.all(4),
+            backgroundColor: WidgetStateProperty.all(Colors.white),
+            surfaceTintColor: WidgetStateProperty.all(Colors.white),
+            elevation: WidgetStateProperty.all(4),
           ),
         ),
       ),
@@ -823,14 +805,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   menuChildren: subEspecialidades.map((subEsp) {
                     return MenuItemButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushNamed(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => ListaDoctoresScreen(
-                              especialidad: subEsp,
-                              ciudad: '',
-                            ),
-                          ),
+                          '/doctores?especialidad=${Uri.encodeComponent(subEsp)}',
                         );
                       },
                       child: Text(
@@ -842,7 +819,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ),
                     );
                   }).toList(),
-                  // 🔑 CORREGIDO: Se pasa únicamente el Text para que Flutter gestione una sola flecha derecha
                   child: Text(
                     categoriaPadre,
                     style: const TextStyle(
@@ -856,12 +832,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               const PopupMenuDivider(),
               MenuItemButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TodasEspecialidadesScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/especialidades');
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // 👈 Asegurado para abrir los enlaces de WhatsApp
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
+
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
 class ContactoScreen extends StatefulWidget {
   const ContactoScreen({Key? key}) : super(key: key);
@@ -16,7 +19,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
   final TextEditingController _correoController = TextEditingController();
   final TextEditingController _mensajeController = TextEditingController();
 
-  // 📞 COLOCA AQUÍ TU NÚMERO DE WHATSAPP CON LADA (52 para México)
+  // 📞 NÚMERO DE SOPORTE COMERCIAL CENTRAL (Con LADA 52 de México)
   final String _numeroSoporte = '528714178277';
 
   @override
@@ -27,7 +30,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
     super.dispose();
   }
 
-  // 🛠️ FUNCIÓN GENERAL PARA ABRIR UN CHAT DE WHATSAPP
+  // 🛠️ FUNCIÓN GENERAL PARA ABRIR CHAT DE WHATSAPP
   Future<void> _abrirWhatsApp({required String mensaje}) async {
     final String mensajeCodificado = Uri.encodeComponent(mensaje);
     final Uri url = Uri.parse(
@@ -48,18 +51,18 @@ class _ContactoScreenState extends State<ContactoScreen> {
     }
   }
 
-  // 🚀 FUNCIÓN DEL BOTÓN "ENVIAR MENSAJE" (Formatea el texto ordenado para tu WhatsApp)
+  // 🚀 FUNCIÓN DEL BOTÓN "ENVIAR MENSAJE"
   void _enviarFormularioPorWhatsApp() {
     if (_formKey.currentState!.validate()) {
       final String plantillaMensaje =
-          '📌 *Nuevo Mensaje de Contacto - Médicos durango*\n\n'
+          '📌 *Nuevo Mensaje de Contacto - ${AppConfig.appName}*\n\n'
           '👤 *Nombre:* ${_nombreController.text.trim()}\n'
           '✉️ *Correo:* ${_correoController.text.trim()}\n\n'
           '💬 *Mensaje / Duda:*\n${_mensajeController.text.trim()}';
 
       _abrirWhatsApp(mensaje: plantillaMensaje);
 
-      // Limpiamos cajas después de mandar la información
+      // Limpiamos cajas después de despachar la información
       _nombreController.clear();
       _correoController.clear();
       _mensajeController.clear();
@@ -103,7 +106,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        '¿Tienes dudas, sugerencias o te interesa anunciar tu consultorio, clínica o farmacia? Escríbenos, estamos para ayudarte.',
+                        '¿Tienes dudas, sugerencias o te interesa anunciar tu consultorio, clínica o farmacia en ${AppConfig.appName}? Escríbenos, estamos para ayudarte.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
@@ -154,6 +157,11 @@ class _ContactoScreenState extends State<ContactoScreen> {
 
   // --- BLOQUE DE CANALES / DATOS DE CONTACTO ---
   Widget _buildFormularioCanales(double width) {
+    String dominioFormateado = AppConfig.appName.toLowerCase().replaceAll(
+      ' ',
+      '',
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,13 +174,17 @@ class _ContactoScreenState extends State<ContactoScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Elige la vía más cómoda para comunicarte de forma directa con el equipo de Médicos durango.',
-          style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.3),
+        Text(
+          'Elige la vía más cómoda para comunicarte de forma directa con el equipo de ${AppConfig.appName}.',
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF64748B),
+            height: 1.3,
+          ),
         ),
         const SizedBox(height: 28),
 
-        // Tarjeta WhatsApp (Clickable para mandar mensaje rápido)
+        // Tarjeta WhatsApp
         _cardCanal(
           icon: Icons.chat_bubble_rounded,
           color: Colors.green,
@@ -181,26 +193,27 @@ class _ContactoScreenState extends State<ContactoScreen> {
           datoDestacado: '871 417 8277',
           onTap: () => _abrirWhatsApp(
             mensaje:
-                'Hola, me comunico desde la sección de Contacto de Médicos durango, me gustaría recibir más información.',
+                'Hola, me comunico desde la sección de Contacto de ${AppConfig.appName}, me gustaría recibir más información.',
           ),
         ),
         const SizedBox(height: 16),
+
+        // Tarjeta Correo Electrónico
         _cardCanal(
           icon: Icons.alternate_email_rounded,
           color: Colors.blue,
           titulo: 'Correo Electrónico',
           desc: 'Para propuestas comerciales o anuncios institucionales.',
-          datoDestacado: 'contacto@medicosdurango.com',
+          datoDestacado: 'contacto@$dominioFormateado.com',
         ),
         const SizedBox(height: 16),
 
-        // Tarjeta de Horario de atención
+        // Tarjeta Horario de atención
         _cardCanal(
           icon: Icons.access_time_filled_rounded,
           color: Colors.orange,
           titulo: 'Horario de Atención',
-          desc:
-              'Lunes a Viernes de 9:00 AM a 7:00 PM', 
+          desc: 'Lunes a Viernes de 9:00 AM a 7:00 PM',
           datoDestacado: 'Sábados de 9:00 AM a 2:00 PM',
         ),
       ],
@@ -213,7 +226,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
     required String titulo,
     required String desc,
     required String datoDestacado,
-    VoidCallback? onTap, // Añadido para habilitar el toque
+    VoidCallback? onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -229,8 +242,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
         ],
       ),
       child: InkWell(
-        onTap:
-            onTap, // Si se le asigna una función (como en el de WhatsApp), reaccionará al clic
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -272,8 +284,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
                         color: color,
                         decoration: onTap != null
                             ? TextDecoration.underline
-                            : TextDecoration
-                                  .none, // Subrayado sutil si es clickable
+                            : TextDecoration.none,
                       ),
                     ),
                   ],
@@ -332,10 +343,12 @@ class _ContactoScreenState extends State<ContactoScreen> {
               keyboardType: TextInputType.emailAddress,
               decoration: _inputDecoration('Ej. carlos@correo.com'),
               validator: (v) {
-                if (v == null || v.isEmpty)
+                if (v == null || v.isEmpty) {
                   return 'Por favor ingresa tu correo';
-                if (!v.contains('@') || !v.contains('.'))
+                }
+                if (!v.contains('@') || !v.contains('.')) {
                   return 'Ingresa un correo válido';
+                }
                 return null;
               },
             ),
@@ -354,14 +367,12 @@ class _ContactoScreenState extends State<ContactoScreen> {
             ),
             const SizedBox(height: 28),
 
-            // Botón de Enviar (Detona el envío estructurado a tu WhatsApp)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed:
-                    _enviarFormularioPorWhatsApp, // 👈 Vinculado al despachador de WhatsApp
+                onPressed: _enviarFormularioPorWhatsApp,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0061E0),
+                  backgroundColor: AppConfig.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -415,7 +426,7 @@ class _ContactoScreenState extends State<ContactoScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF0061E0), width: 1.5),
+        borderSide: BorderSide(color: AppConfig.primaryColor, width: 1.5),
       ),
     );
   }

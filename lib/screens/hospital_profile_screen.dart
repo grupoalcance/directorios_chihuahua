@@ -5,6 +5,9 @@ import 'dart:convert';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 class HospitalProfileScreen extends StatelessWidget {
   final Map<String, dynamic> hospitalData;
 
@@ -19,9 +22,7 @@ class HospitalProfileScreen extends StatelessWidget {
   }
 
   Future<void> _abrirMapa(String direccion, String ciudad) async {
-    final String query = Uri.encodeComponent(
-      '$direccion, $ciudad, Durango, Mexico',
-    );
+    final String query = Uri.encodeComponent('$direccion, $ciudad, Mexico');
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$query',
     );
@@ -38,7 +39,7 @@ class HospitalProfileScreen extends StatelessWidget {
     // Extracción segura de datos desde Firebase
     String nombre = hospitalData['nombre'] ?? 'Hospital General';
     String direccion = hospitalData['direccion'] ?? 'Dirección no especificada';
-    String ciudad = hospitalData['ciudad'] ?? 'Durango';
+    String ciudad = hospitalData['ciudad'] ?? AppConfig.ciudadesActivas[0];
     String telefono = hospitalData['telefono'] ?? '';
     String urgencias =
         hospitalData['telefono_urgencias']?.toString().isNotEmpty == true

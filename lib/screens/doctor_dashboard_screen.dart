@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_durango/config/app_config.dart';
+// 🔑 IMPORTACIÓN RELATIVA Y DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
 import '../widgets/custom_app_bar.dart';
 import 'login_screen.dart';
@@ -61,7 +61,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   List<dynamic> servicios = [];
   final TextEditingController _servicioCtrl = TextEditingController();
 
-  // 🔑 LISTA NORMALIZADA DE CIUDADES DE DURANGO
+  // 🔑 LISTA NORMALIZADA DE CIUDADES DESDE AppConfig
   final List<String> _listaCiudades = AppConfig.ciudadesActivas;
 
   final List<String> diasSemana = [
@@ -288,7 +288,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                 userData!['consultorios'].map((item) {
                   var map = Map<String, dynamic>.from(item as Map);
 
-                  // 🔑 ASEGURAR ESTRUCTURA DE HORARIO SEGURA
                   if (map['horario'] == null || map['horario'] is! Map) {
                     map['horario'] = _crearEstructuraHorarioDefecto();
                   } else {
@@ -320,7 +319,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                     map['horario'] = horario;
                   }
 
-                  // 🔑 NORMALIZACIÓN SEGURA DE CIUDADES
                   String ciudadGuardada = map['ciudad'] ?? '';
                   if (!_listaCiudades.contains(ciudadGuardada)) {
                     map['ciudad'] = _listaCiudades.first;
@@ -459,9 +457,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                 children: [
                   TabBar(
                     controller: _tabController,
-                    labelColor: Colors.blue,
+                    labelColor: AppConfig.primaryColor,
                     unselectedLabelColor: Colors.grey,
-                    indicatorColor: Colors.blue,
+                    indicatorColor: AppConfig.primaryColor,
                     tabs: const [
                       Tab(icon: Icon(Icons.bar_chart), text: 'Estadísticas'),
                       Tab(icon: Icon(Icons.edit), text: 'Editar perfil'),
@@ -494,7 +492,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
   }
 
   Widget _buildHeader() {
-    // 🔑 OBTENCIÓN SEGURA DE INICIALES EVITANDO ERROR DE ÍNDICE
     String n = _nombreCtrl.text.trim();
     String a = _apellidosCtrl.text.trim();
     String iniciales = '${n.isNotEmpty ? n[0] : ''}${a.isNotEmpty ? a[0] : ''}';
@@ -533,7 +530,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.blue,
+                        color: AppConfig.primaryColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -604,10 +601,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.arrow_back, color: Colors.blue),
-                  label: const Text(
+                  icon: Icon(Icons.arrow_back, color: AppConfig.primaryColor),
+                  label: Text(
                     'Volver al Panel',
-                    style: TextStyle(color: Colors.blue),
+                    style: TextStyle(color: AppConfig.primaryColor),
                   ),
                 )
               : TextButton.icon(
@@ -638,7 +635,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           userData?['visitas']?.toString() ?? '0',
           Icon(
             Icons.remove_red_eye,
-            color: Colors.blue.withOpacity(0.7),
+            color: AppConfig.primaryColor.withOpacity(0.7),
             size: 40,
           ),
         ),
@@ -840,7 +837,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                       icon: const Icon(Icons.check, size: 18),
                       label: const Text('Agregar Artículo'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppConfig.primaryColor,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -1029,12 +1026,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Tus Consultorios y Horarios',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+                  color: AppConfig.primaryColor,
                 ),
               ),
               ElevatedButton.icon(
@@ -1042,8 +1039,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Agregar Consultorio'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade50,
-                  foregroundColor: Colors.blue,
+                  backgroundColor: AppConfig.primaryColor.withOpacity(0.1),
+                  foregroundColor: AppConfig.primaryColor,
                   elevation: 0,
                 ),
               ),
@@ -1301,7 +1298,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
           ElevatedButton(
             onPressed: _saveData,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: AppConfig.primaryColor,
               padding: const EdgeInsets.symmetric(vertical: 20),
             ),
             child: const Text(
@@ -1330,7 +1327,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.blue.shade100, width: 1.5),
+        border: Border.all(
+          color: AppConfig.primaryColor.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10),
         ],
@@ -1343,9 +1343,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
             children: [
               Text(
                 clinic['nombre'] ?? 'Consultorio',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+                  color: AppConfig.primaryColor,
                   fontSize: 16,
                 ),
               ),
@@ -1375,9 +1375,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.location_on,
-                      color: Colors.blue,
+                      color: AppConfig.primaryColor,
                     ),
                   ),
                 ),
@@ -1421,7 +1421,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    prefixIcon: const Icon(Icons.phone, color: Colors.blue),
+                    prefixIcon: Icon(
+                      Icons.phone,
+                      color: AppConfig.primaryColor,
+                    ),
                   ),
                 ),
               ),
@@ -1463,7 +1466,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
     );
   }
 
-  // 🔑 MANEJO DE HORARIOS CON LECTURA PROTEGIDA CONTRA NULL
   Widget _buildHorarioRow(int clinicIndex, String dia) {
     Map<String, dynamic> horarioMap =
         consultorios[clinicIndex]['horario'] ?? {};
@@ -1490,6 +1492,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                     ),
                   ),
                   value: abierto,
+                  activeColor: AppConfig.primaryColor,
                   onChanged: (val) => setState(() {
                     consultorios[clinicIndex]['horario'][dia]['abierto'] = val;
                     if (val == false) {
@@ -1521,10 +1524,17 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen>
                           consultorios[clinicIndex]['horario'][dia]['tieneTurno2'] =
                               true,
                     ),
-                    icon: const Icon(Icons.add, size: 14, color: Colors.blue),
-                    label: const Text(
+                    icon: Icon(
+                      Icons.add,
+                      size: 14,
+                      color: AppConfig.primaryColor,
+                    ),
+                    label: Text(
                       'Turno tarde',
-                      style: TextStyle(fontSize: 12, color: Colors.blue),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppConfig.primaryColor,
+                      ),
                     ),
                   ),
               ] else

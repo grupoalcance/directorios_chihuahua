@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
@@ -41,7 +45,7 @@ class QuienesSomosScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Conectamos a Durango con la atención médica de la más alta calidad de manera rápida, directa y transparente.',
+                        'Conectamos a ${AppConfig.ciudadesActivas.join(", ")} y su región con la atención médica de la más alta calidad de manera rápida, directa y transparente.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
@@ -65,28 +69,8 @@ class QuienesSomosScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // --- BLOQUE 2: HISTORIA E IMAGEN ---
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        bool esPC = constraints.maxWidth > 750;
-                        return esPC
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Expanded(child: _buildTextoIntroductorio()),
-                                  const SizedBox(width: 40),
-                                  Expanded(child: _buildImagenDestacada()),
-                                ],
-                              )
-                            : Column(
-                                children: [
-                                  _buildTextoIntroductorio(),
-                                  const SizedBox(height: 30),
-                                  _buildImagenDestacada(),
-                                ],
-                              );
-                      },
-                    ),
+                    // --- BLOQUE 2: HISTORIA EN COLUMNA ÚNICA (ESTÁNDAR SALTILLO) ---
+                    _buildTextoIntroductorio(),
                     const SizedBox(height: 50),
 
                     // --- BLOQUE 3: PILARES (MISIÓN Y VISIÓN) ---
@@ -97,7 +81,7 @@ class QuienesSomosScreen extends StatelessWidget {
                     _buildSeccionValores(width),
                     const SizedBox(height: 60),
 
-                    // --- BLOQUE 5: CONTADORES / NÚMEROS CLAVE (Modificado de forma simétrica) ---
+                    // --- BLOQUE 5: CONTADORES / NÚMEROS CLAVE ---
                     _buildSeccionNumeros(width),
                     const SizedBox(height: 40),
                   ],
@@ -113,17 +97,17 @@ class QuienesSomosScreen extends StatelessWidget {
   Widget _buildTextoIntroductorio() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
-          'Médicos durango',
-          style: TextStyle(
+          AppConfig.appName,
+          style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1E293B),
           ),
         ),
-        SizedBox(height: 12),
-        Text(
+        const SizedBox(height: 12),
+        const Text(
           'Nacimos como una iniciativa tecnológica local con el propósito de modernizar y digitalizar el acceso a la salud en nuestra región.\n\nSabemos lo difícil y tedioso que puede ser buscar un especialista confiable, encontrar sus horarios disponibles o contactar a su consultorio. Por ello, diseñamos un directorio médico inteligente donde los pacientes pueden explorar perfiles detallados, verificar cédulas profesionales y agendar citas de forma directa a través de WhatsApp, eliminando intermediarios y comisiones.',
           style: TextStyle(fontSize: 15, color: Color(0xFF475569), height: 1.5),
         ),
@@ -131,20 +115,10 @@ class QuienesSomosScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImagenDestacada() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Image.asset(
-        'assets/images/medicos_durango_portada.png',
-        fit: BoxFit.cover,
-        height: 280,
-        width: double.infinity,
-      ),
-    );
-  }
-
   Widget _buildSeccionPilares(double width) {
     bool esPC = width > 750;
+    String ciudadesStr = AppConfig.ciudadesActivas.join(", ");
+
     return esPC
         ? Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +128,7 @@ class QuienesSomosScreen extends StatelessWidget {
                   Icons.track_changes_rounded,
                   Colors.blue,
                   'Nuestra Misión',
-                  'Proveer a los habitantes de Durango y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar duranguense.',
+                  'Proveer a los habitantes de $ciudadesStr y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar de nuestra comunidad.',
                 ),
               ),
               const SizedBox(width: 20),
@@ -163,7 +137,7 @@ class QuienesSomosScreen extends StatelessWidget {
                   Icons.remove_red_eye_rounded,
                   Colors.teal,
                   'Nuestra Visión',
-                  'Consolidarnos como el directorio médico y de salud referente de Durango, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
+                  'Consolidarnos como el directorio médico y de salud referente en $ciudadesStr, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
                 ),
               ),
             ],
@@ -174,14 +148,14 @@ class QuienesSomosScreen extends StatelessWidget {
                 Icons.track_changes_rounded,
                 Colors.blue,
                 'Nuestra Misión',
-                'Proveer a los habitantes de Durango y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar duranguense.',
+                'Proveer a los habitantes de $ciudadesStr y alrededores una plataforma digital intuitiva y centralizada que facilite el contacto directo con profesionales de la salud certificados, promoviendo el bienestar de nuestra comunidad.',
               ),
               const SizedBox(height: 20),
               _cardPilar(
                 Icons.remove_red_eye_rounded,
                 Colors.teal,
                 'Nuestra Visión',
-                'Consolidarnos como el directorio médico y de salud referente de Durango, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
+                'Consolidarnos como el directorio médico y de salud referente en $ciudadesStr, reconocido por la veracidad de su información, la calidad visual de sus perfiles y el impulso al crecimiento de la comunidad médica local.',
               ),
             ],
           );
@@ -274,7 +248,7 @@ class QuienesSomosScreen extends StatelessWidget {
             _itemValor(
               Icons.people_alt_rounded,
               'Comunidad',
-              'Impulsamos el desarrollo de nuestra comunidad médica.',
+              'Impulsamos el desarrollo de nuestra región.',
             ),
           ],
         ),
@@ -293,7 +267,7 @@ class QuienesSomosScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: Colors.blue.shade700, size: 28),
+          Icon(icon, color: AppConfig.primaryColor, size: 28),
           const SizedBox(height: 10),
           Text(
             titulo,
@@ -322,7 +296,7 @@ class QuienesSomosScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.blue.shade900,
+        color: const Color(0xFF1E3A8A),
         borderRadius: BorderRadius.circular(16),
       ),
       child: LayoutBuilder(
@@ -332,15 +306,27 @@ class QuienesSomosScreen extends StatelessWidget {
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _datoMetrico('+100', 'Especialidades y Subespecialidades Médicas'),
-                    _datoMetrico('6', 'Ciudades de Cobertura'),
+                    _datoMetrico(
+                      '+100',
+                      'Especialidades y Subespecialidades Médicas',
+                    ),
+                    _datoMetrico(
+                      '${AppConfig.ciudadesActivas.length}',
+                      'Ciudades de Cobertura',
+                    ),
                   ],
                 )
               : Column(
                   children: [
-                    _datoMetrico('+100', 'Especialidades y Subespecialidades Médicas'),
+                    _datoMetrico(
+                      '+100',
+                      'Especialidades y Subespecialidades Médicas',
+                    ),
                     const Divider(color: Colors.white24, height: 30),
-                    _datoMetrico('6', 'Ciudades de Cobertura'),
+                    _datoMetrico(
+                      '${AppConfig.ciudadesActivas.length}',
+                      'Ciudades de Cobertura',
+                    ),
                   ],
                 );
         },

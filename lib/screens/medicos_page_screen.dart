@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:intl/intl.dart';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_durango/config/app_config.dart';
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
 import 'doctor_profile_screen.dart';
 import 'lista_doctores_screen.dart';
@@ -22,7 +22,7 @@ import '../widgets/phone_menu_drawer.dart';
 import '../widgets/seccion_enlaces_cruzados.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
-const List<String> las15Especialidadesdurango = [
+const List<String> las15EspecialidadesBase = [
   'Cardiología',
   'Dermatología',
   'Ginecología y Obstetricia',
@@ -316,7 +316,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       cleanPhone = '52$cleanPhone';
     }
     String mensaje = Uri.encodeComponent(
-      'Hola Doctor(a), vi su perfil en médicosdurango.com y me gustaría agendar una cita.',
+      'Hola Doctor(a), vi su perfil en ${AppConfig.appName} y me gustaría agendar una cita.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -327,18 +327,13 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   Widget _buildBotonBuscar() {
     return ElevatedButton(
       onPressed: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => ListaDoctoresScreen(
-              especialidad: _especialidadController.text.trim(),
-              ciudad: _ciudadBuscadorController.text.trim(),
-            ),
-          ),
+          '/doctores?especialidad=${Uri.encodeComponent(_especialidadController.text.trim())}&ciudad=${Uri.encodeComponent(_ciudadBuscadorController.text.trim())}',
         );
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF0061E0),
+        backgroundColor: AppConfig.primaryColor,
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 0,
@@ -370,12 +365,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.push(
+        onTap: () => Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ListaDoctoresScreen(especialidad: nombre, ciudad: ''),
-          ),
+          '/doctores?especialidad=${Uri.encodeComponent(nombre)}',
         ),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -426,19 +418,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         TextButton(
           onPressed: () {
             if (tipoColeccion == 'hospitales') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaHospitalesScreen(),
-                ),
-              );
+              Navigator.pushNamed(context, '/hospitales');
             } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaFarmaciasScreen(),
-                ),
-              );
+              Navigator.pushNamed(context, '/farmacias');
             }
           },
           child: const Row(
@@ -460,12 +442,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
         onCiudadSeleccionada: (String ciudadElegida) {
-          Navigator.push(
+          Navigator.pushNamed(
             context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ListaDoctoresScreen(especialidad: '', ciudad: ciudadElegida),
-            ),
+            '/doctores?ciudad=${Uri.encodeComponent(ciudadElegida)}',
           );
         },
       ),
@@ -497,6 +476,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
 
   Widget _buildHeroSection(double width) {
     bool esPC = width > 850;
+    String primeraCiudad = AppConfig.ciudadesActivas[0];
+
     return SliverToBoxAdapter(
       child: SizedBox(
         width: double.infinity,
@@ -533,9 +514,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Encuentra a los\nmejores médicos\nen Durango',
-                      style: TextStyle(
+                    Text(
+                      'Encuentra a los\nmejores médicos\nen $primeraCiudad y la región',
+                      style: const TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF1E293B),
@@ -632,8 +613,8 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                 focusNode: FocusNode(),
                 optionsBuilder: (TextEditingValue textEditingValue) {
                   if (textEditingValue.text.isEmpty)
-                    return las15Especialidadesdurango;
-                  return las15Especialidadesdurango.where(
+                    return las15EspecialidadesBase;
+                  return las15EspecialidadesBase.where(
                     (String option) => option.toLowerCase().contains(
                       textEditingValue.text.toLowerCase(),
                     ),
@@ -748,9 +729,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                           fontSize: 14,
                           color: Color(0xFF334155),
                         ),
-                        decoration: const InputDecoration(
-                          hintText: 'Ej. Victoria de Durango, Gómez Palacio...',
-                          hintStyle: TextStyle(
+                        decoration: InputDecoration(
+                          hintText: 'Ej. ${lasCiudades.take(2).join(", ")}...',
+                          hintStyle: const TextStyle(
                             color: Color(0xFF94A3B8),
                             fontSize: 13,
                           ),
@@ -802,7 +783,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
-  // 🔑 SECCIÓN DE ESPECIALIDADES MEJORADA: COMBINA LAS BASE Y AGREGA LAS NUEVAS REGISTRADAS
   Widget _buildEspecialidadesSection(double width) {
     return SliverToBoxAdapter(
       child: Center(
@@ -824,12 +804,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TodasEspecialidadesScreen(),
-                      ),
-                    ),
+                    onPressed: () => Navigator.pushNamed(context, '/especialidades'),
                     child: const Row(
                       children: [
                         Text('Ver todas ', style: TextStyle(fontSize: 13)),
@@ -848,9 +823,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     .snapshots(),
                 builder: (context, snapshot) {
                   Map<String, int> conteoReal = {};
-                  List<String> listaCombinada = List.from(
-                    las15Especialidadesdurango,
-                  );
+                  List<String> listaCombinada = List.from(las15EspecialidadesBase);
 
                   if (snapshot.hasData && snapshot.data != null) {
                     for (var doc in snapshot.data!.docs) {
@@ -874,7 +847,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                       if (esp.isNotEmpty) {
                         conteoReal[esp] = (conteoReal[esp] ?? 0) + 1;
 
-                        // 🔑 SI NO EXISTE EN LA LISTA BASE, SE AGREGA DINÁMICAMENTE
                         if (!listaCombinada.contains(esp)) {
                           listaCombinada.add(esp);
                         }
@@ -942,15 +914,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                     ],
                   ),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ListaDoctoresScreen(
-                          especialidad: '',
-                          ciudad: '',
-                        ),
-                      ),
-                    ),
+                    onPressed: () => Navigator.pushNamed(context, '/doctores'),
                     child: const Row(
                       children: [
                         Text('Ver todos ', style: TextStyle(fontSize: 13)),
@@ -1007,7 +971,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
     );
   }
 
-  // 🔑 TARJETA DE DOCTOR CORREGIDA (INYECTA doc.id Y ENFOCA LA CABEZA EN LA FOTO)
   Widget _cardDoctorPro(QueryDocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     int totalResenas = data['reseñas_count'] ?? 0;
@@ -1017,7 +980,6 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         '${nombre.isNotEmpty ? nombre[0] : ''}${apellidos.isNotEmpty ? apellidos[0] : ''}';
     String nombreCompleto = '$nombre $apellidos'.trim();
 
-    // Manejo de especialidad principal y subespecialidad opcional
     String esp = data['especialidad'] ?? 'Medicina General';
     String subEsp = data['subespecialidad'] ?? '';
     String specialty = subEsp.isNotEmpty ? '$esp • $subEsp' : esp;
@@ -1067,14 +1029,16 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                             ? Image.network(
                                 fotoUrl,
                                 fit: BoxFit.cover,
-                                alignment: Alignment
-                                    .topCenter, // 👈 ENFOCA EL ROSTRO Y CABEZA
+                                alignment: Alignment.topCenter,
                               )
                             : Image.memory(
-                                base64Decode(fotoUrl),
+                                base64Decode(
+                                  fotoUrl.contains(',')
+                                      ? fotoUrl.split(',').last
+                                      : fotoUrl,
+                                ),
                                 fit: BoxFit.cover,
-                                alignment: Alignment
-                                    .topCenter, // 👈 ENFOCA EL ROSTRO Y CABEZA
+                                alignment: Alignment.topCenter,
                               ))
                       : Center(
                           child: Text(
@@ -1182,18 +1146,14 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  // 🔑 NAVEGACIÓN GARANTIZADA SIN PANTALLA ROJA (Inyectamos doc.id)
                   onPressed: () {
                     Map<String, dynamic> doctorDataConId = Map.from(data);
                     doctorDataConId['uid'] = doc.id;
                     doctorDataConId['id'] = doc.id;
 
-                    Navigator.push(
+                    Navigator.pushNamed(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            DoctorProfileScreen(doctorData: doctorDataConId),
-                      ),
+                      '/perfil?id=${doc.id}',
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -1317,7 +1277,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
   Widget _cardDinamicaInformativa(QueryDocumentSnapshot doc, bool esFarmacia) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     String nombre = data['nombre'] ?? '';
-    String ciudad = data['ciudad'] ?? 'Durango';
+    String ciudad = data['ciudad'] ?? AppConfig.ciudadesActivas[0];
     String score = data['score'] ?? '5.0';
     String? fotoUrl = data['foto_url'];
 
@@ -1364,9 +1324,12 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
                               fit: BoxFit.cover,
                             )
                           : Image.network(fotoUrl, fit: BoxFit.cover))
-                    : Image.asset(
-                        'assets/images/medicos_durango_portada.png',
-                        fit: BoxFit.cover,
+                    : Icon(
+                        esFarmacia
+                            ? Icons.local_pharmacy_rounded
+                            : Icons.local_hospital_rounded,
+                        size: 40,
+                        color: AppConfig.primaryColor,
                       ),
               ),
             ),
@@ -1402,7 +1365,7 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              esFarmacia ? 'Ver sucursales >' : '$ciudad, Dgo',
+              esFarmacia ? 'Ver sucursales >' : '$ciudad',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -1652,12 +1615,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
         },
         ctaTitulo: "¿Eres médico?",
         ctaSubtitulo:
-            "Suscríbete al directorio y llega a más pacientes en Durango.",
+            "Suscríbete al directorio y llega a más pacientes en ${AppConfig.appName}.",
         ctaBotonTexto: "Suscríbete",
-        onCtaPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SuscribirseScreen()),
-        ),
+        onCtaPressed: () => Navigator.pushNamed(context, '/suscribirse'),
         onEnlacePressed: (ciudad, enlace) {
           String specialtyNormalizada = 'Medicina General';
           if (enlace.contains('Cardiólogos'))
@@ -1670,14 +1630,9 @@ class _MedicosPageScreenState extends State<MedicosPageScreen> {
           if (enlace.contains('Dermatólogos'))
             specialtyNormalizada = 'Dermatología';
 
-          Navigator.push(
+          Navigator.pushNamed(
             context,
-            MaterialPageRoute(
-              builder: (context) => ListaDoctoresScreen(
-                especialidad: specialtyNormalizada,
-                ciudad: ciudad,
-              ),
-            ),
+            '/doctores?especialidad=${Uri.encodeComponent(specialtyNormalizada)}&ciudad=${Uri.encodeComponent(ciudad)}',
           );
         },
       ),

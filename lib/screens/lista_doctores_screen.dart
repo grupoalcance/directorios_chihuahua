@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:convert';
-import 'doctor_basic_profile_screen.dart';
-import 'doctor_profile_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 import '../widgets/custom_app_bar.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
@@ -41,7 +43,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
       cleanPhone = '52$cleanPhone';
     }
     String mensaje = Uri.encodeComponent(
-      'Hola, vi su perfil en médicosdurango.com y me gustaría agendar una cita o pedir información.',
+      'Hola, vi su perfil en ${AppConfig.appName} y me gustaría agendar una cita o pedir información.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -104,7 +106,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // --- BARRA DE BÚSQUEDA ---
+                  // --- BARRA DE BÚSQUEDA HÍBRIDA ---
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -131,7 +133,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       decoration: InputDecoration(
                         hintText: esBusquedaPorCiudad
                             ? 'Filtrar por especialidad (Ej. Dentista, Pediatra...)'
-                            : 'Filtrar por municipio (Ej. Durango, Gómez Palacio...)',
+                            : 'Filtrar por municipio (Ej. ${AppConfig.ciudadesActivas.take(2).join(", ")}...)',
                         hintStyle: const TextStyle(
                           color: Color(0xFF94A3B8),
                           fontSize: 14,
@@ -140,7 +142,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                           esBusquedaPorCiudad
                               ? Icons.medical_services_outlined
                               : Icons.location_on_outlined,
-                          color: const Color(0xFF2563EB),
+                          color: AppConfig.primaryColor,
                           size: 20,
                         ),
                         suffixIcon: _textoFiltrado.isNotEmpty
@@ -212,12 +214,8 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                               .trim();
                           bool matchCiudadBase =
                               ciudadDoc == ciudadBusqueda ||
-                              (ciudadBusqueda.contains('durango') &&
-                                  ciudadDoc.contains('durango')) ||
-                              (ciudadBusqueda.contains('gómez') &&
-                                  ciudadDoc.contains('gomez')) ||
-                              (ciudadBusqueda.contains('gomez') &&
-                                  ciudadDoc.contains('gómez'));
+                              ciudadDoc.contains(ciudadBusqueda) ||
+                              ciudadBusqueda.contains(ciudadDoc);
 
                           if (!matchCiudadBase) return false;
 
@@ -320,7 +318,6 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                           Map<String, dynamic> data =
                               doc.data() as Map<String, dynamic>;
 
-                          // Inyectamos el ID para garantizar que abra el perfil
                           data['uid'] = doc.id;
                           data['id'] = doc.id;
 
@@ -390,16 +387,16 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
-      child: Column(
+      child: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.person_search_outlined,
             size: 64,
-            color: const Color(0xFFCBD5E1),
+            color: Color(0xFFCBD5E1),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'Aún no hay especialistas registrados para esta búsqueda.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF64748B), fontSize: 15),
@@ -460,6 +457,8 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
     String whatsapp,
   ) {
     String? fotoUrl = doctorData['foto_url'];
+    String docId = doctorData['uid'] ?? '';
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -533,13 +532,11 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      DoctorBasicProfileScreen(doctorData: doctorData),
-                ),
-              ),
+              onPressed: () {
+                if (docId.isNotEmpty) {
+                  Navigator.pushNamed(context, '/perfil?id=$docId');
+                }
+              },
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF2563EB),
                 side: const BorderSide(color: Color(0xFF2563EB)),
@@ -572,6 +569,7 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
   ) {
     String? fotoUrl = doctorData['foto_url'];
     int totalResenas = doctorData['reseñas_count'] ?? 0;
+    String docId = doctorData['uid'] ?? '';
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -705,13 +703,11 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          DoctorProfileScreen(doctorData: doctorData),
-                    ),
-                  ),
+                  onPressed: () {
+                    if (docId.isNotEmpty) {
+                      Navigator.pushNamed(context, '/perfil?id=$docId');
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF2563EB),
@@ -760,7 +756,11 @@ class _ListaDoctoresScreenState extends State<ListaDoctoresScreen> {
                       alignment: Alignment.topCenter,
                     )
                   : Image.memory(
-                      base64Decode(fotoUrl),
+                      base64Decode(
+                        fotoUrl.contains(',')
+                            ? fotoUrl.split(',').last
+                            : fotoUrl,
+                      ),
                       fit: BoxFit.cover,
                       alignment: Alignment.topCenter,
                     ))

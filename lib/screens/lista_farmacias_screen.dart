@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'farmacia_profile_screen.dart';
-import 'suscribirse_screen.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 import '../widgets/seccion_enlaces_cruzados.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
+
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
 class ListaFarmaciasScreen extends StatefulWidget {
   const ListaFarmaciasScreen({super.key});
@@ -31,6 +33,9 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     bool isMobile = width < 750;
+    List<String> ciudadesPrincipales = AppConfig.ciudadesActivas
+        .take(3)
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -56,7 +61,7 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                     children: [
                       // --- ENCABEZADO ---
                       Text(
-                        'Farmacias en Durango',
+                        'Farmacias en ${AppConfig.ciudadesActivas[0]}',
                         style: TextStyle(
                           fontSize: isMobile ? 24 : 32,
                           fontWeight: FontWeight.w900,
@@ -102,14 +107,14 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText:
-                                'Filtrar por municipio (Ej. Durango, Gómez Palacio, Lerdo...)',
+                                'Filtrar por municipio (Ej. ${AppConfig.ciudadesActivas.join(", ")}...)',
                             hintStyle: const TextStyle(
                               color: Color(0xFF94A3B8),
                               fontSize: 14,
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.location_on_rounded,
-                              color: Color(0xFF0061E0),
+                              color: AppConfig.primaryColor,
                               size: 20,
                             ),
                             suffixIcon: _busquedaCiudad.isNotEmpty
@@ -193,12 +198,16 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
                                   mainAxisSpacing: 20,
                                 ),
                             itemBuilder: (context, index) {
-                              var data =
-                                  farmacias[index].data()
-                                      as Map<String, dynamic>;
+                              var doc = farmacias[index];
+                              var data = doc.data() as Map<String, dynamic>;
+                              data['uid'] =
+                                  doc.id; // Asignación garantizada de ID
+
                               String? fotoUrl = data['foto_url'];
                               String nombre = data['nombre'] ?? 'Farmacia';
-                              String ciudadDoc = data['ciudad'] ?? 'Durango';
+                              String ciudadDoc =
+                                  data['ciudad'] ??
+                                  AppConfig.ciudadesActivas[0];
                               String score = data['score'] ?? '5.0';
 
                               return Container(
@@ -438,40 +447,23 @@ class _ListaFarmaciasScreenState extends State<ListaFarmaciasScreen> {
               // --- SECCIÓN DE ENLACES CRUZADOS MÓDULO DE FARMACIAS ---
               SeccionEnlacesCruzados(
                 tituloSeccion: "Farmacias por categoría y ciudad",
-                columnasCiudades: const ['Durango', 'Gómez Palacio', 'Lerdo'],
-                enlacesPorCiudad: const {
-                  'Durango': [
-                    'Farmacias 24 Horas en Durango',
-                    'Farmacias con Consultorio en Durango',
-                    'Medicamentos de Especialidad en Durango',
-                    'Farmacias Dermatológicas en Durango',
-                    'Servicio a Domicilio en Durango',
-                  ],
-                  'Gómez Palacio': [
-                    'Farmacias 24 Horas en Gómez Palacio',
-                    'Farmacias con Consultorio en Gómez Palacio',
-                    'Medicamentos de Especialidad en Gómez Palacio',
-                    'Farmacias de Genéricos en Gómez Palacio',
-                    'Servicio a Domicilio en Gómez Palacio',
-                  ],
-                  'Lerdo': [
-                    'Farmacias 24 Horas en Lerdo',
-                    'Farmacias con Consultorio en Lerdo',
-                    'Medicamentos de Especialidad en Lerdo',
-                    'Farmacias Locales en Lerdo',
-                    'Servicio a Domicilio en Lerdo',
-                  ],
+                columnasCiudades: ciudadesPrincipales,
+                enlacesPorCiudad: {
+                  for (var ciudad in ciudadesPrincipales)
+                    ciudad: [
+                      'Farmacias 24 Horas en $ciudad',
+                      'Farmacias con Consultorio en $ciudad',
+                      'Medicamentos de Especialidad en $ciudad',
+                      'Farmacias Dermatológicas en $ciudad',
+                      'Servicio a Domicilio en $ciudad',
+                    ],
                 },
                 ctaTitulo: "¿Surtas recetas?",
                 ctaSubtitulo:
                     "Une tu farmacia al directorio y ayuda a miles de familias a localizar sus medicamentos rápido.",
                 ctaBotonTexto: "Registrar Farmacia",
-                onCtaPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SuscribirseScreen(),
-                  ),
-                ),
+                onCtaPressed: () =>
+                    Navigator.pushNamed(context, '/suscribirse'),
                 onEnlacePressed: (ciudad, enlace) {
                   _searchController.text = ciudad;
                   setState(() {

@@ -11,6 +11,9 @@ import 'blog_detail_screen.dart';
 import 'login_screen.dart';
 import '../widgets/custom_app_bar.dart';
 
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 class DoctorProfileScreen extends StatefulWidget {
   final Map<String, dynamic> doctorData;
 
@@ -61,21 +64,24 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     if (telefono.isEmpty) return;
     String cleanPhone = telefono.replaceAll(RegExp(r'[^0-9+]'), '');
     final Uri url = Uri.parse('tel:$cleanPhone');
-    if (!await launchUrl(url))
+    if (!await launchUrl(url)) {
       debugPrint('No se pudo abrir la app de teléfono');
+    }
   }
 
   Future<void> _abrirWhatsApp(String whatsapp) async {
     if (whatsapp.isEmpty) return;
     String cleanPhone = whatsapp.replaceAll(RegExp(r'[^0-9]'), '');
-    if (!cleanPhone.startsWith('52') && cleanPhone.length == 10)
+    if (!cleanPhone.startsWith('52') && cleanPhone.length == 10) {
       cleanPhone = '52$cleanPhone';
+    }
     String mensaje = Uri.encodeComponent(
-      'Hola, vi su perfil en médicosdurango.com y me gustaría pedir información o agendar una cita.',
+      'Hola, vi su perfil en ${AppConfig.appDomain} y me gustaría pedir información o agendar una cita.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication))
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint('No se pudo abrir WhatsApp');
+    }
   }
 
   Future<void> _abrirGoogleMaps(String direccion) async {
@@ -83,8 +89,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(direccion)}',
     );
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication))
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint('No se pudo abrir Google Maps');
+    }
   }
 
   Widget _buildMapIframe(String direccion) {
@@ -134,8 +141,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       urlValida = 'https://$urlValida';
     }
     final Uri url = Uri.parse(urlValida);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication))
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint('No se pudo abrir el enlace: $urlValida');
+    }
   }
 
   void _mostrarDialogoResena(String doctorId) {
@@ -296,8 +304,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             String pNombre = userData['nombre'] ?? '';
                             String pApellidos = userData['apellidos'] ?? '';
                             nombrePaciente = '$pNombre $pApellidos'.trim();
-                            if (nombrePaciente.isEmpty)
+                            if (nombrePaciente.isEmpty) {
                               nombrePaciente = 'Paciente Anónimo';
+                            }
                           }
 
                           await FirebaseFirestore.instance
@@ -334,7 +343,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             );
                           }
                         },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppConfig.primaryColor,
+                  ),
                   child: guardando
                       ? const SizedBox(
                           height: 15,
@@ -398,7 +409,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         currentClinic['direccion'] ?? 'Dirección por confirmar';
     String telefonoActivo = currentClinic['telefono'] ?? '';
     String whatsappActivo = currentClinic['whatsapp'] ?? '';
-    String ciudadActiva = currentClinic['ciudad'] ?? 'Durango';
+    String ciudadActiva =
+        currentClinic['ciudad'] ?? AppConfig.ciudadesActivas[0];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FA),
@@ -414,7 +426,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildBreadcrumbs(especialidad, honestyName, doctorId, isMobile),
+                _buildBreadcrumbs(
+                  especialidad,
+                  honestyName,
+                  doctorId,
+                  isMobile,
+                ),
                 const SizedBox(height: 20),
 
                 _buildDoctorMainCard(
@@ -432,7 +449,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 const SizedBox(height: 30),
                 _buildClinicTabs(consultorios),
 
-                // 🔑 SECCIÓN RESPONSIVE DE 2 COLUMNAS (ESCRITORIO) VS 1 COLUMNA (CELULAR)
                 if (isMobile) ...[
                   _buildLeftColumn(
                     descripcion,
@@ -490,7 +506,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
                 _buildDoctorBlogSection(screenWidth, honestyName, doctorId),
 
-                _buildBottomCTA(honestyName, whatsappActivo, telefonoActivo, isMobile),
+                _buildBottomCTA(
+                  honestyName,
+                  whatsappActivo,
+                  telefonoActivo,
+                  isMobile,
+                ),
                 const SizedBox(height: 30),
                 _buildFooterBadges(isMobile),
               ],
@@ -524,10 +545,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue : Colors.white,
+                  color: isSelected ? AppConfig.primaryColor : Colors.white,
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: isSelected ? Colors.blue : Colors.grey.shade300,
+                    color: isSelected
+                        ? AppConfig.primaryColor
+                        : Colors.grey.shade300,
                   ),
                 ),
                 child: Row(
@@ -562,7 +585,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String doctorId,
     bool isMobile,
   ) {
-    String dominio = "https://medicosdurango.com";
+    String dominio = "https://${AppConfig.appDomain}";
     String urlPerfil = "$dominio/#/perfil?id=$doctorId";
 
     if (isMobile) {
@@ -584,7 +607,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               InkWell(
                 onTap: () async {
                   String mensaje = Uri.encodeComponent(
-                    'Te recomiendo a este especialista en Médicos Durango: $urlPerfil',
+                    'Te recomiendo a este especialista en ${AppConfig.appName}: $urlPerfil',
                   );
                   final Uri url = Uri.parse('https://wa.me/?text=$mensaje');
                   await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -656,7 +679,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             InkWell(
               onTap: () async {
                 String mensaje = Uri.encodeComponent(
-                  'Te recomiendo a este especialista en Médicos Durango: $urlPerfil',
+                  'Te recomiendo a este especialista en ${AppConfig.appName}: $urlPerfil',
                 );
                 final Uri url = Uri.parse('https://wa.me/?text=$mensaje');
                 await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -694,7 +717,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('¡Enlace del perfil copiado al portapapeles!'),
+                      content: Text(
+                        '¡Enlace del perfil copiado al portapapeles!',
+                      ),
                       backgroundColor: Colors.blue,
                     ),
                   );
@@ -719,7 +744,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     );
   }
 
-  // 🔑 TARJETA PRINCIPAL REESTRUCTURADA PARA MÓVIL
   Widget _buildDoctorMainCard(
     String doctorId,
     String nombre,
@@ -739,7 +763,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.blue.shade600,
+            color: AppConfig.primaryColor,
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Row(
@@ -762,12 +786,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     );
 
     Widget datosDoctor = Column(
-      crossAxisAlignment:
-          isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      crossAxisAlignment: isMobile
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment:
-              isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+          mainAxisAlignment: isMobile
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
           children: [
             FutureBuilder<DocumentSnapshot>(
               future: FirebaseAuth.instance.currentUser != null
@@ -801,7 +827,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                 .set({
                                   'nombre': nombre,
                                   'especialidad': especialidad,
-                                  'fecha_guardado': FieldValue.serverTimestamp(),
+                                  'fecha_guardado':
+                                      FieldValue.serverTimestamp(),
                                 });
 
                             if (context.mounted) {
@@ -814,9 +841,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             }
                           }
                         },
-                        child: const Icon(
+                        child: Icon(
                           Icons.favorite_border,
-                          color: Colors.blue,
+                          color: AppConfig.primaryColor,
                         ),
                       ),
                     );
@@ -842,9 +869,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         Text(
           especialidad,
           textAlign: isMobile ? TextAlign.center : TextAlign.start,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
-            color: Colors.blue,
+            color: AppConfig.primaryColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -878,8 +905,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             }
 
             return Row(
-              mainAxisAlignment:
-                  isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+              mainAxisAlignment: isMobile
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 16),
                 const SizedBox(width: 4),
@@ -909,7 +937,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         ),
 
         const SizedBox(height: 20),
-        // BOTONES DE WHATSAPP Y LLAMADA REESTRUCTURADOS
+
         if (isMobile) ...[
           SizedBox(
             width: double.infinity,
@@ -943,14 +971,17 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => _llamarTelefono(telActivo),
-              icon: const Icon(Icons.phone, color: Colors.blue, size: 18),
-              label: const Text(
+              icon: Icon(Icons.phone, color: AppConfig.primaryColor, size: 18),
+              label: Text(
                 'Llamar',
-                style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppConfig.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: Colors.blue),
+                side: BorderSide(color: AppConfig.primaryColor),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -980,7 +1011,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                             'clics_wa': FieldValue.increment(1),
                             'ultimo_contacto': fechaHoy,
                           })
-                          .catchError((e) => debugPrint("Error en sensor WA: $e"));
+                          .catchError(
+                            (e) => debugPrint("Error en sensor WA: $e"),
+                          );
                     }
                     _abrirWhatsApp(waActivo);
                   },
@@ -990,14 +1023,14 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _llamarTelefono(telActivo),
-                  icon: const Icon(Icons.phone, color: Colors.blue),
-                  label: const Text(
+                  icon: Icon(Icons.phone, color: AppConfig.primaryColor),
+                  label: Text(
                     'Llamar',
-                    style: TextStyle(color: Colors.blue),
+                    style: TextStyle(color: AppConfig.primaryColor),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: Colors.blue),
+                    side: BorderSide(color: AppConfig.primaryColor),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1011,8 +1044,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         const SizedBox(height: 20),
         const Divider(color: Colors.black12),
         const SizedBox(height: 12),
-        
-        // ESTADÍSTICAS RESPONSIVAS
+
         if (isMobile)
           Column(
             children: [
@@ -1022,17 +1054,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 'Años de experiencia',
               ),
               const SizedBox(height: 10),
-              _statItem(
-                Icons.medical_information,
-                'Cédula / Permiso',
-                cedula,
-              ),
+              _statItem(Icons.medical_information, 'Cédula / Permiso', cedula),
               const SizedBox(height: 10),
-              _statItem(
-                Icons.people_outline,
-                '500+',
-                'Pacientes atendidos',
-              ),
+              _statItem(Icons.people_outline, '500+', 'Pacientes atendidos'),
             ],
           )
         else
@@ -1044,16 +1068,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 experiencia,
                 'Años de experiencia',
               ),
-              _statItem(
-                Icons.medical_information,
-                'Cédula / Permiso',
-                cedula,
-              ),
-              _statItem(
-                Icons.people_outline,
-                '500+',
-                'Pacientes atendidos',
-              ),
+              _statItem(Icons.medical_information, 'Cédula / Permiso', cedula),
+              _statItem(Icons.people_outline, '500+', 'Pacientes atendidos'),
             ],
           ),
       ],
@@ -1070,11 +1086,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       ),
       child: isMobile
           ? Column(
-              children: [
-                avatarBloque,
-                const SizedBox(height: 16),
-                datosDoctor,
-              ],
+              children: [avatarBloque, const SizedBox(height: 16), datosDoctor],
             )
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1161,13 +1173,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       Column(
         children: [
           _infoRow(
-            const Icon(Icons.access_time, color: Colors.blue, size: 20),
+            Icon(Icons.access_time, color: AppConfig.primaryColor, size: 20),
             'Horarios de atención',
             horarioFormateado,
           ),
           const SizedBox(height: 15),
           _infoRow(
-            const Icon(Icons.phone, color: Colors.blue, size: 20),
+            Icon(Icons.phone, color: AppConfig.primaryColor, size: 20),
             'Teléfono',
             telefono,
           ),
@@ -1221,7 +1233,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                       horizontal: 10,
                       vertical: 5,
                     ),
-                    color: Colors.blue.shade900,
+                    color: AppConfig.primaryColor,
                     child: Text(
                       a.toString(),
                       style: const TextStyle(
@@ -1417,8 +1429,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   OutlinedButton(
                     onPressed: () => _mostrarDialogoResena(doctorId),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                      side: BorderSide(color: Colors.blue.shade200),
+                      foregroundColor: AppConfig.primaryColor,
+                      side: BorderSide(color: AppConfig.primaryColor),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
@@ -1571,7 +1583,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
 
         return _reviewItemReal(
           iniciales,
-          Colors.blue.shade50,
+          AppConfig.primaryColor.withOpacity(0.1),
           nombrePx,
           calif,
           comentario,
@@ -1642,7 +1654,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade900,
+                  color: AppConfig.primaryColor,
                 ),
               ),
             ),
@@ -1722,7 +1734,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.location_on, color: Colors.blue, size: 20),
+                  Icon(
+                    Icons.location_on,
+                    color: AppConfig.primaryColor,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1740,8 +1756,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   icon: const Icon(Icons.map, size: 16),
                   label: const Text('Ver en Google Maps'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    side: const BorderSide(color: Colors.blue),
+                    foregroundColor: AppConfig.primaryColor,
+                    side: BorderSide(color: AppConfig.primaryColor),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
@@ -1757,7 +1773,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: Colors.blue.shade600,
+                backgroundColor: AppConfig.primaryColor,
                 child: const Icon(Icons.attach_money, color: Colors.white),
               ),
               const SizedBox(width: 15),
@@ -1770,10 +1786,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                   ),
                   Text(
                     costo.isNotEmpty ? costo : 'Consultar',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: AppConfig.primaryColor,
                     ),
                   ),
                 ],
@@ -1935,10 +1951,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
           .orderBy('fecha', descending: true)
           .get(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox.shrink();
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const SizedBox.shrink();
+        }
 
         List<dynamic> blogsFirebase = snapshot.data!.docs
             .map((doc) => doc.data() as Map<String, dynamic>)
@@ -2003,10 +2021,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                             width: double.infinity,
                                             fit: BoxFit.cover,
                                           ))
-                                  : Image.network(
-                                      'https://via.placeholder.com/400x300',
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
+                                  : Icon(
+                                      Icons.article_rounded,
+                                      size: 50,
+                                      color: Colors.grey.shade400,
                                     ),
                             ),
                           ),
@@ -2053,16 +2071,19 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
                                       );
                                     },
                                     style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(
-                                        color: Colors.blue,
+                                      side: BorderSide(
+                                        color: AppConfig.primaryColor,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'Leer más',
-                                      style: TextStyle(fontSize: 12),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppConfig.primaryColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -2091,8 +2112,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     String doctorId = widget.doctorData['uid'] ?? widget.doctorData['id'] ?? '';
 
     Widget textoInfo = Column(
-      crossAxisAlignment:
-          isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      crossAxisAlignment: isMobile
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       children: [
         Text(
           '¿Listo para agendar tu cita?',
@@ -2163,7 +2185,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             onPressed: () => _llamarTelefono(telefonoActivo),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
-              foregroundColor: Colors.blue,
+              foregroundColor: AppConfig.primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -2199,7 +2221,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.calendar_month, color: Colors.white, size: 45),
+                    const Icon(
+                      Icons.calendar_month,
+                      color: Colors.white,
+                      size: 45,
+                    ),
                     const SizedBox(width: 20),
                     textoInfo,
                   ],
@@ -2222,11 +2248,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         'Información confiable',
         'Datos actualizados',
       ),
-      _footerBadge(
-        Icons.star_border,
-        'Opiniones reales',
-        'Pacientes como tú',
-      ),
+      _footerBadge(Icons.star_border, 'Opiniones reales', 'Pacientes como tú'),
       _footerBadge(
         Icons.support_agent,
         'Atención personalizada',
@@ -2253,7 +2275,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.blue, size: 26),
+        Icon(icon, color: AppConfig.primaryColor, size: 26),
         const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2297,7 +2319,9 @@ class WidgetAvatar extends StatelessWidget {
         return ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: Image.memory(
-            base64Decode(fotoUrl!),
+            base64Decode(
+              fotoUrl!.contains(',') ? fotoUrl!.split(',').last : fotoUrl!,
+            ),
             width: size,
             height: size,
             fit: BoxFit.cover,

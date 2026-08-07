@@ -3,13 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
-import 'package:directorios_durango/config/app_config.dart';
+// 🔑 IMPORTACIÓN RELATIVA Y DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
 
-import '../screens/lista_doctores_screen.dart';
-import '../screens/todas_especialidades_screen.dart';
-import '../screens/lista_hospitales_screen.dart';
-import '../screens/lista_farmacias_screen.dart';
 import '../services/auth_service.dart';
 
 class PhoneMenuDrawer extends StatefulWidget {
@@ -189,7 +185,7 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
             },
           ),
 
-          // 1. ¿Quiénes somos?
+          // 1. ¿Quiénes somos? (URL Limpia)
           ListTile(
             leading: Icon(Icons.info_outline, color: AppConfig.primaryColor),
             title: const Text('¿Quiénes somos?'),
@@ -261,66 +257,46 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TodasEspecialidadesScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/especialidades');
                 },
               ),
             ],
           ),
 
-          // 4. Hospitales
+          // 4. Hospitales (URL Limpia)
           ListTile(
             leading: Icon(Icons.local_hospital, color: AppConfig.primaryColor),
             title: const Text('Hospitales'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaHospitalesScreen(),
-                ),
-              );
+              Navigator.pushNamed(context, '/hospitales');
             },
           ),
 
-          // 5. Farmacias
+          // 5. Farmacias (URL Limpia)
           ListTile(
             leading: Icon(Icons.local_pharmacy, color: AppConfig.primaryColor),
             title: const Text('Farmacias'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaFarmaciasScreen(),
-                ),
-              );
+              Navigator.pushNamed(context, '/farmacias');
             },
           ),
 
-          // 6. Enfermería
+          // 6. Enfermería (URL Limpia)
           ListTile(
             leading: Icon(Icons.people_outline, color: AppConfig.primaryColor),
             title: const Text('Enfermería'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushNamed(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaDoctoresScreen(
-                    especialidad: 'Enfermería General',
-                    ciudad: '',
-                  ),
-                ),
+                '/doctores?especialidad=${Uri.encodeComponent('Enfermería General')}',
               );
             },
           ),
 
-          // 7. Urgencias 24/hrs
+          // 7. Urgencias 24/hrs (URL Limpia)
           ListTile(
             leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
             title: const Text(
@@ -329,19 +305,14 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
             ),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
+              Navigator.pushNamed(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ListaDoctoresScreen(
-                    especialidad: 'Urgencias Médicas 24/7',
-                    ciudad: '',
-                  ),
-                ),
+                '/doctores?especialidad=${Uri.encodeComponent('Urgencias Médicas 24/7')}',
               );
             },
           ),
 
-          // 8. Contacto
+          // 8. Contacto (URL Limpia)
           ListTile(
             leading: Icon(Icons.email_outlined, color: AppConfig.primaryColor),
             title: const Text('Contacto'),
@@ -486,7 +457,7 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
             },
           ),
 
-          // 9. Botón Destacado Fijo: Suscribirse
+          // 9. Botón Destacado Fijo: Suscribirse (URL Limpia)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
@@ -526,12 +497,9 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
       ),
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) =>
-                ListaDoctoresScreen(especialidad: '', ciudad: nombreCiudad),
-          ),
+          '/doctores?ciudad=${Uri.encodeComponent(nombreCiudad)}',
         );
       },
     );
@@ -551,14 +519,9 @@ class _PhoneMenuDrawerState extends State<PhoneMenuDrawer> {
       ),
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => ListaDoctoresScreen(
-              especialidad: nombreEspecialidad,
-              ciudad: '',
-            ),
-          ),
+          '/doctores?especialidad=${Uri.encodeComponent(nombreEspecialidad)}',
         );
       },
     );

@@ -5,7 +5,7 @@ import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO DE DURANGO
 import 'package:directorios_durango/config/app_config.dart';
 
 import 'package:directorios_durango/screens/medicos_page_screen.dart';
@@ -13,8 +13,12 @@ import 'package:directorios_durango/screens/doctor_profile_screen.dart';
 import 'package:directorios_durango/screens/admin_dashboard_screen.dart';
 import 'package:directorios_durango/screens/login_screen.dart';
 import 'package:directorios_durango/screens/suscribirse_screen.dart';
-import 'package:directorios_durango/screens/contacto_screen.dart';
 import 'package:directorios_durango/screens/quienes_somos_screen.dart';
+import 'package:directorios_durango/screens/contacto_screen.dart';
+import 'package:directorios_durango/screens/lista_hospitales_screen.dart';
+import 'package:directorios_durango/screens/lista_farmacias_screen.dart';
+import 'package:directorios_durango/screens/todas_especialidades_screen.dart';
+import 'package:directorios_durango/screens/lista_doctores_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,12 +35,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppConfig.appName, // 🔑 TOMA EL NOMBRE DEL ARCHIVO MAESTRO
+      title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppConfig.primaryColor,
-        ), // 🔑 TOMA EL COLOR MAESTRO
+        colorScheme: ColorScheme.fromSeed(seedColor: AppConfig.primaryColor),
         useMaterial3: true,
       ),
 
@@ -52,55 +54,84 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         final String? routeName = settings.name;
 
-        // 💳 1. RUTA PARA SUSCRIBIRSE / UNETE
-        if (routeName != null &&
-            (routeName == '/suscribirse' ||
-                routeName.contains('suscribirse'))) {
+        // 💳 1. SUSCRIBIRSE / UNETE
+        if (routeName != null && routeName.contains('suscribirse')) {
           return MaterialPageRoute(
             settings: settings,
             builder: (context) => const SuscribirseScreen(),
           );
         }
 
-        // 📞 2. NUEVA RUTA REGISTRADA PARA CONTACTO
-        if (routeName != null &&
-            (routeName == '/contacto' || routeName.contains('contacto'))) {
-          return MaterialPageRoute(
-            settings: settings,
-            builder: (context) => const ContactoScreen(),
-          );
-        }
-
-        // ℹ️ 3. NUEVA RUTA REGISTRADA PARA QUIÉNES SOMOS
-        if (routeName != null &&
-            (routeName == '/quienes-somos' ||
-                routeName.contains('quienes-somos'))) {
+        // ℹ️ 2. ¿QUIÉNES SOMOS?
+        if (routeName != null && routeName.contains('quienes-somos')) {
           return MaterialPageRoute(
             settings: settings,
             builder: (context) => const QuienesSomosScreen(),
           );
         }
 
-        // 🔑 4. INTERCEPTOR DE LOGIN
-        if (routeName != null &&
-            (routeName == '/ingresar' || routeName.contains('ingresar'))) {
+        // ✉️ 3. CONTACTO
+        if (routeName != null && routeName.contains('contacto')) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const ContactoScreen(),
+          );
+        }
+
+        // 🏥 4. HOSPITALES / CLÍNICAS
+        if (routeName != null && routeName.contains('hospitales')) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const ListaHospitalesScreen(),
+          );
+        }
+
+        // 💊 5. FARMACIAS
+        if (routeName != null && routeName.contains('farmacias')) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const ListaFarmaciasScreen(),
+          );
+        }
+
+        // 🩺 6. TODAS LAS ESPECIALIDADES
+        if (routeName != null && routeName.contains('especialidades')) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) => const TodasEspecialidadesScreen(),
+          );
+        }
+
+        // 👨‍⚕️ 7. LISTADO DE DOCTORES CON PARÁMETROS
+        if (routeName != null && routeName.startsWith('/doctores')) {
+          final uri = Uri.parse(routeName);
+          final especialidad = uri.queryParameters['especialidad'] ?? '';
+          final ciudad = uri.queryParameters['ciudad'] ?? '';
+
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (context) =>
+                ListaDoctoresScreen(especialidad: especialidad, ciudad: ciudad),
+          );
+        }
+
+        // 🔑 8. INTERCEPTOR DE LOGIN
+        if (routeName != null && routeName.contains('ingresar')) {
           return MaterialPageRoute(
             settings: settings,
             builder: (context) => const LoginScreen(),
           );
         }
 
-        // 📊 5. DASHBOARD ADMINISTRACIÓN
-        if (routeName != null &&
-            (routeName == '/admin_dashboard' ||
-                routeName.contains('admin_dashboard'))) {
+        // 📊 9. DASHBOARD ADMINISTRACIÓN
+        if (routeName != null && routeName.contains('admin_dashboard')) {
           return MaterialPageRoute(
             settings: settings,
             builder: (context) => const AdminDashboardScreen(),
           );
         }
 
-        // 🩺 6. PERFILES DE MÉDICOS (Ej: /perfil?id=123)
+        // 🩺 10. PERFILES DE MÉDICOS (Ej: /perfil?id=123)
         if (routeName != null && routeName.startsWith('/perfil')) {
           final uri = Uri.parse(routeName);
           final doctorId = uri.queryParameters['id'];
@@ -113,7 +144,7 @@ class MyApp extends StatelessWidget {
           }
         }
 
-        // 🏠 7. RUTA POR DEFECTO (Home / Inicio)
+        // 🏠 11. RUTA POR DEFECTO (Home / Inicio)
         return MaterialPageRoute(
           settings: settings,
           builder: (context) => const MedicosPageScreen(),

@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 
 class SeccionEnlacesCruzados extends StatelessWidget {
   final String tituloSeccion;
-  final List<String> columnasCiudades; // ['Durango', 'Gómez Palacio', 'Lerdo']
-  final Map<String, List<String>>
-  enlacesPorCiudad; // { 'Durango': ['Urgencias...', 'Clínicas...'] }
-  final String ctaTitulo; // '¿Eres médico?'
-  final String ctaSubtitulo; // 'Suscríbete al directorio...'
-  final String ctaBotonTexto; // 'Suscríbete'
+  final List<String> columnasCiudades;
+  final Map<String, List<String>> enlacesPorCiudad;
+  final String ctaTitulo;
+  final String ctaSubtitulo;
+  final String ctaBotonTexto;
   final VoidCallback onCtaPressed;
   final Function(String ciudad, String categoria) onEnlacePressed;
 
@@ -30,8 +29,10 @@ class SeccionEnlacesCruzados extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFF1E3A8A), // Azul marino corporativo de fondo
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      color: const Color(
+        0xFF0F172A,
+      ), // Azul marino muy oscuro para máximo contraste
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -43,20 +44,21 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                 tituloSeccion,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
 
-              // CONTENIDO EN FILA (O EN COLUMNA SI ES CELULAR)
+              // CONTENIDO RESPONSIVO
               Flex(
                 direction: esCelular ? Axis.vertical : Axis.horizontal,
                 crossAxisAlignment: esCelular
                     ? CrossAxisAlignment.stretch
                     : CrossAxisAlignment.start,
                 children: [
-                  // COLUMNAS DE ENLACES (OCUPAN EL ESPACIO IZQUIERDO)
+                  // COLUMNAS DE ENLACES
                   Expanded(
                     flex: esCelular ? 0 : 3,
                     child: Wrap(
@@ -65,13 +67,13 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                       children: columnasCiudades.map((ciudad) {
                         return Container(
                           width: esCelular ? double.infinity : 260,
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
-                            ),
+                            color: const Color(
+                              0xFF1E293B,
+                            ), // Tarjetas con contraste oscuro
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFF334155)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,12 +81,14 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                               Text(
                                 'Categorías en $ciudad',
                                 style: const TextStyle(
-                                  color: Colors.lightBlueAccent,
+                                  color: Color(
+                                    0xFF38BDF8,
+                                  ), // Cyan brillante legible
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                  fontSize: 16,
                                 ),
                               ),
-                              const SizedBox(height: 15),
+                              const SizedBox(height: 16),
                               ...?enlacesPorCiudad[ciudad]?.map((enlace) {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12.0),
@@ -93,9 +97,10 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                                         onEnlacePressed(ciudad, enlace),
                                     child: Text(
                                       enlace,
-                                      style: TextStyle(
-                                        color: Colors.grey.shade300,
-                                        fontSize: 13.5,
+                                      style: const TextStyle(
+                                        color: Colors
+                                            .white, // Texto en blanco nítido
+                                        fontSize: 14,
                                         height: 1.3,
                                       ),
                                     ),
@@ -109,17 +114,28 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                     ),
                   ),
 
-                  if (!esCelular) const SizedBox(width: 20),
-                  if (esCelular) const SizedBox(height: 20),
+                  if (!esCelular) const SizedBox(width: 24),
+                  if (esCelular) const SizedBox(height: 24),
 
                   // TARJETA LLAMADO A LA ACCIÓN (CTA DERECHO)
                   Expanded(
                     flex: esCelular ? 0 : 1,
                     child: Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0284C7), // Azul brillante
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -129,29 +145,29 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                             ctaTitulo,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Text(
                             ctaSubtitulo,
-                            style: TextStyle(
-                              color: Colors.blue.shade100,
-                              fontSize: 13.5,
+                            style: const TextStyle(
+                              color: Color(0xFFE0F2FE),
+                              fontSize: 14,
                               height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 25),
+                          const SizedBox(height: 28),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: onCtaPressed,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                foregroundColor: Colors.blue.shade900,
+                                foregroundColor: const Color(0xFF0369A1),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: 16,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -162,6 +178,7 @@ class SeccionEnlacesCruzados extends StatelessWidget {
                                 ctaBotonTexto,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),

@@ -5,6 +5,9 @@ import 'dart:convert';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/phone_menu_drawer.dart';
 
+// 🔑 IMPORTACIÓN DINÁMICA DE CONFIGURACIÓN REGIONAL
+import '../config/app_config.dart';
+
 class EstablishmentDashboardScreen extends StatefulWidget {
   final String estId; // ID del documento en Firebase
   final String tipo; // 'hospitales' o 'farmacias'
@@ -27,8 +30,7 @@ class _EstablishmentDashboardScreenState
   final TextEditingController _direccionController = TextEditingController();
   final TextEditingController _ciudadController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
-  final TextEditingController _whatsappController =
-      TextEditingController(); // 👈 AGREGADO PARA FARMACIAS
+  final TextEditingController _whatsappController = TextEditingController();
   final TextEditingController _scoreController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
   final TextEditingController _urgenciasController = TextEditingController();
@@ -104,7 +106,8 @@ class _EstablishmentDashboardScreenState
           _nombreOriginal = data['nombre'] ?? '';
           _nombreController.text = _nombreOriginal;
           _direccionController.text = data['direccion'] ?? '';
-          _ciudadController.text = data['ciudad'] ?? '';
+          _ciudadController.text =
+              data['ciudad'] ?? AppConfig.ciudadesActivas[0];
           _telefonoController.text = data['telefono'] ?? '';
           _whatsappController.text = data['whatsapp'] ?? '';
           _scoreController.text = data['score'] ?? '5.0';
@@ -171,8 +174,7 @@ class _EstablishmentDashboardScreenState
         'score': _scoreController.text.trim(),
         'descripcion': _descripcionController.text.trim(),
         'horario': _horarioController.text.trim(),
-        'servicios':
-            _serviciosSeleccionados, // 👈 Se guarda en ambas colecciones
+        'servicios': _serviciosSeleccionados,
         'foto_url': urlFinalImagen,
       };
 
@@ -402,8 +404,8 @@ class _EstablishmentDashboardScreenState
                                 controller: _nombreController,
                                 decoration: _inputStyle(
                                   esHospital
-                                      ? 'Ej. AMCCI Hospital de Especialidades'
-                                      : 'Ej. Farmacia La Miniatura',
+                                      ? 'Ej. Hospital de Especialidades'
+                                      : 'Ej. Farmacia Central',
                                   Icons.business,
                                 ),
                                 validator: (v) => v == null || v.isEmpty
@@ -437,7 +439,7 @@ class _EstablishmentDashboardScreenState
                                         TextFormField(
                                           controller: _direccionController,
                                           decoration: _inputStyle(
-                                            'Ej. Pereyra 404, Zona Centro',
+                                            'Ej. Av. Principal #123, Zona Centro',
                                             Icons.location_on_outlined,
                                           ),
                                           validator: (v) =>
@@ -458,7 +460,7 @@ class _EstablishmentDashboardScreenState
                                         TextFormField(
                                           controller: _ciudadController,
                                           decoration: _inputStyle(
-                                            'Ej. Durango',
+                                            'Ej. ${AppConfig.ciudadesActivas[0]}',
                                             Icons.map_outlined,
                                           ),
                                           validator: (v) =>
@@ -487,7 +489,7 @@ class _EstablishmentDashboardScreenState
                                           controller: _telefonoController,
                                           keyboardType: TextInputType.phone,
                                           decoration: _inputStyle(
-                                            'Ej. 61882272727',
+                                            'Ej. 8711234567',
                                             Icons.phone,
                                           ),
                                           validator: (v) =>
@@ -511,7 +513,7 @@ class _EstablishmentDashboardScreenState
                                           controller: _whatsappController,
                                           keyboardType: TextInputType.phone,
                                           decoration: _inputStyle(
-                                            'Ej. 6181234567',
+                                            'Ej. 8717654321',
                                             Icons.chat_bubble_outline_rounded,
                                           ),
                                         ),
@@ -578,13 +580,13 @@ class _EstablishmentDashboardScreenState
                                   controller: _urgenciasController,
                                   keyboardType: TextInputType.phone,
                                   decoration: _inputStyle(
-                                    'Ej. 61882272727',
+                                    'Ej. 8711234567',
                                     Icons.phone_android_rounded,
                                   ),
                                 ),
                               ],
 
-                              // 🔑 SERVICIOS E INFRAESTRUCTURA (CHIPS PARA HOSPITALES Y FARMACIAS)
+                              // 🔑 SERVICIOS E INFRAESTRUCTURA (CHIPS)
                               const SizedBox(height: 24),
                               _buildFieldLabel('Servicios y Ventajas Clave'),
                               const SizedBox(height: 8),
@@ -609,7 +611,7 @@ class _EstablishmentDashboardScreenState
                                     ),
                                     selected: seleccionado,
                                     selectedColor: esHospital
-                                        ? const Color(0xFF0061E0)
+                                        ? AppConfig.primaryColor
                                         : const Color(0xFF0D9488),
                                     backgroundColor: const Color(0xFFF1F5F9),
                                     checkmarkColor: Colors.white,
@@ -665,7 +667,7 @@ class _EstablishmentDashboardScreenState
                                   ),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: esHospital
-                                        ? const Color(0xFF0061E0)
+                                        ? AppConfig.primaryColor
                                         : const Color(0xFF0D9488),
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 24,
@@ -724,7 +726,7 @@ class _EstablishmentDashboardScreenState
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
           color: widget.tipo == 'hospitales'
-              ? const Color(0xFF0061E0)
+              ? AppConfig.primaryColor
               : const Color(0xFF0D9488),
           width: 1.5,
         ),
