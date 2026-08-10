@@ -482,66 +482,104 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: Row(
-          children: [
-            const Icon(Icons.settings, color: Colors.blueGrey),
-            const SizedBox(width: 10),
-            const Text(
-              'Panel Administrador',
-              style: TextStyle(
-                color: Color(0xFF1A1F36),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 15),
-            Text(
-              '${AppConfig.appName} · Control total del directorio',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const MedicosPageScreen(),
-              ),
-            ),
-            icon: Icon(Icons.public, color: AppConfig.primaryColor),
-            label: Text(
-              'Ver sitio público',
-              style: TextStyle(
-                color: AppConfig.primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 15),
-          TextButton.icon(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MedicosPageScreen(),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight * 1.5),
+        child: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          automaticallyImplyLeading: false,
+          flexibleSpace: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.settings, color: Colors.blueGrey),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Panel Administrador',
+                            style: TextStyle(
+                              color: Color(0xFF1A1F36),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            AppConfig.appName,
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  (route) => false,
-                );
-              }
-            },
-            icon: const Icon(Icons.logout, color: Colors.grey),
-            label: const Text(
-              'Cerrar sesión',
-              style: TextStyle(color: Colors.grey),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MedicosPageScreen(),
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.public,
+                          color: AppConfig.primaryColor,
+                          size: 18,
+                        ),
+                        label: Text(
+                          'Ver sitio público',
+                          style: TextStyle(
+                            color: AppConfig.primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: () async {
+                          await FirebaseAuth.instance.signOut();
+                          if (mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MedicosPageScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.logout,
+                          color: Colors.grey,
+                          size: 18,
+                        ),
+                        label: const Text(
+                          'Cerrar sesión',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 20),
-        ],
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('usuarios').snapshots(),
@@ -604,116 +642,130 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(30),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 20,
-                  runSpacing: 20,
-                  children: [
-                    GestureDetector(
-                      onTap: () async {
-                        final Uri url = Uri.parse(AppConfig.crmUrl);
-                        if (!await launchUrl(
-                          url,
-                          mode: LaunchMode.externalApplication,
-                        )) {
-                          debugPrint('No se pudo abrir el panel de asesores');
-                        }
-                      },
-                      child: Container(
-                        width: 180,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F172A),
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    double width = constraints.maxWidth < 600
+                        ? (constraints.maxWidth - 12) / 2
+                        : 170;
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final Uri url = Uri.parse(AppConfig.crmUrl);
+                            if (!await launchUrl(
+                              url,
+                              mode: LaunchMode.externalApplication,
+                            )) {
+                              debugPrint(
+                                'No se pudo abrir el panel de asesores',
+                              );
+                            }
+                          },
+                          child: Container(
+                            width: width,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A),
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                          ],
+                            child: const Column(
+                              children: [
+                                Icon(
+                                  Icons.assignment_turned_in_outlined,
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Contratos',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'Auditar Ventas',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: const Column(
-                          children: [
-                            Icon(
-                              Icons.assignment_turned_in_outlined,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              'Contratos',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Auditar Ventas',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                    _buildKpiCard(
-                      'Solicitudes Pendientes',
-                      solicitudesPendientes.length.toString(),
-                      const Icon(
-                        Icons.notification_important,
-                        color: Colors.redAccent,
-                        size: 30,
-                      ),
-                      Colors.redAccent,
-                    ),
-                    _buildKpiCard(
-                      'Total Activos',
-                      perfilesActivos.toString(),
-                      const Icon(
-                        Icons.check_box,
-                        color: Colors.green,
-                        size: 30,
-                      ),
-                      Colors.green,
-                    ),
-                    _buildKpiCard(
-                      'Médicos Pro',
-                      perfilesDestacados.toString(),
-                      const Icon(Icons.star, color: Colors.amber, size: 30),
-                      Colors.amber,
-                    ),
-                    _buildKpiCard(
-                      'Directorio Global',
-                      totalRegistradosGlobal.toString(),
-                      Icon(
-                        Icons.analytics_rounded,
-                        color: AppConfig.primaryColor,
-                        size: 30,
-                      ),
-                      AppConfig.primaryColor,
-                    ),
-                    _buildKpiCard(
-                      'Clics WA',
-                      totalClicsWA.toString(),
-                      const FaIcon(
-                        FontAwesomeIcons.whatsapp,
-                        color: Colors.green,
-                        size: 30,
-                      ),
-                      Colors.green,
-                    ),
-                  ],
+                        _buildKpiCard(
+                          'Solicitudes Pendientes',
+                          solicitudesPendientes.length.toString(),
+                          const Icon(
+                            Icons.notification_important,
+                            color: Colors.redAccent,
+                            size: 26,
+                          ),
+                          Colors.redAccent,
+                          width,
+                        ),
+                        _buildKpiCard(
+                          'Total Activos',
+                          perfilesActivos.toString(),
+                          const Icon(
+                            Icons.check_box,
+                            color: Colors.green,
+                            size: 26,
+                          ),
+                          Colors.green,
+                          width,
+                        ),
+                        _buildKpiCard(
+                          'Médicos Pro',
+                          perfilesDestacados.toString(),
+                          const Icon(Icons.star, color: Colors.amber, size: 26),
+                          Colors.amber,
+                          width,
+                        ),
+                        _buildKpiCard(
+                          'Directorio Global',
+                          totalRegistradosGlobal.toString(),
+                          Icon(
+                            Icons.analytics_rounded,
+                            color: AppConfig.primaryColor,
+                            size: 26,
+                          ),
+                          AppConfig.primaryColor,
+                          width,
+                        ),
+                        _buildKpiCard(
+                          'Clics WA',
+                          totalClicsWA.toString(),
+                          const FaIcon(
+                            FontAwesomeIcons.whatsapp,
+                            color: Colors.green,
+                            size: 26,
+                          ),
+                          Colors.green,
+                          width,
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 25),
 
                 Container(
                   decoration: BoxDecoration(
@@ -728,6 +780,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                   ),
                   child: TabBar(
                     controller: _tabController,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
                     labelColor: AppConfig.primaryColor,
                     unselectedLabelColor: Colors.grey,
                     indicatorColor: AppConfig.primaryColor,
@@ -735,7 +789,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                     tabs: [
                       Tab(
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.hourglass_empty),
                             const SizedBox(width: 6),
@@ -822,8 +876,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppConfig.primaryColor,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 16,
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -881,10 +935,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     String value,
     Widget iconWidget,
     Color textColor,
+    double cardWidth,
   ) {
     return Container(
-      width: 180,
-      padding: const EdgeInsets.all(20),
+      width: cardWidth,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -893,11 +948,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       child: Column(
         children: [
           iconWidget,
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: textColor,
             ),
@@ -905,7 +960,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.grey, fontSize: 13),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.grey, fontSize: 11),
           ),
         ],
       ),
@@ -937,8 +994,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
           child: ConstrainedBox(
             constraints: BoxConstraints(minWidth: constraints.maxWidth),
             child: DataTable(
-              horizontalMargin: 24,
-              columnSpacing: 16,
+              horizontalMargin: 16,
+              columnSpacing: 12,
               headingTextStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.blueGrey,
@@ -1177,8 +1234,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               child: ConstrainedBox(
                 constraints: BoxConstraints(minWidth: constraints.maxWidth),
                 child: DataTable(
-                  horizontalMargin: 24,
-                  columnSpacing: 16,
+                  horizontalMargin: 16,
+                  columnSpacing: 12,
                   headingTextStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.blueGrey,
@@ -1316,7 +1373,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       itemCount: doctores.length,
       separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
@@ -1325,57 +1382,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         String apellidosStr = data['apellidos'] ?? '';
 
         return ListTile(
+          contentPadding: EdgeInsets.zero,
           leading: const CircleAvatar(
             backgroundColor: Colors.blueGrey,
             child: Icon(Icons.analytics_outlined, color: Colors.white),
           ),
           title: Text(
             'Dr. $nombreStr $apellidosStr'.trim(),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
-          subtitle: Text(data['especialidad'] ?? 'Sin especialidad'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _miniStat(
-                Icons.remove_red_eye,
-                '${data['visitas'] ?? 0}',
-                'visitas',
-                Colors.blueGrey,
-              ),
-              const SizedBox(width: 15),
-              _miniStat(
-                Icons.chat_bubble,
-                '${data['clics_wa'] ?? 0}',
-                'WA clics',
-                Colors.purple.shade300,
-              ),
-              const SizedBox(width: 15),
-              _miniStat(
-                Icons.star,
-                '${data['reseñas_count'] ?? 0}',
-                'reseñas',
-                Colors.amber,
-              ),
-              const SizedBox(width: 20),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Último contacto WA',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  Text(
-                    data['ultimo_contacto'] ?? 'N/A',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          subtitle: Text(
+            data['especialidad'] ?? 'Sin especialidad',
+            style: const TextStyle(fontSize: 12),
+          ),
+          trailing: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _miniStat(
+                  Icons.remove_red_eye,
+                  '${data['visitas'] ?? 0}',
+                  'visitas',
+                  Colors.blueGrey,
+                ),
+                const SizedBox(width: 10),
+                _miniStat(
+                  Icons.chat_bubble,
+                  '${data['clics_wa'] ?? 0}',
+                  'WA clics',
+                  Colors.purple.shade300,
+                ),
+                const SizedBox(width: 10),
+                _miniStat(
+                  Icons.star,
+                  '${data['reseñas_count'] ?? 0}',
+                  'reseñas',
+                  Colors.amber,
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -1388,15 +1434,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 2),
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
           ],
         ),
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 9, color: Colors.grey)),
       ],
     );
   }
