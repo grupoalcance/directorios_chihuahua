@@ -41,42 +41,42 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDiP8RsarDcwrTByYK06IFjGwRDzHBF7ns',
-    appId: '1:339700507997:web:424bff5203fa403157b4b4',
-    messagingSenderId: '339700507997',
+    apiKey: 'AIzaSyBfOpZyIky2KOuigBRQY3v-b80aRFO23VY',
+    appId: '1:869441306004:web:af9957172d8087783b2381',
+    messagingSenderId: '869441306004',
     projectId: 'directorios-sinaloa',
     authDomain: 'directorios-sinaloa.firebaseapp.com',
     storageBucket: 'directorios-sinaloa.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBFoqdsGkNnkuzHHpalRfnlIHOEGFGUP7s',
-    appId: '1:339700507997:android:c04b1b107ab8e22c57b4b4',
-    messagingSenderId: '339700507997',
+    apiKey: 'AIzaSyBuy9oKoeql2zVWvB0lQWB9v02acs_hwnA',
+    appId: '1:869441306004:android:1e8bf7a3365dec303b2381',
+    messagingSenderId: '869441306004',
     projectId: 'directorios-sinaloa',
     storageBucket: 'directorios-sinaloa.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBH3ymizwdqxvBj16-Dp315QN1R7ZhywQk',
-    appId: '1:339700507997:ios:cf45214e4d9474a157b4b4',
-    messagingSenderId: '339700507997',
+    apiKey: 'AIzaSyAjOeiuUgL-SJVXxbIkm4ihu6HZsXMK_p0',
+    appId: '1:869441306004:ios:c65256f8374c264d3b2381',
+    messagingSenderId: '869441306004',
     projectId: 'directorios-sinaloa',
     storageBucket: 'directorios-sinaloa.firebasestorage.app',
     iosBundleId: 'com.example.directoriossinaloa',
   );
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBH3ymizwdqxvBj16-Dp315QN1R7ZhywQk',
-    appId: '1:339700507997:ios:cf45214e4d9474a157b4b4',
-    messagingSenderId: '339700507997',
+    apiKey: 'AIzaSyAjOeiuUgL-SJVXxbIkm4ihu6HZsXMK_p0',
+    appId: '1:869441306004:ios:c65256f8374c264d3b2381',
+    messagingSenderId: '869441306004',
     projectId: 'directorios-sinaloa',
     storageBucket: 'directorios-sinaloa.firebasestorage.app',
     iosBundleId: 'com.example.directoriossinaloa',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDiP8RsarDcwrTByYK06IFjGwRDzHBF7ns',
-    appId: '1:339700507997:web:aafdbcc1ceb08b5a57b4b4',
-    messagingSenderId: '339700507997',
+    apiKey: 'AIzaSyBfOpZyIky2KOuigBRQY3v-b80aRFO23VY',
+    appId: '1:869441306004:web:a391b1ea51173fc53b2381',
+    messagingSenderId: '869441306004',
     projectId: 'directorios-sinaloa',
     authDomain: 'directorios-sinaloa.firebaseapp.com',
     storageBucket: 'directorios-sinaloa.firebasestorage.app',

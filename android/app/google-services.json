@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "339700507997",
+    "project_number": "869441306004",
     "project_id": "directorios-sinaloa",
     "storage_bucket": "directorios-sinaloa.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:339700507997:android:c04b1b107ab8e22c57b4b4",
+        "mobilesdk_app_id": "1:869441306004:android:1e8bf7a3365dec303b2381",
         "android_client_info": {
           "package_name": "com.example.directorios_sinaloa"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBFoqdsGkNnkuzHHpalRfnlIHOEGFGUP7s"
+          "current_key": "AIzaSyBuy9oKoeql2zVWvB0lQWB9v02acs_hwnA"
         }
       ],
       "services": {
