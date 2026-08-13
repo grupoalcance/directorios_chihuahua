@@ -1,4 +1,4 @@
-name: Despliegue Automático a Hostinger - Chihuahua
+name: Despliegue Automático a Hostinger - sinaloa
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
           echo "  RewriteRule . /index.html [L]" >> build/web/.htaccess
           echo "</IfModule>" >> build/web/.htaccess
 
-      - name: 6. Subir por SCP a la carpeta de Chihuahua
+      - name: 6. Subir por SCP a la carpeta de sinaloa
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -47,6 +47,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           source: "build/web/*"
-          target: "domains/medicoschihuahua.com/public_html"
+          target: "domains/medicossinaloa.com/public_html"
           strip_components: 2
           overwrite: true

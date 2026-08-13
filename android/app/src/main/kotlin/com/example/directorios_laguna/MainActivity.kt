@@ -1,4 +1,4 @@
-package com.example.directorios_chihuahua
+package com.example.directorios_sinaloa
 
 import io.flutter.embedding.android.FlutterActivity
 

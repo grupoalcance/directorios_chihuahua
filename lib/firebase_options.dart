@@ -44,41 +44,41 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyDiP8RsarDcwrTByYK06IFjGwRDzHBF7ns',
     appId: '1:339700507997:web:424bff5203fa403157b4b4',
     messagingSenderId: '339700507997',
-    projectId: 'directorios-chihuahua',
-    authDomain: 'directorios-chihuahua.firebaseapp.com',
-    storageBucket: 'directorios-chihuahua.firebasestorage.app',
+    projectId: 'directorios-sinaloa',
+    authDomain: 'directorios-sinaloa.firebaseapp.com',
+    storageBucket: 'directorios-sinaloa.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBFoqdsGkNnkuzHHpalRfnlIHOEGFGUP7s',
     appId: '1:339700507997:android:c04b1b107ab8e22c57b4b4',
     messagingSenderId: '339700507997',
-    projectId: 'directorios-chihuahua',
-    storageBucket: 'directorios-chihuahua.firebasestorage.app',
+    projectId: 'directorios-sinaloa',
+    storageBucket: 'directorios-sinaloa.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBH3ymizwdqxvBj16-Dp315QN1R7ZhywQk',
     appId: '1:339700507997:ios:cf45214e4d9474a157b4b4',
     messagingSenderId: '339700507997',
-    projectId: 'directorios-chihuahua',
-    storageBucket: 'directorios-chihuahua.firebasestorage.app',
-    iosBundleId: 'com.example.directorioschihuahua',
+    projectId: 'directorios-sinaloa',
+    storageBucket: 'directorios-sinaloa.firebasestorage.app',
+    iosBundleId: 'com.example.directoriossinaloa',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBH3ymizwdqxvBj16-Dp315QN1R7ZhywQk',
     appId: '1:339700507997:ios:cf45214e4d9474a157b4b4',
     messagingSenderId: '339700507997',
-    projectId: 'directorios-chihuahua',
-    storageBucket: 'directorios-chihuahua.firebasestorage.app',
-    iosBundleId: 'com.example.directorioschihuahua',
+    projectId: 'directorios-sinaloa',
+    storageBucket: 'directorios-sinaloa.firebasestorage.app',
+    iosBundleId: 'com.example.directoriossinaloa',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDiP8RsarDcwrTByYK06IFjGwRDzHBF7ns',
     appId: '1:339700507997:web:aafdbcc1ceb08b5a57b4b4',
     messagingSenderId: '339700507997',
-    projectId: 'directorios-chihuahua',
-    authDomain: 'directorios-chihuahua.firebaseapp.com',
-    storageBucket: 'directorios-chihuahua.firebasestorage.app',
+    projectId: 'directorios-sinaloa',
+    authDomain: 'directorios-sinaloa.firebaseapp.com',
+    storageBucket: 'directorios-sinaloa.firebasestorage.app',
   );
 }

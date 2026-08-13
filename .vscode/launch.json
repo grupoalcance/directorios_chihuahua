@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "directorios_chihuahua",
+            "name": "directorios_sinaloa",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "directorios_chihuahua (profile mode)",
+            "name": "directorios_sinaloa (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "directorios_chihuahua (release mode)",
+            "name": "directorios_sinaloa (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

@@ -1,4 +1,4 @@
-# directorios_chihuahua
+# directorios_sinaloa
 
 A new Flutter project.
 

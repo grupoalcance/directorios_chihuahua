@@ -1,11 +1,11 @@
 {
-    "name": "Médicos Chihuahua",
+    "name": "Médicos sinaloa",
     "short_name": "Médicos CUU",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Directorio Médico de Chihuahua.",
+    "description": "Directorio Médico de sinaloa.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

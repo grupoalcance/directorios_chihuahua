@@ -1,15 +1,15 @@
 {
   "project_info": {
     "project_number": "339700507997",
-    "project_id": "directorios-chihuahua",
-    "storage_bucket": "directorios-chihuahua.firebasestorage.app"
+    "project_id": "directorios-sinaloa",
+    "storage_bucket": "directorios-sinaloa.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
         "mobilesdk_app_id": "1:339700507997:android:c04b1b107ab8e22c57b4b4",
         "android_client_info": {
-          "package_name": "com.example.directorios_chihuahua"
+          "package_name": "com.example.directorios_sinaloa"
         }
       },
       "oauth_client": [],
