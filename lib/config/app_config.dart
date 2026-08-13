@@ -10,7 +10,7 @@ class AppConfig {
   static const Color secondaryColor = Color(0xFF0061E0);
 
   // 3. Rutas y CRM
-  static const String logoPath = 'assets/images/chihuahua.png';
+  static const String logoPath = 'assets/images/logo-chihuahua.png';
   static const String crmUrl = 'https://medicoschihuahua.com/asesores/';
 
   // 4. Menú de Ciudades (Principales municipios de Chihuahua)
