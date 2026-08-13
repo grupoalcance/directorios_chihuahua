@@ -37,6 +37,6 @@ jobs:
           REMOTE_USER: ${{ secrets.SSH_USERNAME }}
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
           SOURCE: "build/web/"
-          TARGET: "/home/u492244081/domains/medicosdurango.com/public_html/"
+          TARGET: "/home/u492244081/domains/medicoschihuahua.com/public_html/"
           SCRIPT_AFTER: |
-            chmod -R 755 /home/u492244081/domains/medicosdurango.com/public_html/
+            chmod -R 755 /home/u492244081/domains/medicoschihuahua.com/public_html/

@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "directorios_durango",
+            "name": "directorios_chihuahua",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "directorios_durango (profile mode)",
+            "name": "directorios_chihuahua (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "directorios_durango (release mode)",
+            "name": "directorios_chihuahua (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"

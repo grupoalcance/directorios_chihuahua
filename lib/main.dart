@@ -5,20 +5,20 @@ import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
-// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO DE DURANGO
-import 'package:directorios_durango/config/app_config.dart';
+// 🔑 IMPORTACIÓN DEL ARCHIVO MAESTRO DE chihuahua
+import 'package:directorios_chihuahua/config/app_config.dart';
 
-import 'package:directorios_durango/screens/medicos_page_screen.dart';
-import 'package:directorios_durango/screens/doctor_profile_screen.dart';
-import 'package:directorios_durango/screens/admin_dashboard_screen.dart';
-import 'package:directorios_durango/screens/login_screen.dart';
-import 'package:directorios_durango/screens/suscribirse_screen.dart';
-import 'package:directorios_durango/screens/quienes_somos_screen.dart';
-import 'package:directorios_durango/screens/contacto_screen.dart';
-import 'package:directorios_durango/screens/lista_hospitales_screen.dart';
-import 'package:directorios_durango/screens/lista_farmacias_screen.dart';
-import 'package:directorios_durango/screens/todas_especialidades_screen.dart';
-import 'package:directorios_durango/screens/lista_doctores_screen.dart';
+import 'package:directorios_chihuahua/screens/medicos_page_screen.dart';
+import 'package:directorios_chihuahua/screens/doctor_profile_screen.dart';
+import 'package:directorios_chihuahua/screens/admin_dashboard_screen.dart';
+import 'package:directorios_chihuahua/screens/login_screen.dart';
+import 'package:directorios_chihuahua/screens/suscribirse_screen.dart';
+import 'package:directorios_chihuahua/screens/quienes_somos_screen.dart';
+import 'package:directorios_chihuahua/screens/contacto_screen.dart';
+import 'package:directorios_chihuahua/screens/lista_hospitales_screen.dart';
+import 'package:directorios_chihuahua/screens/lista_farmacias_screen.dart';
+import 'package:directorios_chihuahua/screens/todas_especialidades_screen.dart';
+import 'package:directorios_chihuahua/screens/lista_doctores_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

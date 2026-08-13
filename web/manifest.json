@@ -1,11 +1,11 @@
 {
-    "name": "directorios_durango",
-    "short_name": "directorios_durango",
+    "name": "Médicos Chihuahua",
+    "short_name": "Médicos CUU",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Directorio Médico de Chihuahua.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

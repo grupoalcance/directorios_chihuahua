@@ -1,4 +1,4 @@
-# directorios_durango
+# directorios_chihuahua
 
 A new Flutter project.
 

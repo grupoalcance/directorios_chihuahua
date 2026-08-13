@@ -44,9 +44,9 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyDqulmjBZtigbfn8-kWYzawaMFQC-3v-ag',
     appId: '1:548020924115:web:edfa0213fa4e5c1e026e26',
     messagingSenderId: '548020924115',
-    projectId: 'directorios-durango',
-    authDomain: 'directorios-durango.firebaseapp.com',
-    storageBucket: 'directorios-durango.firebasestorage.app',
+    projectId: 'directorios-chihuahua',
+    authDomain: 'directorios-chihuahua.firebaseapp.com',
+    storageBucket: 'directorios-chihuahua.firebasestorage.app',
     measurementId: 'G-NMS9BS7RRZ',
   );
 
@@ -54,33 +54,33 @@ class DefaultFirebaseOptions {
     apiKey: 'AIzaSyDaWCY8ZbUpv-acSj-9TyBT8pVMeG9omfE',
     appId: '1:548020924115:android:8caad2ac2adc6e4b026e26',
     messagingSenderId: '548020924115',
-    projectId: 'directorios-durango',
-    storageBucket: 'directorios-durango.firebasestorage.app',
+    projectId: 'directorios-chihuahua',
+    storageBucket: 'directorios-chihuahua.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
     appId: '1:548020924115:ios:99a3e4d92c3212ae026e26',
     messagingSenderId: '548020924115',
-    projectId: 'directorios-durango',
-    storageBucket: 'directorios-durango.firebasestorage.app',
-    iosBundleId: 'com.example.directoriosdurango',
+    projectId: 'directorios-chihuahua',
+    storageBucket: 'directorios-chihuahua.firebasestorage.app',
+    iosBundleId: 'com.example.directorioschihuahua',
   );
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
     appId: '1:548020924115:ios:99a3e4d92c3212ae026e26',
     messagingSenderId: '548020924115',
-    projectId: 'directorios-durango',
-    storageBucket: 'directorios-durango.firebasestorage.app',
-    iosBundleId: 'com.example.directoriosdurango',
+    projectId: 'directorios-chihuahua',
+    storageBucket: 'directorios-chihuahua.firebasestorage.app',
+    iosBundleId: 'com.example.directorioschihuahua',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyDqulmjBZtigbfn8-kWYzawaMFQC-3v-ag',
     appId: '1:548020924115:web:4bf4716d09bf3cc8026e26',
     messagingSenderId: '548020924115',
-    projectId: 'directorios-durango',
-    authDomain: 'directorios-durango.firebaseapp.com',
-    storageBucket: 'directorios-durango.firebasestorage.app',
+    projectId: 'directorios-chihuahua',
+    authDomain: 'directorios-chihuahua.firebaseapp.com',
+    storageBucket: 'directorios-chihuahua.firebasestorage.app',
     measurementId: 'G-34P61RBN95',
   );
 }

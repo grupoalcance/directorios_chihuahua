@@ -81,10 +81,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
     // 🛠️ RUTAS DE BANNERS CORREGIDAS A ASSETS LOCALES
     misBannersEstaticos = [
       {
-        'imagen': 'assets/banners/sanjorgebanner.png',
-        'url': 'https://www.facebook.com/HospitalSanJorgeDgo/?locale=es_LA',
-      },
-      {
         'imagen': 'assets/banners/alcance.gif',
         'url': 'https://agenciaalcance.com/',
       },

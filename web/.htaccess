@@ -16,3 +16,10 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# 3. COMPLEMENTO OPCIONAL: Guardar en caché assets pesados (imágenes y fuentes)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(ico|jpg|jpeg|png|gif|svg|ttf|otf|woff|woff2|wasm)$">
+    Header set Cache-Control "max-age=2592000, public"
+  </FilesMatch>
+</IfModule>

@@ -76,7 +76,7 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
 
     // Creamos un mensaje automático genial
     String mensaje = Uri.encodeComponent(
-      'Hola Doctor(a), vi su perfil en médicosdurango.com y me gustaría agendar una cita.',
+      'Hola Doctor(a), vi su perfil en médicoschihuahua.com y me gustaría agendar una cita.',
     );
     final Uri url = Uri.parse('https://wa.me/$cleanPhone?text=$mensaje');
 
@@ -90,8 +90,8 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
   Future<void> _abrirGoogleMaps(String direccion) async {
     if (direccion.isEmpty) return;
 
-    // Codificamos la dirección para que sea una búsqueda válida en Maps (le añadimos "Durango" por defecto para ayudar al mapa)
-    final String query = Uri.encodeComponent('$direccion, Durango, Coahuila');
+    // Codificamos la dirección para que sea una búsqueda válida en Maps (le añadimos "chihuahua" por defecto para ayudar al mapa)
+    final String query = Uri.encodeComponent('$direccion, chihuahua, Coahuila');
     final Uri url = Uri.parse(
       'https://www.google.com/maps/search/?api=1&query=$query',
     );
@@ -255,7 +255,7 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
     String doctorId,
   ) {
     // Generamos el link único de este doctor
-    String dominio = "https://medicosdurango.com";
+    String dominio = "https://medicoschihuahua.com";
     String urlPerfil = "$dominio/#/perfil?id=$doctorId";
 
     return Row(
@@ -277,7 +277,7 @@ class _DoctorBasicProfileScreenState extends State<DoctorBasicProfileScreen> {
             InkWell(
               onTap: () async {
                 String mensaje = Uri.encodeComponent(
-                  'Te recomiendo a este especialista en Médicos durango: $urlPerfil',
+                  'Te recomiendo a este especialista en Médicos chihuahua: $urlPerfil',
                 );
                 final Uri url = Uri.parse('https://wa.me/?text=$mensaje');
                 await launchUrl(url, mode: LaunchMode.externalApplication);

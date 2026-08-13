@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="directorios_durango"
+        android:label="directorios_chihuahua"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
