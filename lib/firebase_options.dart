@@ -41,46 +41,44 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDqulmjBZtigbfn8-kWYzawaMFQC-3v-ag',
-    appId: '1:548020924115:web:edfa0213fa4e5c1e026e26',
-    messagingSenderId: '548020924115',
+    apiKey: 'AIzaSyDiP8RsarDcwrTByYK06IFjGwRDzHBF7ns',
+    appId: '1:339700507997:web:424bff5203fa403157b4b4',
+    messagingSenderId: '339700507997',
     projectId: 'directorios-chihuahua',
     authDomain: 'directorios-chihuahua.firebaseapp.com',
     storageBucket: 'directorios-chihuahua.firebasestorage.app',
-    measurementId: 'G-NMS9BS7RRZ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDaWCY8ZbUpv-acSj-9TyBT8pVMeG9omfE',
-    appId: '1:548020924115:android:8caad2ac2adc6e4b026e26',
-    messagingSenderId: '548020924115',
+    apiKey: 'AIzaSyBFoqdsGkNnkuzHHpalRfnlIHOEGFGUP7s',
+    appId: '1:339700507997:android:c04b1b107ab8e22c57b4b4',
+    messagingSenderId: '339700507997',
     projectId: 'directorios-chihuahua',
     storageBucket: 'directorios-chihuahua.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
-    appId: '1:548020924115:ios:99a3e4d92c3212ae026e26',
-    messagingSenderId: '548020924115',
+    apiKey: 'AIzaSyBH3ymizwdqxvBj16-Dp315QN1R7ZhywQk',
+    appId: '1:339700507997:ios:cf45214e4d9474a157b4b4',
+    messagingSenderId: '339700507997',
     projectId: 'directorios-chihuahua',
     storageBucket: 'directorios-chihuahua.firebasestorage.app',
     iosBundleId: 'com.example.directorioschihuahua',
   );
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB-8yIkh6mdSME22wRDlCoxXGZ5Mj7hb0E',
-    appId: '1:548020924115:ios:99a3e4d92c3212ae026e26',
-    messagingSenderId: '548020924115',
+    apiKey: 'AIzaSyBH3ymizwdqxvBj16-Dp315QN1R7ZhywQk',
+    appId: '1:339700507997:ios:cf45214e4d9474a157b4b4',
+    messagingSenderId: '339700507997',
     projectId: 'directorios-chihuahua',
     storageBucket: 'directorios-chihuahua.firebasestorage.app',
     iosBundleId: 'com.example.directorioschihuahua',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDqulmjBZtigbfn8-kWYzawaMFQC-3v-ag',
-    appId: '1:548020924115:web:4bf4716d09bf3cc8026e26',
-    messagingSenderId: '548020924115',
+    apiKey: 'AIzaSyDiP8RsarDcwrTByYK06IFjGwRDzHBF7ns',
+    appId: '1:339700507997:web:aafdbcc1ceb08b5a57b4b4',
+    messagingSenderId: '339700507997',
     projectId: 'directorios-chihuahua',
     authDomain: 'directorios-chihuahua.firebaseapp.com',
     storageBucket: 'directorios-chihuahua.firebasestorage.app',
-    measurementId: 'G-34P61RBN95',
   );
 }

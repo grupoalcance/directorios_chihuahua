@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "548020924115",
+    "project_number": "339700507997",
     "project_id": "directorios-chihuahua",
     "storage_bucket": "directorios-chihuahua.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:548020924115:android:8caad2ac2adc6e4b026e26",
+        "mobilesdk_app_id": "1:339700507997:android:c04b1b107ab8e22c57b4b4",
         "android_client_info": {
           "package_name": "com.example.directorios_chihuahua"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDaWCY8ZbUpv-acSj-9TyBT8pVMeG9omfE"
+          "current_key": "AIzaSyBFoqdsGkNnkuzHHpalRfnlIHOEGFGUP7s"
         }
       ],
       "services": {
